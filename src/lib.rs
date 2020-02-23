@@ -2,7 +2,7 @@
 // #![deny(warnings, missing_docs)]
 use embedded_hal::{blocking::spi::Transfer, blocking::spi::Write, digital::v2::OutputPin};
 
-mod accel;
+pub mod accel;
 mod mag;
 
 use accel::AccelSettings;
@@ -14,9 +14,9 @@ const WHO_AM_I_M: u8 = 0x3D;
 const TEMP_OFFSET: u16 = 25;
 
 pub enum Axis {
-	X,
-	Y,
-	Z,
+    X,
+    Y,
+    Z,
 }
 
 pub struct LSM9DS1<SPI, CS> {
@@ -68,6 +68,53 @@ where
         self.write_register(
             accel::Register::CTRL_REG7_XL.addr(),
             self.accel.ctrl_reg7_xl(),
+        );
+    }
+
+    pub fn set_accel_scale(&mut self, scale: accel::AccelScale) {
+        self.accel.scale = scale;
+        self.write_register(
+            accel::Register::CTRL_REG6_XL.addr(),
+            self.accel.ctrl_reg6_xl(),
+        );
+    }
+
+    pub fn set_accel_odr(&mut self, sample_rate: accel::AccelODR) {
+        self.accel.sample_rate = sample_rate;
+        self.write_register(
+            accel::Register::CTRL_REG6_XL.addr(),
+            self.accel.ctrl_reg6_xl(),
+        );
+    }
+
+    pub fn set_accel_bandwidth_selection(
+        &mut self,
+        bandwidth_selection: accel::AccelBandwidthSelection,
+    ) {
+        self.accel.bandwidth_selection = bandwidth_selection;
+        self.write_register(
+            accel::Register::CTRL_REG6_XL.addr(),
+            self.accel.ctrl_reg6_xl(),
+        );
+    }
+
+    pub fn set_accel_bandwidth(&mut self, bandwidth: accel::AccelBandwidth) {
+        self.accel.bandwidth = bandwidth;
+        self.write_register(
+            accel::Register::CTRL_REG6_XL.addr(),
+            self.accel.ctrl_reg6_xl(),
+        );
+    }
+
+    pub fn enable_axis(&mut self, axis: Axis, enabled: bool) {
+        match axis {
+            Axis::X => self.accel.enable_x = enabled,
+            Axis::Y => self.accel.enable_y = enabled,
+            Axis::Z => self.accel.enable_z = enabled,
+        }
+        self.write_register(
+            accel::Register::CTRL_REG5_XL.addr(),
+            self.accel.ctrl_reg5_xl(),
         );
     }
 

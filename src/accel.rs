@@ -1,15 +1,16 @@
 #![allow(dead_code, non_camel_case_types)]
 
 /// Accelerometer settings
+#[derive(Debug)]
 pub struct AccelSettings {
-    enable_x: bool,
-    enable_y: bool,
-    enable_z: bool,
-    scale: AccelScale,
-    sample_rate: AccelODR,
-    bandwidth_selection: AccelBandwidthSelection,
-    bandwidth: AccelBandwidth,
-    high_res_bandwidth: HighRes,
+    pub enable_x: bool,
+    pub enable_y: bool,
+    pub enable_z: bool,
+    pub scale: AccelScale,
+    pub sample_rate: AccelODR,
+    pub bandwidth_selection: AccelBandwidthSelection,
+    pub bandwidth: AccelBandwidth,
+    pub high_res_bandwidth: HighRes,
 }
 
 impl Default for AccelSettings {
@@ -79,8 +80,8 @@ impl AccelSettings {
 }
 
 /// Accelerometer full-scale selection. Default value: 00. See table 67.
-#[derive(Clone, Copy)]
-enum AccelScale {
+#[derive(Debug, Clone, Copy)]
+pub enum AccelScale {
     /// 2g
     LA_FS_2G = 0b00,
     /// 16g
@@ -98,8 +99,8 @@ impl AccelScale {
 }
 
 /// Output data rate and power mode selection (ODR_XL). default value: 000 (see Table 68)
-#[derive(Clone, Copy)]
-enum AccelODR {
+#[derive(Debug, Clone, Copy)]
+pub enum AccelODR {
     /// Power-down mode
     POWER_DOWN = 0b000,
     /// 10 Hz
@@ -122,7 +123,8 @@ impl AccelODR {
     }
 }
 
-enum AccelBandwidthSelection {
+#[derive(Debug)]
+pub enum AccelBandwidthSelection {
     ByODR,
     ByBW,
 }
@@ -137,8 +139,8 @@ impl AccelBandwidthSelection {
 }
 
 /// Anti-aliasing filter bandwidth selection (BW_XL). Default value: 00. See table 67
-#[derive(Clone, Copy)]
-enum AccelBandwidth {
+#[derive(Debug, Clone, Copy)]
+pub enum AccelBandwidth {
     /// 408 Hz
     BW_408 = 0b00,
     /// 211 Hz
@@ -157,8 +159,8 @@ impl AccelBandwidth {
 
 /// Accelerometer digital filter (high pass and low pass) cutoff frequency selection:
 /// the band- width of the high-pass filter depends on the selected ODR. Refer to Table 71
-#[derive(Clone, Copy)]
-enum HighRes {
+#[derive(Debug, Clone, Copy)]
+pub enum HighRes {
     Disabled = 0b000,
     ODR_50 = 0b100,
     ODR_100 = 0b101,
