@@ -1,3 +1,5 @@
+#![allow(dead_code, non_camel_case_types)]
+
 /// LSM9DS1 Magnetometer Registers
 #[allow(non_camel_case_types)]
 #[derive(Clone, Copy)]
