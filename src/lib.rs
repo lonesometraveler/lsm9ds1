@@ -11,6 +11,8 @@ const SPI_READ: u8 = 0x80;
 const WHO_AM_I_AG: u8 = 0x68;
 const WHO_AM_I_M: u8 = 0x3D;
 
+const TEMP_OFFSET: u16 = 25;
+
 pub enum Axis {
 	X,
 	Y,
@@ -116,6 +118,61 @@ where
             Axis::X => accel::Register::OUT_X_L_XL.addr(),
             Axis::Y => accel::Register::OUT_Y_L_XL.addr(),
             Axis::Z => accel::Register::OUT_Z_L_XL.addr(),
+        };
+        bytes[0] = SPI_READ | addr;
+        let result = self.read_bytes(&mut bytes);
+        match result {
+            Ok(_) => {
+                let result: u16 = (bytes[2] as u16) << 8 | bytes[1] as u16;
+                // if (_autoCalc) {
+                //     ax -= aBiasRaw[X_AXIS];
+                //     ay -= aBiasRaw[Y_AXIS];
+                //     az -= aBiasRaw[Z_AXIS];
+                // }
+                result
+            }
+            _ => 0,
+        }
+    }
+
+    pub fn read_temp(&mut self) -> u16 {
+        let mut bytes = [0u8; 3];
+        bytes[0] = SPI_READ | accel::Register::OUT_TEMP_L.addr();
+        match self.read_bytes(&mut bytes) {
+            Ok(_) => {
+                let result: u16 = (bytes[2] as u16) << 8 | bytes[1] as u16;
+                result + TEMP_OFFSET
+            }
+            _ => 0,
+        }
+    }
+
+    pub fn read_gyro(&mut self) -> (u16, u16, u16) {
+        let mut bytes = [0u8; 7];
+        bytes[0] = SPI_READ | accel::Register::OUT_X_L_G.addr();
+        let result = self.read_bytes(&mut bytes);
+        match result {
+            Ok(_) => {
+                let x: u16 = (bytes[2] as u16) << 8 | bytes[1] as u16;
+                let y: u16 = (bytes[4] as u16) << 8 | bytes[3] as u16;
+                let z: u16 = (bytes[6] as u16) << 8 | bytes[5] as u16;
+                // if (_autoCalc) {
+                //     ax -= aBiasRaw[X_AXIS];
+                //     ay -= aBiasRaw[Y_AXIS];
+                //     az -= aBiasRaw[Z_AXIS];
+                // }
+                (x, y, z)
+            }
+            _ => (0, 0, 0),
+        }
+    }
+
+    pub fn read_gyro_for(&mut self, axis: Axis) -> u16 {
+        let mut bytes = [0u8; 3];
+        let addr = match axis {
+            Axis::X => accel::Register::OUT_X_L_G.addr(),
+            Axis::Y => accel::Register::OUT_Y_L_G.addr(),
+            Axis::Z => accel::Register::OUT_Z_L_G.addr(),
         };
         bytes[0] = SPI_READ | addr;
         let result = self.read_bytes(&mut bytes);
