@@ -96,6 +96,15 @@ impl AccelScale {
     pub fn value(self) -> u8 {
         (self as u8) << 3
     }
+
+    pub fn sensitivity(self) -> f32 {
+        match self {
+            AccelScale::LA_FS_2G => 0.000_061,
+            AccelScale::LA_FS_4G => 0.000_122,
+            AccelScale::LA_FS_8G => 0.000_244,
+            AccelScale::LA_FS_16G => 0.000_732,
+        }
+    }
 }
 
 /// Output data rate and power mode selection (ODR_XL). default value: 000 (see Table 68)
@@ -182,6 +191,16 @@ enum GyroScale {
     G_FS_500DPS = 0b01,
     /// 2000 dps
     G_FS_2000DPS = 0b11,
+}
+
+impl GyroScale {
+    pub fn sensitivity(&self) -> f32 {
+        match self {
+            GyroScale::G_FS_245DPS => 0.00875,
+            GyroScale::G_FS_500DPS => 0.0175,
+            GyroScale::G_FS_2000DPS => 0.07,
+        }
+    }
 }
 
 /// Gyroscope operating modes. See table 9.

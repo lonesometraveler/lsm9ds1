@@ -11,7 +11,8 @@ const SPI_READ: u8 = 0x80;
 const WHO_AM_I_AG: u8 = 0x68;
 const WHO_AM_I_M: u8 = 0x3D;
 
-const TEMP_OFFSET: u16 = 25;
+const TEMP_SCALE: f32 = 16.0;
+const TEMP_BIAS: f32 = 27.5;
 
 pub enum Axis {
     X,
@@ -139,27 +140,31 @@ where
         }
     }
 
-    pub fn read_accel(&mut self) -> (u16, u16, u16) {
+    pub fn read_accel(&mut self) -> (f32, f32, f32) {
         let mut bytes = [0u8; 7];
         bytes[0] = SPI_READ | accel::Register::OUT_X_L_XL.addr();
         let result = self.read_bytes(&mut bytes);
         match result {
             Ok(_) => {
-                let x: u16 = (bytes[2] as u16) << 8 | bytes[1] as u16;
-                let y: u16 = (bytes[4] as u16) << 8 | bytes[3] as u16;
-                let z: u16 = (bytes[6] as u16) << 8 | bytes[5] as u16;
+                let x: i16 = (bytes[2] as i16) << 8 | bytes[1] as i16;
+                let y: i16 = (bytes[4] as i16) << 8 | bytes[3] as i16;
+                let z: i16 = (bytes[6] as i16) << 8 | bytes[5] as i16;
                 // if (_autoCalc) {
                 //     ax -= aBiasRaw[X_AXIS];
                 //     ay -= aBiasRaw[Y_AXIS];
                 //     az -= aBiasRaw[Z_AXIS];
                 // }
-                (x, y, z)
+                (
+                    x as f32 * self.accel.scale.sensitivity(),
+                    y as f32 * self.accel.scale.sensitivity(),
+                    z as f32 * self.accel.scale.sensitivity(),
+                )
             }
-            _ => (0, 0, 0),
+            _ => (0.0, 0.0, 0.0),
         }
     }
 
-    pub fn read_accel_for(&mut self, axis: Axis) -> u16 {
+    pub fn read_accel_for(&mut self, axis: Axis) -> f32 {
         let mut bytes = [0u8; 3];
         let addr = match axis {
             Axis::X => accel::Register::OUT_X_L_XL.addr(),
@@ -176,21 +181,21 @@ where
                 //     ay -= aBiasRaw[Y_AXIS];
                 //     az -= aBiasRaw[Z_AXIS];
                 // }
-                result
+                result as f32 * self.accel.scale.sensitivity()
             }
-            _ => 0,
+            _ => 0.0,
         }
     }
 
-    pub fn read_temp(&mut self) -> u16 {
+    pub fn read_temp(&mut self) -> f32 {
         let mut bytes = [0u8; 3];
         bytes[0] = SPI_READ | accel::Register::OUT_TEMP_L.addr();
         match self.read_bytes(&mut bytes) {
             Ok(_) => {
-                let result: u16 = (bytes[2] as u16) << 8 | bytes[1] as u16;
-                result + TEMP_OFFSET
+                let result: i16 = (bytes[2] as i16) << 8 | bytes[1] as i16;
+                (result as f32) / TEMP_SCALE + TEMP_BIAS
             }
-            _ => 0,
+            _ => 0.0,
         }
     }
 
