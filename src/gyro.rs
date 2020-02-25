@@ -50,40 +50,38 @@ impl GyroSettings {
         Default::default()
     }
 
-    ///    CTRL_REG1_G (Default value: 0x00), page 45
-    ///    [ODR_G2][ODR_G1][ODR_G0][FS_G1][FS_G0][0][BW_G1][BW_G0]
-    ///    ODR_G[2:0] - Output data rate selection
-    ///    FS_G[1:0] - Gyroscope full-scale selection
-    ///    BW_G[1:0] - Gyroscope bandwidth selection
+    /// CTRL_REG1_G (Default value: 0x00), page 45
+    /// [ODR_G2][ODR_G1][ODR_G0][FS_G1][FS_G0][0][BW_G1][BW_G0]
+    /// ODR_G[2:0] - Output data rate selection
+    /// FS_G[1:0] - Gyroscope full-scale selection
+    /// BW_G[1:0] - Gyroscope bandwidth selection
     pub fn crtl_reg1_g(&self) -> u8 {
-        self.sample_rate.value()
-            | self.scale.value()
-            | self.bandwidth.value()
+        self.sample_rate.value() | self.scale.value() | self.bandwidth.value()
     }
 
     // CTRL_REG2_G (Default value: 0x00)
-	// [0][0][0][0][INT_SEL1][INT_SEL0][OUT_SEL1][OUT_SEL0]
-	// INT_SEL[1:0] - INT selection configuration
-	// OUT_SEL[1:0] - Out selection configuration
-	pub fn crtl_reg2_g(&self) -> u8 {
+    // [0][0][0][0][INT_SEL1][INT_SEL0][OUT_SEL1][OUT_SEL0]
+    // INT_SEL[1:0] - INT selection configuration
+    // OUT_SEL[1:0] - Out selection configuration
+    pub fn crtl_reg2_g(&self) -> u8 {
         self.int_selection.value() | self.out_selection.value()
     }
 
-    ///    CTRL_REG3_G (Default value: 0x00). see page 47
-	///    [LP_mode][HP_EN][0][0][HPCF3_G][HPCF2_G][HPCF1_G][HPCF0_G]
-	///    LP_mode - Low-power mode enable (0: disabled, 1: enabled)
-	///    HP_EN - HPF enable (0:disabled, 1: enabled)
-	///    HPCF_G[3:0] - HPF cutoff frequency
+    /// CTRL_REG3_G (Default value: 0x00). see page 47
+    /// [LP_mode][HP_EN][0][0][HPCF3_G][HPCF2_G][HPCF1_G][HPCF0_G]
+    /// LP_mode - Low-power mode enable (0: disabled, 1: enabled)
+    /// HP_EN - HPF enable (0:disabled, 1: enabled)
+    /// HPCF_G[3:0] - HPF cutoff frequency
     pub fn crtl_reg3_g(&self) -> u8 {
         self.low_power_mode.value() | self.hpf_mode.value() | self.hpf_cutoff.value()
     }
 
     /// CTRL_REG4 (Default value: 0x38). see page 50
-	/// [0][0][Zen_G][Yen_G][Xen_G][0][LIR_XL1][4D_XL1]
-	/// Zen_G - Z-axis output enable (0:disable, 1:enable)
-	/// Yen_G - Y-axis output enable (0:disable, 1:enable)
-	/// Xen_G - X-axis output enable (0:disable, 1:enable)
-	/// LIR_XL1 - Latched interrupt (0:not latched, 1:latched)
+    /// [0][0][Zen_G][Yen_G][Xen_G][0][LIR_XL1][4D_XL1]
+    /// Zen_G - Z-axis output enable (0:disable, 1:enable)
+    /// Yen_G - Y-axis output enable (0:disable, 1:enable)
+    /// Xen_G - X-axis output enable (0:disable, 1:enable)
+    /// LIR_XL1 - Latched interrupt (0:not latched, 1:latched)
     /// 4D_XL1 - 4D option on interrupt (0:6D used, 1:4D used) // TODO:
     pub fn ctrl_reg4(&self) -> u8 {
         let mut result = 0_u8;
@@ -100,9 +98,9 @@ impl GyroSettings {
     }
 
     /// ORIENT_CFG_G (Default value: 0x00)
-	/// [0][0][SignX_G][SignY_G][SignZ_G][Orient_2][Orient_1][Orient_0]
-	/// SignX_G - Pitch axis (X) angular rate sign (0: positive, 1: negative)
-	/// Orient [2:0] - Directional user orientation selection // TODO:
+    /// [0][0][SignX_G][SignY_G][SignZ_G][Orient_2][Orient_1][Orient_0]
+    /// SignX_G - Pitch axis (X) angular rate sign (0: positive, 1: negative)
+    /// Orient [2:0] - Directional user orientation selection // TODO:
     pub fn orient_cfg_g(&self) -> u8 {
         let mut result = 0_u8;
         if self.flip_x {
@@ -134,7 +132,7 @@ impl GyroScale {
         (self as u8) << 3
     }
 
-    pub fn sensitivity(&self) -> f32 {
+    pub fn sensitivity(self) -> f32 {
         match self {
             GyroScale::G_FS_245DPS => 0.00875,
             GyroScale::G_FS_500DPS => 0.0175,
