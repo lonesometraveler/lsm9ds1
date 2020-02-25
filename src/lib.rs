@@ -45,6 +45,24 @@ pub struct LSM9DS1<SPI, CS> {
     gyro: GyroSettings,
 }
 
+// pub mod interface;
+// enum Interfaces<IF: interface::CommunicationInterface> {
+//     SpiMode(IF),
+//     I2cMode(IF),
+// }
+
+// impl<IF> Interfaces<IF> {
+//     fn inner_mut(&mut self) -> &mut IF
+//     where
+//         IF: interface::CommunicationInterface,
+//     {
+//         match self {
+//             Interfaces::SpiMode(ref mut inner) => inner,
+//             Interfaces::I2cMode(ref mut inner) => inner,
+//         }
+//     }
+// }
+
 impl<SPI, CS, CommE, PinE> LSM9DS1<SPI, CS>
 where
     SPI: Transfer<u8, Error = CommE> + Write<u8, Error = CommE>,
@@ -189,76 +207,19 @@ where
         )
     }
 
-    pub fn read_accel_for(&mut self, axis: Axis) -> f32 {
-        let mut bytes = [0u8; 3];
-        let addr = match axis {
-            Axis::X => register::AG::OUT_X_L_XL.addr(),
-            Axis::Y => register::AG::OUT_Y_L_XL.addr(),
-            Axis::Z => register::AG::OUT_Z_L_XL.addr(),
-        };
-        bytes[0] = SPI_READ | addr;
-        let result = self.read_bytes(&mut bytes);
-        match result {
-            Ok(_) => {
-                let result: u16 = (bytes[2] as u16) << 8 | bytes[1] as u16;
-                // if (_autoCalc) {
-                //     ax -= aBiasRaw[X_AXIS];
-                //     ay -= aBiasRaw[Y_AXIS];
-                //     az -= aBiasRaw[Z_AXIS];
-                // }
-                result as f32 * self.accel.scale.sensitivity()
-            }
-            _ => 0.0,
-        }
-    }
-
-    pub fn read_temp(&mut self) -> f32 {
+    pub fn read_temp(&mut self) -> Result<f32, Error<CommE, PinE>> {
         let mut bytes = [0u8; 3];
         bytes[0] = SPI_READ | register::AG::OUT_TEMP_L.addr();
-        match self.read_bytes(&mut bytes) {
-            Ok(_) => {
-                let result: i16 = (bytes[2] as i16) << 8 | bytes[1] as i16;
-                (result as f32) / TEMP_SCALE + TEMP_BIAS
-            }
-            _ => 0.0,
-        }
+        self.read_bytes(&mut bytes)?;
+        let result: i16 = (bytes[2] as i16) << 8 | bytes[1] as i16;
+        Ok((result as f32) / TEMP_SCALE + TEMP_BIAS)
     }
-
-    // pub fn read_gyro(&mut self) -> (f32, f32, f32) {
-    //     self.read_sensor(
-    //         register::AG::OUT_X_L_G.addr(),
-    //         self.gyro.scale.sensitivity(),
-    //     )
-    // }
 
     pub fn read_gyro(&mut self) -> Result<(f32, f32, f32), Error<CommE, PinE>> {
         self.read_sensor(
             register::AG::OUT_X_L_G.addr(),
             self.gyro.scale.sensitivity(),
         )
-    }
-
-    pub fn read_gyro_for(&mut self, axis: Axis) -> u16 {
-        let mut bytes = [0u8; 3];
-        let addr = match axis {
-            Axis::X => register::AG::OUT_X_L_G.addr(),
-            Axis::Y => register::AG::OUT_Y_L_G.addr(),
-            Axis::Z => register::AG::OUT_Z_L_G.addr(),
-        };
-        bytes[0] = SPI_READ | addr;
-        let result = self.read_bytes(&mut bytes);
-        match result {
-            Ok(_) => {
-                let result: u16 = (bytes[2] as u16) << 8 | bytes[1] as u16;
-                // if (_autoCalc) {
-                //     ax -= aBiasRaw[X_AXIS];
-                //     ay -= aBiasRaw[Y_AXIS];
-                //     az -= aBiasRaw[Z_AXIS];
-                // }
-                result
-            }
-            _ => 0,
-        }
     }
 
     // pub fn mag_available(&mut self) -> bool {
@@ -282,7 +243,6 @@ where
         self.cs.set_low().map_err(Error::Pin)?;
         self.spi.transfer(&mut buffer).map_err(Error::Comm)?;
         self.cs.set_high().map_err(Error::Pin)?;
-
         Ok(buffer[1])
     }
 
@@ -292,7 +252,6 @@ where
         self.cs.set_low().map_err(Error::Pin)?;
         self.spi.transfer(bytes).map_err(Error::Comm)?;
         self.cs.set_high().map_err(Error::Pin)?;
-
         Ok(())
     }
 }
