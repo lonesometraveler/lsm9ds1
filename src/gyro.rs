@@ -2,7 +2,6 @@
 
 #[derive(Debug)]
 pub struct GyroSettings {
-    pub enabled: bool,
     pub enable_x: bool,
     pub enable_y: bool,
     pub enable_z: bool,
@@ -24,7 +23,6 @@ pub struct GyroSettings {
 impl Default for GyroSettings {
     fn default() -> Self {
         GyroSettings {
-            enabled: true,
             enable_x: true,
             enable_y: true,
             enable_z: true,
