@@ -5,14 +5,19 @@ use embedded_hal::{blocking::spi::Transfer, blocking::spi::Write, digital::v2::O
 pub mod accel;
 mod mag;
 
-use accel::AccelSettings;
+use accel::{ AccelSettings, GyroSettings };
 
+/// R/W bit should be high for SPI Read operation
 const SPI_READ: u8 = 0x80;
+/// Accelerometer/Gyroscope's ID
 const WHO_AM_I_AG: u8 = 0x68;
+/// Magnetonomer's ID
 const WHO_AM_I_M: u8 = 0x3D;
 
+/// temperature scale
 const TEMP_SCALE: f32 = 16.0;
-const TEMP_BIAS: f32 = 27.5;
+/// The output of the temperature sensor is 0 (typ.) at 25 °C. see page 14: Temperature sensor characteristics
+const TEMP_BIAS: f32 = 25.0;
 
 pub enum Axis {
     X,
@@ -24,6 +29,7 @@ pub struct LSM9DS1<SPI, CS> {
     spi: SPI,
     cs: CS,
     accel: AccelSettings,
+    gyro: GyroSettings
 }
 
 impl<SPI, CS, E> LSM9DS1<SPI, CS>
@@ -37,6 +43,7 @@ where
             spi,
             cs,
             accel: AccelSettings::new(),
+            gyro: GyroSettings::new(),
         };
         // this.cs.set_high()?;
         this.cs.set_high().ok();
@@ -69,6 +76,25 @@ where
         self.write_register(
             accel::Register::CTRL_REG7_XL.addr(),
             self.accel.ctrl_reg7_xl(),
+        );
+    }
+
+    pub fn init_gyro(&mut self) {
+        self.write_register(
+            accel::Register::CTRL_REG1_G.addr(),
+            self.gyro.crtl_reg1_g(),
+        );
+        self.write_register(
+            accel::Register::CTRL_REG2_G.addr(),
+            self.gyro.crtl_reg2_g(),
+        );
+        self.write_register(
+            accel::Register::CTRL_REG3_G.addr(),
+            self.gyro.crtl_reg3_g(),
+        );
+        self.write_register(
+            accel::Register::CTRL_REG4.addr(),
+            self.gyro.ctrl_reg4(),
         );
     }
 
@@ -140,9 +166,9 @@ where
         }
     }
 
-    pub fn read_accel(&mut self) -> (f32, f32, f32) {
+    fn read_sensor(&mut self, addr: u8, sensitivity: f32) -> (f32, f32, f32) {
         let mut bytes = [0u8; 7];
-        bytes[0] = SPI_READ | accel::Register::OUT_X_L_XL.addr();
+        bytes[0] = SPI_READ | addr;
         let result = self.read_bytes(&mut bytes);
         match result {
             Ok(_) => {
@@ -155,13 +181,17 @@ where
                 //     az -= aBiasRaw[Z_AXIS];
                 // }
                 (
-                    x as f32 * self.accel.scale.sensitivity(),
-                    y as f32 * self.accel.scale.sensitivity(),
-                    z as f32 * self.accel.scale.sensitivity(),
+                    x as f32 * sensitivity,
+                    y as f32 * sensitivity,
+                    z as f32 * sensitivity,
                 )
             }
             _ => (0.0, 0.0, 0.0),
         }
+    }
+
+    pub fn read_accel(&mut self) -> (f32, f32, f32) {
+        self.read_sensor(accel::Register::OUT_X_L_XL.addr(), self.accel.scale.sensitivity())
     }
 
     pub fn read_accel_for(&mut self, axis: Axis) -> f32 {
@@ -199,24 +229,8 @@ where
         }
     }
 
-    pub fn read_gyro(&mut self) -> (u16, u16, u16) {
-        let mut bytes = [0u8; 7];
-        bytes[0] = SPI_READ | accel::Register::OUT_X_L_G.addr();
-        let result = self.read_bytes(&mut bytes);
-        match result {
-            Ok(_) => {
-                let x: u16 = (bytes[2] as u16) << 8 | bytes[1] as u16;
-                let y: u16 = (bytes[4] as u16) << 8 | bytes[3] as u16;
-                let z: u16 = (bytes[6] as u16) << 8 | bytes[5] as u16;
-                // if (_autoCalc) {
-                //     ax -= aBiasRaw[X_AXIS];
-                //     ay -= aBiasRaw[Y_AXIS];
-                //     az -= aBiasRaw[Z_AXIS];
-                // }
-                (x, y, z)
-            }
-            _ => (0, 0, 0),
-        }
+    pub fn read_gyro(&mut self) -> (f32, f32, f32) {
+        self.read_sensor(accel::Register::OUT_X_L_G.addr(), self.gyro.scale.sensitivity())
     }
 
     pub fn read_gyro_for(&mut self, axis: Axis) -> u16 {
