@@ -53,7 +53,8 @@ where
         Ok(buffer[1])
     }
 
-    fn read_bytes(&mut self, bytes: &mut [u8]) -> Result<(), Self::Error> {
+    fn read_bytes(&mut self, addr: u8, bytes: &mut [u8]) -> Result<(), Self::Error> {
+        bytes[0] = SPI_READ | addr;
         self.cs.set_low().map_err(Error::Pin)?;
         self.spi.transfer(bytes).map_err(Error::Comm)?;
         self.cs.set_high().map_err(Error::Pin)?;
