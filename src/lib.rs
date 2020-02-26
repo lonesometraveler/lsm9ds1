@@ -45,24 +45,6 @@ pub struct LSM9DS1<SPI, CS> {
     gyro: GyroSettings,
 }
 
-// pub mod interface;
-// enum Interfaces<IF: interface::CommunicationInterface> {
-//     SpiMode(IF),
-//     I2cMode(IF),
-// }
-
-// impl<IF> Interfaces<IF> {
-//     fn inner_mut(&mut self) -> &mut IF
-//     where
-//         IF: interface::CommunicationInterface,
-//     {
-//         match self {
-//             Interfaces::SpiMode(ref mut inner) => inner,
-//             Interfaces::I2cMode(ref mut inner) => inner,
-//         }
-//     }
-// }
-
 impl<SPI, CS, CommE, PinE> LSM9DS1<SPI, CS>
 where
     SPI: Transfer<u8, Error = CommE> + Write<u8, Error = CommE>,
@@ -222,12 +204,12 @@ where
         )
     }
 
-    // pub fn mag_available(&mut self) -> bool {
-    //     match self.read_register(mag::Register::STATUS_REG_M.addr()) {
-    //         Ok(x) if x & 0x01 > 0 => true,
-    //         _ => false,
-    //     }
-    // }
+    pub fn mag_available(&mut self) -> bool {
+        match self.read_register(register::Mag::STATUS_REG_M.addr()) {
+            Ok(x) if x & 0x01 > 0 => true,
+            _ => false,
+        }
+    }
 
     fn write_register(&mut self, addr: u8, value: u8) -> Result<(), Error<CommE, PinE>> {
         let bytes = [addr, value];
