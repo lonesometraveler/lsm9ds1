@@ -1,6 +1,5 @@
 use super::CommunicationInterface;
 use embedded_hal::{blocking::spi::Transfer, blocking::spi::Write, digital::v2::OutputPin};
-// use crate::Error;
 
 /// R/W bit should be high for SPI Read operation
 const SPI_READ: u8 = 0x80;

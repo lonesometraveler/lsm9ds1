@@ -4,17 +4,21 @@ use embedded_hal::{blocking::spi::Transfer, blocking::spi::Write, digital::v2::O
 
 pub mod accel;
 pub mod gyro;
-// mod mag;
+pub mod mag;
 pub mod register;
 
 use accel::AccelSettings;
 use gyro::GyroSettings;
+use mag::MagSettings;
+
+mod interface;
+use interface::*;
 
 /// R/W bit should be high for SPI Read operation
 const SPI_READ: u8 = 0x80;
 /// Accelerometer/Gyroscope's ID
 const WHO_AM_I_AG: u8 = 0x68;
-/// Magnetonomer's ID
+/// Magnetometer's ID
 const WHO_AM_I_M: u8 = 0x3D;
 
 /// temperature scale
@@ -31,6 +35,16 @@ pub enum Error<CommE, PinE> {
     Pin(PinE),
 }
 
+impl<CommE, PinE> From<spi::Error<CommE, PinE>> for Error<CommE, PinE> {
+    fn from(err: spi::Error<CommE, PinE>) -> Error<CommE, PinE> {
+        // Error::Parse(err)
+        match err {
+            spi::Error::Comm(x) => Error::Comm(x),
+            spi::Error::Pin(x) => Error::Pin(x),
+        }
+    }
+}
+
 /// Axis selection
 pub enum Axis {
     X,
@@ -39,10 +53,10 @@ pub enum Axis {
 }
 
 pub struct LSM9DS1<SPI, CS> {
-    spi: SPI,
-    cs: CS,
+    peripheral: SpiInterface<SPI, CS>,
     accel: AccelSettings,
     gyro: GyroSettings,
+    mag: MagSettings,
 }
 
 impl<SPI, CS, CommE, PinE> LSM9DS1<SPI, CS>
@@ -54,48 +68,72 @@ where
     where
         CS: OutputPin<Error = PinE>,
     {
-        let mut this = Self {
-            spi,
-            cs,
+        let this = Self {
+            peripheral: SpiInterface::new(spi, cs),
             accel: AccelSettings::new(),
             gyro: GyroSettings::new(),
+            mag: MagSettings::new(),
         };
-        this.cs.set_high().map_err(Error::Pin)?;
         Ok(this)
     }
 
     pub fn accel_is_reacheable(&mut self) -> bool {
-        match self.read_register(register::AG::WHO_AM_I.addr()) {
+        match self.peripheral.read_register(register::AG::WHO_AM_I.addr()) {
             Ok(x) if x == WHO_AM_I_AG => true,
             _ => false,
         }
     }
 
     pub fn mag_is_reacheable(&mut self) -> bool {
-        match self.read_register(register::Mag::WHO_AM_I.addr()) {
+        match self
+            .peripheral
+            .read_register(register::Mag::WHO_AM_I.addr())
+        {
             Ok(x) if x == WHO_AM_I_M => true,
             _ => false,
         }
     }
 
     pub fn init_accel(&mut self) -> Result<(), Error<CommE, PinE>> {
-        self.write_register(register::AG::CTRL_REG5_XL.addr(), self.accel.ctrl_reg5_xl())?;
-        self.write_register(register::AG::CTRL_REG6_XL.addr(), self.accel.ctrl_reg6_xl())?;
-        self.write_register(register::AG::CTRL_REG7_XL.addr(), self.accel.ctrl_reg7_xl())?;
+        self.peripheral
+            .write_register(register::AG::CTRL_REG5_XL.addr(), self.accel.ctrl_reg5_xl())?;
+        self.peripheral
+            .write_register(register::AG::CTRL_REG6_XL.addr(), self.accel.ctrl_reg6_xl())?;
+        self.peripheral
+            .write_register(register::AG::CTRL_REG7_XL.addr(), self.accel.ctrl_reg7_xl())?;
         Ok(())
     }
 
     pub fn init_gyro(&mut self) -> Result<(), Error<CommE, PinE>> {
-        self.write_register(register::AG::CTRL_REG1_G.addr(), self.gyro.crtl_reg1_g())?;
-        self.write_register(register::AG::CTRL_REG2_G.addr(), self.gyro.crtl_reg2_g())?;
-        self.write_register(register::AG::CTRL_REG3_G.addr(), self.gyro.crtl_reg3_g())?;
-        self.write_register(register::AG::CTRL_REG4.addr(), self.gyro.ctrl_reg4())?;
+        self.peripheral
+            .write_register(register::AG::CTRL_REG1_G.addr(), self.gyro.crtl_reg1_g())?;
+        self.peripheral
+            .write_register(register::AG::CTRL_REG2_G.addr(), self.gyro.crtl_reg2_g())?;
+        self.peripheral
+            .write_register(register::AG::CTRL_REG3_G.addr(), self.gyro.crtl_reg3_g())?;
+        self.peripheral
+            .write_register(register::AG::CTRL_REG4.addr(), self.gyro.ctrl_reg4())?;
+        Ok(())
+    }
+
+    pub fn init_mag(&mut self) -> Result<(), Error<CommE, PinE>> {
+        self.peripheral
+            .write_register(register::Mag::CTRL_REG1_M.addr(), self.mag.ctrl_reg1_m())?;
+        self.peripheral
+            .write_register(register::Mag::CTRL_REG2_M.addr(), self.mag.ctrl_reg2_m())?;
+        self.peripheral
+            .write_register(register::Mag::CTRL_REG3_M.addr(), self.mag.ctrl_reg3_m())?;
+        self.peripheral
+            .write_register(register::Mag::CTRL_REG4_M.addr(), self.mag.ctrl_reg4_m())?;
+        self.peripheral
+            .write_register(register::Mag::CTRL_REG5_M.addr(), self.mag.ctrl_reg5_m())?;
         Ok(())
     }
 
     pub fn set_accel_scale(&mut self, scale: accel::AccelScale) -> Result<(), Error<CommE, PinE>> {
         self.accel.scale = scale;
-        self.write_register(register::AG::CTRL_REG6_XL.addr(), self.accel.ctrl_reg6_xl())?;
+        self.peripheral
+            .write_register(register::AG::CTRL_REG6_XL.addr(), self.accel.ctrl_reg6_xl())?;
         Ok(())
     }
 
@@ -104,7 +142,8 @@ where
         sample_rate: accel::AccelODR,
     ) -> Result<(), Error<CommE, PinE>> {
         self.accel.sample_rate = sample_rate;
-        self.write_register(register::AG::CTRL_REG6_XL.addr(), self.accel.ctrl_reg6_xl())?;
+        self.peripheral
+            .write_register(register::AG::CTRL_REG6_XL.addr(), self.accel.ctrl_reg6_xl())?;
         Ok(())
     }
 
@@ -113,7 +152,8 @@ where
         bandwidth_selection: accel::AccelBandwidthSelection,
     ) -> Result<(), Error<CommE, PinE>> {
         self.accel.bandwidth_selection = bandwidth_selection;
-        self.write_register(register::AG::CTRL_REG6_XL.addr(), self.accel.ctrl_reg6_xl())?;
+        self.peripheral
+            .write_register(register::AG::CTRL_REG6_XL.addr(), self.accel.ctrl_reg6_xl())?;
         Ok(())
     }
 
@@ -122,7 +162,8 @@ where
         bandwidth: accel::AccelBandwidth,
     ) -> Result<(), Error<CommE, PinE>> {
         self.accel.bandwidth = bandwidth;
-        self.write_register(register::AG::CTRL_REG6_XL.addr(), self.accel.ctrl_reg6_xl())?;
+        self.peripheral
+            .write_register(register::AG::CTRL_REG6_XL.addr(), self.accel.ctrl_reg6_xl())?;
         Ok(())
     }
 
@@ -132,27 +173,47 @@ where
             Axis::Y => self.accel.enable_y = enabled,
             Axis::Z => self.accel.enable_z = enabled,
         }
-        self.write_register(register::AG::CTRL_REG5_XL.addr(), self.accel.ctrl_reg5_xl())?;
+        self.peripheral
+            .write_register(register::AG::CTRL_REG5_XL.addr(), self.accel.ctrl_reg5_xl())?;
         Ok(())
     }
 
     pub fn accel_available(&mut self) -> bool {
-        match self.read_register(register::AG::STATUS_REG_1.addr()) {
+        match self
+            .peripheral
+            .read_register(register::AG::STATUS_REG_1.addr())
+        {
             Ok(x) if x & 0x01 > 0 => true,
             _ => false,
         }
     }
 
     pub fn gyro_available(&mut self) -> bool {
-        match self.read_register(register::AG::STATUS_REG_1.addr()) {
+        match self
+            .peripheral
+            .read_register(register::AG::STATUS_REG_1.addr())
+        {
             Ok(x) if x & 0x02 > 0 => true,
             _ => false,
         }
     }
 
     pub fn temp_available(&mut self) -> bool {
-        match self.read_register(register::AG::STATUS_REG_1.addr()) {
+        match self
+            .peripheral
+            .read_register(register::AG::STATUS_REG_1.addr())
+        {
             Ok(x) if x & 0x04 > 0 => true,
+            _ => false,
+        }
+    }
+
+    pub fn mag_available(&mut self) -> bool {
+        match self
+            .peripheral
+            .read_register(register::Mag::STATUS_REG_M.addr())
+        {
+            Ok(x) if x & 0x01 > 0 => true,
             _ => false,
         }
     }
@@ -164,7 +225,7 @@ where
     ) -> Result<(f32, f32, f32), Error<CommE, PinE>> {
         let mut bytes = [0u8; 7];
         bytes[0] = SPI_READ | addr;
-        self.read_bytes(&mut bytes)?;
+        self.peripheral.read_bytes(&mut bytes)?;
 
         let x: i16 = (bytes[2] as i16) << 8 | bytes[1] as i16;
         let y: i16 = (bytes[4] as i16) << 8 | bytes[3] as i16;
@@ -192,7 +253,7 @@ where
     pub fn read_temp(&mut self) -> Result<f32, Error<CommE, PinE>> {
         let mut bytes = [0u8; 3];
         bytes[0] = SPI_READ | register::AG::OUT_TEMP_L.addr();
-        self.read_bytes(&mut bytes)?;
+        self.peripheral.read_bytes(&mut bytes)?;
         let result: i16 = (bytes[2] as i16) << 8 | bytes[1] as i16;
         Ok((result as f32) / TEMP_SCALE + TEMP_BIAS)
     }
@@ -204,37 +265,11 @@ where
         )
     }
 
-    pub fn mag_available(&mut self) -> bool {
-        match self.read_register(register::Mag::STATUS_REG_M.addr()) {
-            Ok(x) if x & 0x01 > 0 => true,
-            _ => false,
-        }
-    }
-
-    fn write_register(&mut self, addr: u8, value: u8) -> Result<(), Error<CommE, PinE>> {
-        let bytes = [addr, value];
-        self.cs.set_low().map_err(Error::Pin)?;
-        self.spi.write(&bytes).map_err(Error::Comm)?;
-        self.cs.set_high().map_err(Error::Pin)?;
-        Ok(())
-    }
-
-    fn read_register(&mut self, addr: u8) -> Result<u8, Error<CommE, PinE>> {
-        let mut buffer = [0u8; 2];
-        buffer[0] = SPI_READ | (addr & 0x3F);
-        self.cs.set_low().map_err(Error::Pin)?;
-        self.spi.transfer(&mut buffer).map_err(Error::Comm)?;
-        self.cs.set_high().map_err(Error::Pin)?;
-        Ok(buffer[1])
-    }
-
-    fn read_bytes(&mut self, bytes: &mut [u8]) -> Result<(), Error<CommE, PinE>> {
-        // let mut bytes = [0u8; 7];
-        // bytes[0] = SPI_READ | (sub_address & 0x3F);
-        self.cs.set_low().map_err(Error::Pin)?;
-        self.spi.transfer(bytes).map_err(Error::Comm)?;
-        self.cs.set_high().map_err(Error::Pin)?;
-        Ok(())
+    pub fn read_mag(&mut self) -> Result<(f32, f32, f32), Error<CommE, PinE>> {
+        self.read_sensor(
+            register::Mag::OUT_X_L_M.addr(),
+            1.0, // TODO: verify
+        )
     }
 }
 
