@@ -14,8 +14,6 @@ use mag::MagSettings;
 mod interface;
 use interface::*;
 
-/// R/W bit should be high for SPI Read operation
-const SPI_READ: u8 = 0x80;
 /// Accelerometer/Gyroscope's ID
 const WHO_AM_I_AG: u8 = 0x68;
 /// Magnetometer's ID
@@ -35,12 +33,11 @@ pub enum Error<CommE, PinE> {
     Pin(PinE),
 }
 
-impl<CommE, PinE> From<spi::Error<CommE, PinE>> for Error<CommE, PinE> {
-    fn from(err: spi::Error<CommE, PinE>) -> Error<CommE, PinE> {
-        // Error::Parse(err)
+impl<CommE, PinE> From<interface::Error<CommE, PinE>> for Error<CommE, PinE> {
+    fn from(err: interface::Error<CommE, PinE>) -> Error<CommE, PinE> {
         match err {
-            spi::Error::Comm(x) => Error::Comm(x),
-            spi::Error::Pin(x) => Error::Pin(x),
+            interface::Error::Comm(x) => Error::Comm(x),
+            interface::Error::Pin(x) => Error::Pin(x),
         }
     }
 }
@@ -53,7 +50,7 @@ pub enum Axis {
 }
 
 pub struct LSM9DS1<SPI, CS> {
-    peripheral: SpiInterface<SPI, CS>,
+    peripheral: interface::Selection<SPI, CS>,
     accel: AccelSettings,
     gyro: GyroSettings,
     mag: MagSettings,
@@ -63,13 +60,11 @@ impl<SPI, CS, CommE, PinE> LSM9DS1<SPI, CS>
 where
     SPI: Transfer<u8, Error = CommE> + Write<u8, Error = CommE>,
     CS: OutputPin<Error = PinE>,
+    // I2C: WriteRead<Error = E> + Write<Error = E>,
 {
-    pub fn new(spi: SPI, cs: CS) -> Result<LSM9DS1<SPI, CS>, Error<CommE, PinE>>
-    where
-        CS: OutputPin<Error = PinE>,
-    {
+    pub fn new(spi: SPI, cs: CS) -> Result<LSM9DS1<SPI, CS>, Error<CommE, PinE>> {
         let this = Self {
-            peripheral: SpiInterface::new(spi, cs),
+            peripheral: Selection::SPI(SpiInterface::new(spi, cs)),
             accel: AccelSettings::new(),
             gyro: GyroSettings::new(),
             mag: MagSettings::new(),
@@ -224,8 +219,7 @@ where
         sensitivity: f32,
     ) -> Result<(f32, f32, f32), Error<CommE, PinE>> {
         let mut bytes = [0u8; 7];
-        bytes[0] = SPI_READ | addr;
-        self.peripheral.read_bytes(&mut bytes)?;
+        self.peripheral.read_bytes(addr, &mut bytes)?;
 
         let x: i16 = (bytes[2] as i16) << 8 | bytes[1] as i16;
         let y: i16 = (bytes[4] as i16) << 8 | bytes[3] as i16;
@@ -252,8 +246,8 @@ where
 
     pub fn read_temp(&mut self) -> Result<f32, Error<CommE, PinE>> {
         let mut bytes = [0u8; 3];
-        bytes[0] = SPI_READ | register::AG::OUT_TEMP_L.addr();
-        self.peripheral.read_bytes(&mut bytes)?;
+        self.peripheral
+            .read_bytes(register::AG::OUT_TEMP_L.addr(), &mut bytes)?;
         let result: i16 = (bytes[2] as i16) << 8 | bytes[1] as i16;
         Ok((result as f32) / TEMP_SCALE + TEMP_BIAS)
     }
@@ -270,13 +264,5 @@ where
             register::Mag::OUT_X_L_M.addr(),
             1.0, // TODO: verify
         )
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
     }
 }
