@@ -1,43 +1,199 @@
 #![allow(dead_code, non_camel_case_types)]
 
-/// LSM9DS1 Magnetometer Registers
-#[allow(non_camel_case_types)]
-#[derive(Clone, Copy)]
-pub enum Register {
-    /// This register is a 16-bit register and represents the X offset used to compensate environmental effects.
-    OFFSET_X_REG_L_M = 0x05,
-    OFFSET_X_REG_H_M = 0x06,
-    /// This register is a 16-bit register and represents the Y offset used to compensate environmental effects.
-    OFFSET_Y_REG_L_M = 0x07,
-    OFFSET_Y_REG_H_M = 0x08,
-    /// This register is a 16-bit register and represents the Z offset used to compensate environmental effects.
-    OFFSET_Z_REG_L_M = 0x09,
-    OFFSET_Z_REG_H_M = 0x0A,
-    /// Device identification register.
-    WHO_AM_I = 0x0F,
-    CTRL_REG1_M = 0x20,
-    CTRL_REG2_M = 0x21,
-    CTRL_REG3_M = 0x22,
-    CTRL_REG4_M = 0x23,
-    CTRL_REG5_M = 0x24,
-    STATUS_REG_M = 0x27,
-    /// Magnetometer X-axis data output. The value of the magnetic field is expressed as two’s complement.
-    OUT_X_L_M = 0x28,
-    OUT_X_H_M = 0x29,
-    /// Magnetometer Y-axis data output. The value of the magnetic field is expressed as two’s complement.
-    OUT_Y_L_M = 0x2A,
-    OUT_Y_H_M = 0x2B,
-    /// Magnetometer Z-axis data output. The value of the magnetic field is expressed as two’s complement.
-    OUT_Z_L_M = 0x2C,
-    OUT_Z_H_M = 0x2D,
-    INT_CFG_M = 0x30,
-    INT_SRC_M = 0x31,
-    INT_THS_L_M = 0x32,
-    INT_THS_H_M = 0x33,
+/// Magnetometer settings
+#[derive(Debug)]
+pub struct MagSettings {
+    pub enabled: bool,
+    pub sample_rate: MagODR,
+    pub temp_compensation: TempComp,
+    pub x_y_performance: OpModeXY,
+    pub scale: MagScale,
+    pub system_op: SysOpMode,
+    pub low_power: LowPowerMode,
+    pub z_performance: OpModeZ,
 }
 
-impl Register {
-    pub fn addr(self) -> u8 {
+impl Default for MagSettings {
+    fn default() -> Self {
+        MagSettings {
+            enabled: true,
+            temp_compensation: TempComp::Disabled,
+            x_y_performance: OpModeXY::Low,
+            sample_rate: MagODR::ODR_10,
+            scale: MagScale::FS_4,
+            system_op: SysOpMode::Continuous,
+            low_power: LowPowerMode::Disabled,
+            z_performance: OpModeZ::Low,
+        }
+    }
+}
+
+impl MagSettings {
+    pub fn new() -> MagSettings {
+        Default::default()
+    }
+
+    /// CTRL_REG1_M (Default value: 0x10)
+    /// [TEMP_COMP][OM1][OM0][DO2][DO1][DO0][0][ST]
+    /// TEMP_COMP - Temperature compensation
+    /// OM[1:0] - X & Y axes op mode selection
+    /// 00:low-power, 01:medium performance
+    /// 10: high performance, 11:ultra-high performance
+    /// DO[2:0] - Output data rate selection
+    /// ST - Self-test enable // TODO
+    pub fn ctrl_reg1_m(&self) -> u8 {
+        self.temp_compensation.value() | self.x_y_performance.value() | self.sample_rate.value()
+    }
+
+    /// CTRL_REG2_M (Default value 0x00)
+    /// [0][FS1][FS0][0][REBOOT][SOFT_RST][0][0]
+    /// FS[1:0] - Full-scale configuration
+    /// REBOOT - Reboot memory content (0:normal, 1:reboot) // TODO
+    /// SOFT_RST - Reset config and user registers (0:default, 1:reset) // TODO
+    pub fn ctrl_reg2_m(&self) -> u8 {
+        self.scale.value()
+    }
+
+    /// CTRL_REG3_M (Default value: 0x03)
+    /// [I2C_DISABLE][0][LP][0][0][SIM][MD1][MD0]
+    /// I2C_DISABLE - Disable I2C interace (0:enable, 1:disable) // TODO
+    /// LP - Low-power mode cofiguration (1:enable)
+    /// SIM - SPI mode selection (0:write-only, 1:read/write enable) // TODO
+    /// MD[1:0] - Operating mode
+    /// 00:continuous conversion, 01:single-conversion,
+    /// 10,11: Power-down
+    pub fn ctrl_reg3_m(&self) -> u8 {
+        self.system_op.value() | self.low_power.value()
+    }
+
+    /// CTRL_REG4_M (Default value: 0x00)
+    /// [0][0][0][0][OMZ1][OMZ0][BLE][0]
+    /// OMZ[1:0] - Z-axis operative mode selection
+    /// 00:low-power mode, 01:medium performance
+    /// 10:high performance, 10:ultra-high performance
+    /// BLE - Big/little endian data // TODO
+    pub fn ctrl_reg4_m(&self) -> u8 {
+        self.z_performance.value()
+    }
+
+    /// CTRL_REG5_M (Default value: 0x00)
+    /// [0][BDU][0][0][0][0][0][0]
+    /// BDU - Block data update for magnetic data // TODO
+    /// 0:continuous, 1:not updated until MSB/LSB are read
+    pub fn ctrl_reg5_m(&self) -> u8 {
+        0 // TODO
+    }
+}
+
+/// Temperature compensation enable. Default value: 0 (Refer to Table 109)
+#[derive(Debug, Clone, Copy)]
+pub enum TempComp {
+    Disabled = 0,
+    Enabled = 1,
+}
+
+impl TempComp {
+    pub fn value(self) -> u8 {
+        (self as u8) << 7
+    }
+}
+
+/// X and Y axes operative mode selection. Default value: 00 (Refer to Table 110)
+#[derive(Debug, Clone, Copy)]
+pub enum OpModeXY {
+    Low = 0b00,
+    Medium = 0b01,
+    High = 0b10,
+    UltraHigh = 0b11,
+}
+
+impl OpModeXY {
+    pub fn value(self) -> u8 {
+        (self as u8) << 5
+    }
+}
+
+/// Z axe operative mode selection. Default value: 00 (Refer to Table 110)
+#[derive(Debug, Clone, Copy)]
+pub enum OpModeZ {
+    Low = 0b00,
+    Medium = 0b01,
+    High = 0b10,
+    UltraHigh = 0b11,
+}
+
+impl OpModeZ {
+    pub fn value(self) -> u8 {
+        (self as u8) << 2
+    }
+}
+
+/// Output data rate selection. Default value: 100 (Refer to Table 111)
+#[derive(Debug, Clone, Copy)]
+pub enum MagODR {
+    ODR_0_625 = 0b000,
+    ODR_1_25 = 0b001,
+    ODR_2_5 = 0b010,
+    ODR_5 = 0b011,
+    ODR_10 = 0b100,
+    ODR_20 = 0b101,
+    ODR_40 = 0b110,
+    ODR_80 = 0b111,
+}
+
+impl MagODR {
+    pub fn value(self) -> u8 {
+        (self as u8) << 2
+    }
+}
+
+/// Full-scale selection. Default value: 00. See table 114
+#[derive(Debug, Clone, Copy)]
+pub enum MagScale {
+    FS_4 = 0b00,
+    FS_8 = 0b01,
+    FS_12 = 0b10,
+    FS_16 = 0b11,
+}
+
+impl MagScale {
+    pub fn value(self) -> u8 {
+        (self as u8) << 5
+    }
+
+    pub fn sensitivity(self) -> f32 {
+        match self {
+            MagScale::FS_4 => 0.000_14,
+            MagScale::FS_8 => 0.000_29,
+            MagScale::FS_12 => 0.000_43,
+            MagScale::FS_16 => 0.000_58,
+        }
+    }
+}
+
+/// Operating mode selection. Default value: 11 Refer to Table 117.
+#[derive(Debug, Clone, Copy)]
+pub enum SysOpMode {
+    Continuous = 0b00,
+    Single = 0b01,
+    PowerDown = 0b11,
+}
+
+impl SysOpMode {
+    pub fn value(self) -> u8 {
         self as u8
+    }
+}
+
+/// Low Power Mode
+#[derive(Debug, Clone, Copy)]
+pub enum LowPowerMode {
+    Disabled = 0,
+    Enabled = 1,
+}
+
+impl LowPowerMode {
+    pub fn value(self) -> u8 {
+        (self as u8) << 5
     }
 }
