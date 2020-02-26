@@ -14,7 +14,7 @@ pub trait CommunicationInterface {
 
 pub enum Selection<SPI, CS> {
     SPI(SpiInterface<SPI, CS>),
-    // I2C(I2cInterface<B>)
+    // I2C(I2cInterface<I2C>)
 }
 
 #[derive(Debug)]
