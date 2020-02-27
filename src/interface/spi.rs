@@ -1,4 +1,4 @@
-use super::CommunicationInterface;
+use super::Interface;
 use embedded_hal::{blocking::spi::Transfer, blocking::spi::Write, digital::v2::OutputPin};
 
 /// R/W bit should be high for SPI Read operation
@@ -13,7 +13,7 @@ pub enum Error<CommE, PinE> {
     Pin(PinE),
 }
 
-/// This combines the SPI peripheral and a data/command pin
+/// This combines the SPI Interface and a data/command pin
 pub struct SpiInterface<SPI, CS> {
     spi: SPI,
     cs: CS,
@@ -29,7 +29,7 @@ where
     }
 }
 
-impl<SPI, CS, CommE, PinE> CommunicationInterface for SpiInterface<SPI, CS>
+impl<SPI, CS, CommE, PinE> Interface for SpiInterface<SPI, CS>
 where
     SPI: Transfer<u8, Error = CommE> + Write<u8, Error = CommE>,
     CS: OutputPin<Error = PinE>,
