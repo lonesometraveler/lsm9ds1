@@ -95,17 +95,17 @@ where
         self.interface.write_register(
             Sensor::Gyro,
             register::AG::CTRL_REG1_G.addr(),
-            self.gyro.crtl_reg1_g(),
+            self.gyro.ctrl_reg1_g(),
         )?;
         self.interface.write_register(
             Sensor::Gyro,
             register::AG::CTRL_REG2_G.addr(),
-            self.gyro.crtl_reg2_g(),
+            self.gyro.ctrl_reg2_g(),
         )?;
         self.interface.write_register(
             Sensor::Gyro,
             register::AG::CTRL_REG3_G.addr(),
-            self.gyro.crtl_reg3_g(),
+            self.gyro.ctrl_reg3_g(),
         )?;
         self.interface.write_register(
             Sensor::Gyro,
@@ -154,12 +154,52 @@ where
         Ok(())
     }
 
+    pub fn set_gyro_scale(&mut self, scale: gyro::GyroScale) -> Result<(), T::Error> {
+        self.gyro.scale = scale;
+        self.interface.write_register(
+            Sensor::Gyro,
+            register::AG::CTRL_REG1_G.addr(),
+            self.gyro.ctrl_reg1_g(),
+        )?;
+        Ok(())
+    }
+
+    pub fn set_mag_scale(&mut self, scale: mag::MagScale) -> Result<(), T::Error> {
+        self.mag.scale = scale;
+        self.interface.write_register(
+            Sensor::Magnetometer,
+            register::Mag::CTRL_REG2_M.addr(),
+            self.mag.ctrl_reg2_m(),
+        )?;
+        Ok(())
+    }
+
     pub fn set_accel_odr(&mut self, sample_rate: accel::AccelODR) -> Result<(), T::Error> {
         self.accel.sample_rate = sample_rate;
         self.interface.write_register(
             Sensor::Accelerometer,
             register::AG::CTRL_REG6_XL.addr(),
             self.accel.ctrl_reg6_xl(),
+        )?;
+        Ok(())
+    }
+
+    pub fn set_gyro_odr(&mut self, sample_rate: gyro::GyroODR) -> Result<(), T::Error> {
+        self.gyro.sample_rate = sample_rate;
+        self.interface.write_register(
+            Sensor::Gyro,
+            register::AG::CTRL_REG1_G.addr(),
+            self.gyro.ctrl_reg1_g(),
+        )?;
+        Ok(())
+    }
+
+    pub fn set_mag_odr(&mut self, sample_rate: mag::MagODR) -> Result<(), T::Error> {
+        self.mag.sample_rate = sample_rate;
+        self.interface.write_register(
+            Sensor::Magnetometer,
+            register::Mag::CTRL_REG1_M.addr(),
+            self.mag.ctrl_reg1_m(),
         )?;
         Ok(())
     }
@@ -204,7 +244,7 @@ where
         Ok(())
     }
 
-    pub fn accel_available(&mut self) -> bool {
+    pub fn accel_data_available(&mut self) -> bool {
         match self
             .interface
             .read_register(Sensor::Accelerometer, register::AG::STATUS_REG_1.addr())
@@ -214,7 +254,7 @@ where
         }
     }
 
-    pub fn gyro_available(&mut self) -> bool {
+    pub fn gyro_data_available(&mut self) -> bool {
         match self
             .interface
             .read_register(Sensor::Gyro, register::AG::STATUS_REG_1.addr())
@@ -224,7 +264,7 @@ where
         }
     }
 
-    pub fn temp_available(&mut self) -> bool {
+    pub fn temp_data_available(&mut self) -> bool {
         match self
             .interface
             .read_register(Sensor::Accelerometer, register::AG::STATUS_REG_1.addr())
@@ -234,7 +274,7 @@ where
         }
     }
 
-    pub fn mag_available(&mut self) -> bool {
+    pub fn mag_data_available(&mut self) -> bool {
         match self
             .interface
             .read_register(Sensor::Magnetometer, register::Mag::STATUS_REG_M.addr())
@@ -295,7 +335,7 @@ where
         self.read_sensor(
             Sensor::Magnetometer,
             register::Mag::OUT_X_L_M.addr(),
-            1.0, // TODO: verify
+            self.mag.scale.sensitivity(),
         )
     }
 }
