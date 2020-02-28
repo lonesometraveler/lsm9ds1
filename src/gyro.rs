@@ -53,7 +53,7 @@ impl GyroSettings {
     /// ODR_G[2:0] - Output data rate selection
     /// FS_G[1:0] - Gyroscope full-scale selection
     /// BW_G[1:0] - Gyroscope bandwidth selection
-    pub fn crtl_reg1_g(&self) -> u8 {
+    pub fn ctrl_reg1_g(&self) -> u8 {
         self.sample_rate.value() | self.scale.value() | self.bandwidth.value()
     }
 
@@ -61,7 +61,7 @@ impl GyroSettings {
     // [0][0][0][0][INT_SEL1][INT_SEL0][OUT_SEL1][OUT_SEL0]
     // INT_SEL[1:0] - INT selection configuration
     // OUT_SEL[1:0] - Out selection configuration
-    pub fn crtl_reg2_g(&self) -> u8 {
+    pub fn ctrl_reg2_g(&self) -> u8 {
         self.int_selection.value() | self.out_selection.value()
     }
 
@@ -70,7 +70,7 @@ impl GyroSettings {
     /// LP_mode - Low-power mode enable (0: disabled, 1: enabled)
     /// HP_EN - HPF enable (0:disabled, 1: enabled)
     /// HPCF_G[3:0] - HPF cutoff frequency
-    pub fn crtl_reg3_g(&self) -> u8 {
+    pub fn ctrl_reg3_g(&self) -> u8 {
         self.low_power_mode.value() | self.hpf_mode.value() | self.hpf_cutoff.value()
     }
 
