@@ -1,5 +1,6 @@
 #![allow(dead_code, non_camel_case_types)]
 
+/// Gyro settings
 #[derive(Debug)]
 pub struct GyroSettings {
     pub enable_x: bool,
@@ -44,6 +45,7 @@ impl Default for GyroSettings {
 }
 
 impl GyroSettings {
+    /// return the default setting
     pub fn new() -> GyroSettings {
         Default::default()
     }
@@ -57,10 +59,10 @@ impl GyroSettings {
         self.sample_rate.value() | self.scale.value() | self.bandwidth.value()
     }
 
-    // CTRL_REG2_G (Default value: 0x00)
-    // [0][0][0][0][INT_SEL1][INT_SEL0][OUT_SEL1][OUT_SEL0]
-    // INT_SEL[1:0] - INT selection configuration
-    // OUT_SEL[1:0] - Out selection configuration
+    /// CTRL_REG2_G (Default value: 0x00)
+    /// [0][0][0][0][INT_SEL1][INT_SEL0][OUT_SEL1][OUT_SEL0]
+    /// INT_SEL[1:0] - INT selection configuration
+    /// OUT_SEL[1:0] - Out selection configuration
     pub fn ctrl_reg2_g(&self) -> u8 {
         self.int_selection.value() | self.out_selection.value()
     }
@@ -130,6 +132,7 @@ impl GyroScale {
         (self as u8) << 3
     }
 
+    /// return Angular rate sensitivity depending on scale. see page 12.
     pub fn sensitivity(self) -> f32 {
         match self {
             GyroScale::G_FS_245DPS => 0.00875,

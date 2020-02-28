@@ -29,6 +29,7 @@ impl Default for MagSettings {
 }
 
 impl MagSettings {
+    /// return the default setting
     pub fn new() -> MagSettings {
         Default::default()
     }
@@ -161,6 +162,7 @@ impl MagScale {
         (self as u8) << 5
     }
 
+    /// return Magnetic sensitivity depending on scale. see page 12.
     pub fn sensitivity(self) -> f32 {
         match self {
             MagScale::FS_4 => 0.000_14,

@@ -29,18 +29,18 @@ impl Default for AccelSettings {
 }
 
 impl AccelSettings {
-    /// Create a setting
+    /// return the default setting
     pub fn new() -> AccelSettings {
         Default::default()
     }
 
-    ///    CTRL_REG5_XL (0x1F) (Default value: 0x38)
-    ///    [DEC_1][DEC_0][Zen_XL][Yen_XL][Zen_XL][0][0][0]
-    ///    DEC[0:1] - Decimation of accel data on OUT REG and FIFO.
-    ///    00: None, 01: 2 samples, 10: 4 samples 11: 8 samples
-    ///    Zen_XL - Z-axis output enabled
-    ///    Yen_XL - Y-axis output enabled
-    ///    Xen_XL - X-axis output enabled
+    /// CTRL_REG5_XL (0x1F) (Default value: 0x38)
+    /// [DEC_1][DEC_0][Zen_XL][Yen_XL][Zen_XL][0][0][0]
+    /// DEC[0:1] - Decimation of accel data on OUT REG and FIFO.
+    /// 00: None, 01: 2 samples, 10: 4 samples 11: 8 samples
+    /// Zen_XL - Z-axis output enabled
+    /// Yen_XL - Y-axis output enabled
+    /// Xen_XL - X-axis output enabled
     pub fn ctrl_reg5_xl(&self) -> u8 {
         let mut result = 0_u8;
         if self.enable_z {
@@ -97,6 +97,7 @@ impl AccelScale {
         (self as u8) << 3
     }
 
+    /// return Linear acceleration sensitivity depending on scale. see page 12.
     pub fn sensitivity(self) -> f32 {
         match self {
             AccelScale::LA_FS_2G => 0.000_061,

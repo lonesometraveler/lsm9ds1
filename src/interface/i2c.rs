@@ -36,7 +36,7 @@ impl MagAddress {
     }
 }
 
-/// I2C driver
+/// This holds `I2C` and AG and Mag addresses
 pub struct I2cInterface<I2C> {
     i2c: I2C,
     ag_addr: u8,
@@ -47,6 +47,7 @@ impl<I2C, CommE> I2cInterface<I2C>
 where
     I2C: WriteRead<Error = CommE> + Write<Error = CommE>,
 {
+    /// create Interface with `I2C` instance and AG and Mag addresses
     pub fn new(i2c: I2C, ag_addr: AgAddress, mag_addr: MagAddress) -> Self {
         Self {
             i2c,
@@ -56,6 +57,7 @@ where
     }
 }
 
+/// Implementation of `Interface`
 impl<I2C, CommE> Interface for I2cInterface<I2C>
 where
     I2C: WriteRead<Error = CommE> + Write<Error = CommE>,

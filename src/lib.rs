@@ -1,3 +1,17 @@
+//! A platform agnostic driver to interface with LSM9DS1 3D accelerometer, 3D gyroscope, 3D magnetometer sesor module
+//!
+//! This driver was built using [`embedded-hal`] traits.
+//!
+//! [`embedded-hal`]: https://docs.rs/embedded-hal/~0.2
+//!
+//! ### Datasheets
+//! - [LSM9DS1](https://www.st.com/resource/en/datasheet/lsm9ds1.pdf)
+//!
+//! # Examples
+//!```rust
+//! 
+//! 
+//! ```
 #![no_std]
 // #![deny(warnings, missing_docs)]
 pub mod accel;

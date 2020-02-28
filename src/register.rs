@@ -100,6 +100,7 @@ impl AG {
     }
 }
 
+/// LSM9DS1 Magnetometer (M) Registers
 #[allow(non_camel_case_types)]
 #[derive(Clone, Copy)]
 pub enum Mag {

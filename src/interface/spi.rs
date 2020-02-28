@@ -14,7 +14,7 @@ pub enum Error<CommE, PinE> {
     Pin(PinE),
 }
 
-/// This combines the SPI Interface and a data/command pin
+/// This combines the SPI Interface and chip select pins
 pub struct SpiInterface<SPI, AG, M> {
     spi: SPI,
     ag_cs: AG,
@@ -27,11 +27,13 @@ where
     AG: OutputPin<Error = PinE>,
     M: OutputPin<Error = PinE>,
 {
+    /// create Interface with `SPI` instance and AG and M chip select `OutputPin`s
     pub fn new(spi: SPI, ag_cs: AG, m_cs: M) -> Self {
         Self { spi, ag_cs, m_cs }
     }
 }
 
+/// Implementation of `Interface`
 impl<SPI, AG, M, CommE, PinE> Interface for SpiInterface<SPI, AG, M>
 where
     SPI: Transfer<u8, Error = CommE> + Write<u8, Error = CommE>,
