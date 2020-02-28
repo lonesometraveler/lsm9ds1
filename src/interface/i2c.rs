@@ -61,9 +61,9 @@ where
 {
     type Error = Error<CommE>;
 
-    fn write_register(&mut self, sensor: Sensor, addr: u8, value: u8) -> Result<(), Self::Error> {
+    fn write(&mut self, sensor: Sensor, addr: u8, value: u8) -> Result<(), Self::Error> {
         let sensor_addr = match sensor {
-            Sensor::Accelerometer | Sensor::Gyro => self.ag_addr,
+            Sensor::Accelerometer | Sensor::Gyro | Sensor::Temperature => self.ag_addr,
             Sensor::Magnetometer => self.mag_addr,
         };
         core::prelude::v1::Ok(
@@ -73,25 +73,14 @@ where
         )
     }
 
-    fn read_register(&mut self, sensor: Sensor, addr: u8) -> Result<u8, Self::Error> {
-        let mut bytes = [0u8; 1];
-        self.read_bytes(sensor, addr, &mut bytes)?;
-        Ok(bytes[0])
-    }
-
-    fn read_bytes(
-        &mut self,
-        sensor: Sensor,
-        addr: u8,
-        bytes: &mut [u8],
-    ) -> Result<(), Self::Error> {
+    fn read(&mut self, sensor: Sensor, addr: u8, buffer: &mut [u8]) -> Result<(), Self::Error> {
         let sensor_addr = match sensor {
-            Sensor::Accelerometer | Sensor::Gyro => self.ag_addr,
+            Sensor::Accelerometer | Sensor::Gyro | Sensor::Temperature => self.ag_addr,
             Sensor::Magnetometer => self.mag_addr,
         };
         core::prelude::v1::Ok(
             self.i2c
-                .write_read(sensor_addr, &[addr], bytes)
+                .write_read(sensor_addr, &[addr], buffer)
                 .map_err(Error::Comm)?,
         )
     }

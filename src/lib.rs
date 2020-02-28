@@ -9,8 +9,8 @@
 //!
 //! # Examples
 //!```rust
-//! 
-//! 
+//!
+//!
 //! ```
 #![no_std]
 // #![deny(warnings, missing_docs)]
@@ -66,38 +66,39 @@ where
         }
     }
 
-    pub fn accel_is_reacheable(&mut self) -> bool {
-        match self
-            .interface
-            .read_register(Sensor::Accelerometer, register::AG::WHO_AM_I.addr())
-        {
-            Ok(x) if x == WHO_AM_I_AG => true,
-            _ => false,
-        }
+    fn reachable(&mut self, sensor: Sensor) -> Result<bool, T::Error> {
+        let mut bytes = [0u8, 1];
+        let (who_am_i, register) = match sensor {
+            Sensor::Accelerometer | Sensor::Gyro | Sensor::Temperature => {
+                (WHO_AM_I_AG, register::AG::WHO_AM_I.addr())
+            }
+            Sensor::Magnetometer => (WHO_AM_I_M, register::Mag::WHO_AM_I.addr()),
+        };
+
+        self.interface.read(sensor, register, &mut bytes)?;
+        Ok(bytes[0] == who_am_i)
     }
 
-    pub fn mag_is_reacheable(&mut self) -> bool {
-        match self
-            .interface
-            .read_register(Sensor::Magnetometer, register::Mag::WHO_AM_I.addr())
-        {
-            Ok(x) if x == WHO_AM_I_M => true,
-            _ => false,
-        }
+    pub fn accel_is_reacheable(&mut self) -> Result<bool, T::Error> {
+        self.reachable(Sensor::Accelerometer)
+    }
+
+    pub fn mag_is_reacheable(&mut self) -> Result<bool, T::Error> {
+        self.reachable(Sensor::Magnetometer)
     }
 
     pub fn init_accel(&mut self) -> Result<(), T::Error> {
-        self.interface.write_register(
+        self.interface.write(
             Sensor::Accelerometer,
             register::AG::CTRL_REG5_XL.addr(),
             self.accel.ctrl_reg5_xl(),
         )?;
-        self.interface.write_register(
+        self.interface.write(
             Sensor::Accelerometer,
             register::AG::CTRL_REG6_XL.addr(),
             self.accel.ctrl_reg6_xl(),
         )?;
-        self.interface.write_register(
+        self.interface.write(
             Sensor::Accelerometer,
             register::AG::CTRL_REG7_XL.addr(),
             self.accel.ctrl_reg7_xl(),
@@ -106,22 +107,22 @@ where
     }
 
     pub fn init_gyro(&mut self) -> Result<(), T::Error> {
-        self.interface.write_register(
+        self.interface.write(
             Sensor::Gyro,
             register::AG::CTRL_REG1_G.addr(),
             self.gyro.ctrl_reg1_g(),
         )?;
-        self.interface.write_register(
+        self.interface.write(
             Sensor::Gyro,
             register::AG::CTRL_REG2_G.addr(),
             self.gyro.ctrl_reg2_g(),
         )?;
-        self.interface.write_register(
+        self.interface.write(
             Sensor::Gyro,
             register::AG::CTRL_REG3_G.addr(),
             self.gyro.ctrl_reg3_g(),
         )?;
-        self.interface.write_register(
+        self.interface.write(
             Sensor::Gyro,
             register::AG::CTRL_REG4.addr(),
             self.gyro.ctrl_reg4(),
@@ -130,27 +131,27 @@ where
     }
 
     pub fn init_mag(&mut self) -> Result<(), T::Error> {
-        self.interface.write_register(
+        self.interface.write(
             Sensor::Magnetometer,
             register::Mag::CTRL_REG1_M.addr(),
             self.mag.ctrl_reg1_m(),
         )?;
-        self.interface.write_register(
+        self.interface.write(
             Sensor::Magnetometer,
             register::Mag::CTRL_REG2_M.addr(),
             self.mag.ctrl_reg2_m(),
         )?;
-        self.interface.write_register(
+        self.interface.write(
             Sensor::Magnetometer,
             register::Mag::CTRL_REG3_M.addr(),
             self.mag.ctrl_reg3_m(),
         )?;
-        self.interface.write_register(
+        self.interface.write(
             Sensor::Magnetometer,
             register::Mag::CTRL_REG4_M.addr(),
             self.mag.ctrl_reg4_m(),
         )?;
-        self.interface.write_register(
+        self.interface.write(
             Sensor::Magnetometer,
             register::Mag::CTRL_REG5_M.addr(),
             self.mag.ctrl_reg5_m(),
@@ -160,7 +161,7 @@ where
 
     pub fn set_accel_scale(&mut self, scale: accel::AccelScale) -> Result<(), T::Error> {
         self.accel.scale = scale;
-        self.interface.write_register(
+        self.interface.write(
             Sensor::Accelerometer,
             register::AG::CTRL_REG6_XL.addr(),
             self.accel.ctrl_reg6_xl(),
@@ -170,7 +171,7 @@ where
 
     pub fn set_gyro_scale(&mut self, scale: gyro::GyroScale) -> Result<(), T::Error> {
         self.gyro.scale = scale;
-        self.interface.write_register(
+        self.interface.write(
             Sensor::Gyro,
             register::AG::CTRL_REG1_G.addr(),
             self.gyro.ctrl_reg1_g(),
@@ -180,7 +181,7 @@ where
 
     pub fn set_mag_scale(&mut self, scale: mag::MagScale) -> Result<(), T::Error> {
         self.mag.scale = scale;
-        self.interface.write_register(
+        self.interface.write(
             Sensor::Magnetometer,
             register::Mag::CTRL_REG2_M.addr(),
             self.mag.ctrl_reg2_m(),
@@ -190,7 +191,7 @@ where
 
     pub fn set_accel_odr(&mut self, sample_rate: accel::AccelODR) -> Result<(), T::Error> {
         self.accel.sample_rate = sample_rate;
-        self.interface.write_register(
+        self.interface.write(
             Sensor::Accelerometer,
             register::AG::CTRL_REG6_XL.addr(),
             self.accel.ctrl_reg6_xl(),
@@ -200,7 +201,7 @@ where
 
     pub fn set_gyro_odr(&mut self, sample_rate: gyro::GyroODR) -> Result<(), T::Error> {
         self.gyro.sample_rate = sample_rate;
-        self.interface.write_register(
+        self.interface.write(
             Sensor::Gyro,
             register::AG::CTRL_REG1_G.addr(),
             self.gyro.ctrl_reg1_g(),
@@ -210,7 +211,7 @@ where
 
     pub fn set_mag_odr(&mut self, sample_rate: mag::MagODR) -> Result<(), T::Error> {
         self.mag.sample_rate = sample_rate;
-        self.interface.write_register(
+        self.interface.write(
             Sensor::Magnetometer,
             register::Mag::CTRL_REG1_M.addr(),
             self.mag.ctrl_reg1_m(),
@@ -223,7 +224,7 @@ where
         bandwidth_selection: accel::AccelBandwidthSelection,
     ) -> Result<(), T::Error> {
         self.accel.bandwidth_selection = bandwidth_selection;
-        self.interface.write_register(
+        self.interface.write(
             Sensor::Accelerometer,
             register::AG::CTRL_REG6_XL.addr(),
             self.accel.ctrl_reg6_xl(),
@@ -236,7 +237,7 @@ where
         bandwidth: accel::AccelBandwidth,
     ) -> Result<(), T::Error> {
         self.accel.bandwidth = bandwidth;
-        self.interface.write_register(
+        self.interface.write(
             Sensor::Accelerometer,
             register::AG::CTRL_REG6_XL.addr(),
             self.accel.ctrl_reg6_xl(),
@@ -250,7 +251,7 @@ where
             Axis::Y => self.accel.enable_y = enabled,
             Axis::Z => self.accel.enable_z = enabled,
         }
-        self.interface.write_register(
+        self.interface.write(
             Sensor::Accelerometer,
             register::AG::CTRL_REG5_XL.addr(),
             self.accel.ctrl_reg5_xl(),
@@ -258,43 +259,43 @@ where
         Ok(())
     }
 
-    pub fn accel_data_available(&mut self) -> bool {
-        match self
-            .interface
-            .read_register(Sensor::Accelerometer, register::AG::STATUS_REG_1.addr())
-        {
-            Ok(x) if x & 0x01 > 0 => true,
-            _ => false,
+    fn data_available(&mut self, sensor: Sensor) -> Result<u8, T::Error> {
+        let register = match sensor {
+            Sensor::Accelerometer | Sensor::Gyro | Sensor::Temperature => {
+                register::AG::STATUS_REG_1.addr()
+            }
+            Sensor::Magnetometer => register::Mag::STATUS_REG_M.addr(),
+        };
+        let mut bytes = [0u8, 1];
+        self.interface.read(sensor, register, &mut bytes)?;
+        Ok(bytes[0])
+    }
+
+    pub fn accel_data_available(&mut self) -> Result<bool, T::Error> {
+        match self.data_available(Sensor::Accelerometer)? {
+            x if x & 0x01 > 0 => Ok(true),
+            _ => Ok(false),
         }
     }
 
-    pub fn gyro_data_available(&mut self) -> bool {
-        match self
-            .interface
-            .read_register(Sensor::Gyro, register::AG::STATUS_REG_1.addr())
-        {
-            Ok(x) if x & 0x02 > 0 => true,
-            _ => false,
+    pub fn gyro_data_available(&mut self) -> Result<bool, T::Error> {
+        match self.data_available(Sensor::Gyro)? {
+            x if x & 0x02 > 0 => Ok(true),
+            _ => Ok(false),
         }
     }
 
-    pub fn temp_data_available(&mut self) -> bool {
-        match self
-            .interface
-            .read_register(Sensor::Accelerometer, register::AG::STATUS_REG_1.addr())
-        {
-            Ok(x) if x & 0x04 > 0 => true,
-            _ => false,
+    pub fn temp_data_available(&mut self) -> Result<bool, T::Error> {
+        match self.data_available(Sensor::Temperature)? {
+            x if x & 0x04 > 0 => Ok(true),
+            _ => Ok(false),
         }
     }
 
-    pub fn mag_data_available(&mut self) -> bool {
-        match self
-            .interface
-            .read_register(Sensor::Magnetometer, register::Mag::STATUS_REG_M.addr())
-        {
-            Ok(x) if x & 0x01 > 0 => true,
-            _ => false,
+    pub fn mag_data_available(&mut self) -> Result<bool, T::Error> {
+        match self.data_available(Sensor::Magnetometer)? {
+            x if x & 0x01 > 0 => Ok(true),
+            _ => Ok(false),
         }
     }
 
@@ -305,7 +306,7 @@ where
         sensitivity: f32,
     ) -> Result<(f32, f32, f32), T::Error> {
         let mut bytes = [0u8; 6];
-        self.interface.read_bytes(sensor, addr, &mut bytes)?;
+        self.interface.read(sensor, addr, &mut bytes)?;
         let x: i16 = (bytes[1] as i16) << 8 | bytes[0] as i16;
         let y: i16 = (bytes[3] as i16) << 8 | bytes[2] as i16;
         let z: i16 = (bytes[5] as i16) << 8 | bytes[4] as i16;
@@ -327,7 +328,7 @@ where
 
     pub fn read_temp(&mut self) -> Result<f32, T::Error> {
         let mut bytes = [0u8; 2];
-        self.interface.read_bytes(
+        self.interface.read(
             Sensor::Accelerometer,
             register::AG::OUT_TEMP_L.addr(),
             &mut bytes,
