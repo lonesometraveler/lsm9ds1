@@ -60,21 +60,22 @@ where
     }
 
     fn read_register(&mut self, sensor: Sensor, addr: u8) -> Result<u8, Self::Error> {
-        let mut buffer = [0u8; 2];
-        buffer[0] = SPI_READ | (addr & 0x3F);
+        let mut buffer = [0u8; 1];
         match sensor {
             Sensor::Accelerometer | Sensor::Gyro => {
                 self.ag_cs.set_low().map_err(Error::Pin)?;
+                self.spi.write(&[SPI_READ | addr]).map_err(Error::Comm)?;
                 self.spi.transfer(&mut buffer).map_err(Error::Comm)?;
                 self.ag_cs.set_high().map_err(Error::Pin)?;
             }
             Sensor::Magnetometer => {
                 self.m_cs.set_low().map_err(Error::Pin)?;
+                self.spi.write(&[SPI_READ | addr]).map_err(Error::Comm)?;
                 self.spi.transfer(&mut buffer).map_err(Error::Comm)?;
                 self.m_cs.set_high().map_err(Error::Pin)?;
             }
         }
-        Ok(buffer[1])
+        Ok(buffer[0])
     }
 
     fn read_bytes(
@@ -83,15 +84,16 @@ where
         addr: u8,
         bytes: &mut [u8],
     ) -> Result<(), Self::Error> {
-        bytes[0] = SPI_READ | addr;
         match sensor {
             Sensor::Accelerometer | Sensor::Gyro => {
                 self.ag_cs.set_low().map_err(Error::Pin)?;
+                self.spi.write(&[SPI_READ | addr]).map_err(Error::Comm)?;
                 self.spi.transfer(bytes).map_err(Error::Comm)?;
                 self.ag_cs.set_high().map_err(Error::Pin)?;
             }
             Sensor::Magnetometer => {
                 self.m_cs.set_low().map_err(Error::Pin)?;
+                self.spi.write(&[SPI_READ | addr]).map_err(Error::Comm)?;
                 self.spi.transfer(bytes).map_err(Error::Comm)?;
                 self.m_cs.set_high().map_err(Error::Pin)?;
             }

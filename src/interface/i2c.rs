@@ -2,9 +2,6 @@ use super::Interface;
 use super::Sensor;
 use embedded_hal::blocking::i2c::{Write, WriteRead};
 
-/// R/W bit should be high for I2C Read operation
-const I2C_READ: u8 = 0x01;
-
 /// Errors in this crate
 #[derive(Debug)]
 pub enum Error<CommE> {
@@ -77,9 +74,9 @@ where
     }
 
     fn read_register(&mut self, sensor: Sensor, addr: u8) -> Result<u8, Self::Error> {
-        let mut bytes = [0u8; 2];
+        let mut bytes = [0u8; 1];
         self.read_bytes(sensor, addr, &mut bytes)?;
-        Ok(bytes[1])
+        Ok(bytes[0])
     }
 
     fn read_bytes(
@@ -94,7 +91,7 @@ where
         };
         core::prelude::v1::Ok(
             self.i2c
-                .write_read(sensor_addr, &[(addr << 7) | I2C_READ], bytes)
+                .write_read(sensor_addr, &[addr], bytes)
                 .map_err(Error::Comm)?,
         )
     }

@@ -304,12 +304,11 @@ where
         addr: u8,
         sensitivity: f32,
     ) -> Result<(f32, f32, f32), T::Error> {
-        let mut bytes = [0u8; 7];
+        let mut bytes = [0u8; 6];
         self.interface.read_bytes(sensor, addr, &mut bytes)?;
-
-        let x: i16 = (bytes[2] as i16) << 8 | bytes[1] as i16;
-        let y: i16 = (bytes[4] as i16) << 8 | bytes[3] as i16;
-        let z: i16 = (bytes[6] as i16) << 8 | bytes[5] as i16;
+        let x: i16 = (bytes[1] as i16) << 8 | bytes[0] as i16;
+        let y: i16 = (bytes[3] as i16) << 8 | bytes[2] as i16;
+        let z: i16 = (bytes[5] as i16) << 8 | bytes[4] as i16;
 
         Ok((
             x as f32 * sensitivity,
@@ -327,13 +326,13 @@ where
     }
 
     pub fn read_temp(&mut self) -> Result<f32, T::Error> {
-        let mut bytes = [0u8; 3];
+        let mut bytes = [0u8; 2];
         self.interface.read_bytes(
             Sensor::Accelerometer,
             register::AG::OUT_TEMP_L.addr(),
             &mut bytes,
         )?;
-        let result: i16 = (bytes[2] as i16) << 8 | bytes[1] as i16;
+        let result: i16 = (bytes[1] as i16) << 8 | bytes[0] as i16;
         Ok((result as f32) / TEMP_SCALE + TEMP_BIAS)
     }
 

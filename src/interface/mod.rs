@@ -16,7 +16,7 @@ pub trait Interface {
         -> Result<(), Self::Error>;
 }
 
-/// Available Sensors
+/// Available Sensors to talk to
 pub enum Sensor {
     Accelerometer,
     Gyro,
