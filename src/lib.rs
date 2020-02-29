@@ -181,22 +181,12 @@ where
 
     pub fn set_gyro_scale(&mut self, scale: gyro::GyroScale) -> Result<(), T::Error> {
         self.gyro.scale = scale;
-        self.interface.write(
-            Sensor::Gyro,
-            register::AG::CTRL_REG1_G.addr(),
-            self.gyro.ctrl_reg1_g(),
-        )?;
-        Ok(())
+        self.set_scale(Sensor::Gyro)
     }
 
     pub fn set_mag_scale(&mut self, scale: mag::MagScale) -> Result<(), T::Error> {
         self.mag.scale = scale;
-        self.interface.write(
-            Sensor::Magnetometer,
-            register::Mag::CTRL_REG2_M.addr(),
-            self.mag.ctrl_reg2_m(),
-        )?;
-        Ok(())
+        self.set_scale(Sensor::Magnetometer)
     }
 
     fn set_odr(&mut self, sensor: Sensor) -> Result<(), T::Error> {
@@ -211,32 +201,17 @@ where
 
     pub fn set_accel_odr(&mut self, sample_rate: accel::AccelODR) -> Result<(), T::Error> {
         self.accel.sample_rate = sample_rate;
-        self.interface.write(
-            Sensor::Accelerometer,
-            register::AG::CTRL_REG6_XL.addr(),
-            self.accel.ctrl_reg6_xl(),
-        )?;
-        Ok(())
+        self.set_odr(Sensor::Accelerometer)
     }
 
     pub fn set_gyro_odr(&mut self, sample_rate: gyro::GyroODR) -> Result<(), T::Error> {
         self.gyro.sample_rate = sample_rate;
-        self.interface.write(
-            Sensor::Gyro,
-            register::AG::CTRL_REG1_G.addr(),
-            self.gyro.ctrl_reg1_g(),
-        )?;
-        Ok(())
+        self.set_odr(Sensor::Gyro)
     }
 
     pub fn set_mag_odr(&mut self, sample_rate: mag::MagODR) -> Result<(), T::Error> {
         self.mag.sample_rate = sample_rate;
-        self.interface.write(
-            Sensor::Magnetometer,
-            register::Mag::CTRL_REG1_M.addr(),
-            self.mag.ctrl_reg1_m(),
-        )?;
-        Ok(())
+        self.set_odr(Sensor::Magnetometer)
     }
 
     pub fn set_accel_bandwidth_selection(
@@ -377,41 +352,136 @@ where
 fn accel_init_values() {
     let interface = interface::FakeInterface::new();
     let imu = LSM9DS1::from_interface(interface);
-    assert_eq!(imu.accel.ctrl_reg5_xl(), 0b00111000); // [DEC_1][DEC_0][Zen_XL][Yen_XL][Zen_XL][0][0][0]
-    assert_eq!(imu.accel.ctrl_reg6_xl(), 0b01100000); // [ODR_XL2][ODR_XL1][ODR_XL0][FS1_XL][FS0_XL][BW_SCAL_ODR][BW_XL1][BW_XL0]
-    assert_eq!(imu.accel.ctrl_reg7_xl(), 0b00000000); // [HR][DCF1][DCF0][0][0][FDS][0][HPIS1]
+    assert_eq!(imu.accel.ctrl_reg5_xl(), 0b0011_1000); // [DEC_1][DEC_0][Zen_XL][Yen_XL][Zen_XL][0][0][0]
+    assert_eq!(imu.accel.ctrl_reg6_xl(), 0b0110_0000); // [ODR_XL2][ODR_XL1][ODR_XL0][FS1_XL][FS0_XL][BW_SCAL_ODR][BW_XL1][BW_XL0]
+    assert_eq!(imu.accel.ctrl_reg7_xl(), 0b0000_0000); // [HR][DCF1][DCF0][0][0][FDS][0][HPIS1]
+}
+
+#[test]
+fn gyro_init_values() {
+    let interface = interface::FakeInterface::new();
+    let imu = LSM9DS1::from_interface(interface);
+    assert_eq!(imu.gyro.ctrl_reg1_g(), 0b1100_0000); // [ODR_G2][ODR_G1][ODR_G0][FS_G1][FS_G0][0][BW_G1][BW_G0]
+    assert_eq!(imu.gyro.ctrl_reg2_g(), 0b0000_0000); // [0][0][0][0][INT_SEL1][INT_SEL0][OUT_SEL1][OUT_SEL0]
+    assert_eq!(imu.gyro.ctrl_reg3_g(), 0b0000_0000); // [LP_mode][HP_EN][0][0][HPCF3_G][HPCF2_G][HPCF1_G][HPCF0_G]
+    assert_eq!(imu.gyro.ctrl_reg4(), 0b0011_1000); // [0][0][Zen_G][Yen_G][Xen_G][0][LIR_XL1][4D_XL1]
+}
+
+#[test]
+fn mag_init_values() {
+    let interface = interface::FakeInterface::new();
+    let imu = LSM9DS1::from_interface(interface);
+    assert_eq!(imu.mag.ctrl_reg1_m(), 0b0101_0000); // [TEMP_COMP][OM1][OM0][DO2][DO1][DO0][0][ST]
+    assert_eq!(imu.mag.ctrl_reg2_m(), 0b0000_0000); // [0][FS1][FS0][0][REBOOT][SOFT_RST][0][0]
+    assert_eq!(imu.mag.ctrl_reg3_m(), 0b0000_0100); // [I2C_DISABLE][0][LP][0][0][SIM][MD1][MD0]
+    assert_eq!(imu.mag.ctrl_reg4_m(), 0b0000_1000); // [0][0][0][0][OMZ1][OMZ0][BLE][0]
+    assert_eq!(imu.mag.ctrl_reg5_m(), 0b0000_0000); // [0][BDU][0][0][0][0][0][0]
 }
 
 #[test]
 fn accel_set_scale() {
-    let mask = 0b00011000;
+    let mask = 0b0001_1000;
     let interface = interface::FakeInterface::new();
     let mut imu = LSM9DS1::from_interface(interface);
-    imu.set_accel_scale(accel::AccelScale::LA_FS_16G).unwrap();
-    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b00001000);
-    imu.set_accel_scale(accel::AccelScale::LA_FS_4G).unwrap();
-    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b00010000);
-    imu.set_accel_scale(accel::AccelScale::LA_FS_8G).unwrap();
-    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b00011000);
-    imu.set_accel_scale(accel::AccelScale::LA_FS_2G).unwrap();
-    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b00000000);
+    imu.set_accel_scale(accel::AccelScale::_16G).unwrap();
+    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0000_1000);
+    imu.set_accel_scale(accel::AccelScale::_4G).unwrap();
+    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0001_0000);
+    imu.set_accel_scale(accel::AccelScale::_8G).unwrap();
+    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0001_1000);
+    imu.set_accel_scale(accel::AccelScale::_2G).unwrap();
+    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0000_0000);
 }
 
-fn gyro_init_values() {
+#[test]
+fn gyro_set_scale() {
+    let mask = 0b0001_1000;
     let interface = interface::FakeInterface::new();
-    let imu = LSM9DS1::from_interface(interface);
-    assert_eq!(imu.gyro.ctrl_reg1_g(), 56);
-    assert_eq!(imu.gyro.ctrl_reg2_g(), 56);
-    assert_eq!(imu.gyro.ctrl_reg3_g(), 56);
-    assert_eq!(imu.gyro.ctrl_reg4(), 56);
+    let mut imu = LSM9DS1::from_interface(interface);
+    imu.set_gyro_scale(gyro::GyroScale::_500DPS).unwrap();
+    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b0000_1000);
+    imu.set_gyro_scale(gyro::GyroScale::_2000DPS).unwrap();
+    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b0001_1000);
+    imu.set_gyro_scale(gyro::GyroScale::_245DPS).unwrap();
+    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b0000_0000);
 }
 
-fn mag_init_values() {
+#[test]
+fn mag_set_scale() {
+    let mask = 0b0110_0000;
     let interface = interface::FakeInterface::new();
-    let imu = LSM9DS1::from_interface(interface);
-    assert_eq!(imu.mag.ctrl_reg1_m(), 56);
-    assert_eq!(imu.mag.ctrl_reg2_m(), 56);
-    assert_eq!(imu.mag.ctrl_reg3_m(), 56);
-    assert_eq!(imu.mag.ctrl_reg4_m(), 56);
-    assert_eq!(imu.mag.ctrl_reg5_m(), 56);
+    let mut imu = LSM9DS1::from_interface(interface);
+    imu.set_mag_scale(mag::MagScale::_8G).unwrap();
+    assert_eq!(imu.mag.ctrl_reg2_m() & mask, 0b0010_0000);
+    imu.set_mag_scale(mag::MagScale::_12G).unwrap();
+    assert_eq!(imu.mag.ctrl_reg2_m() & mask, 0b0100_0000);
+    imu.set_mag_scale(mag::MagScale::_16G).unwrap();
+    assert_eq!(imu.mag.ctrl_reg2_m() & mask, 0b0110_0000);
+    imu.set_mag_scale(mag::MagScale::_4G).unwrap();
+    assert_eq!(imu.mag.ctrl_reg2_m() & mask, 0b0000_0000);
+}
+
+#[test]
+fn accel_set_odr() {
+    let mask = 0b1110_0000;
+    let interface = interface::FakeInterface::new();
+    let mut imu = LSM9DS1::from_interface(interface);
+    imu.set_accel_odr(accel::AccelODR::PowerDown).unwrap();
+    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0000_0000);
+    imu.set_accel_odr(accel::AccelODR::_10Hz).unwrap();
+    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0010_0000);
+    imu.set_accel_odr(accel::AccelODR::_50Hz).unwrap();
+    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0100_0000);
+    imu.set_accel_odr(accel::AccelODR::_119Hz).unwrap();
+    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0110_0000);
+    imu.set_accel_odr(accel::AccelODR::_238Hz).unwrap();
+    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b1000_0000);
+    imu.set_accel_odr(accel::AccelODR::_476Hz).unwrap();
+    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b1010_0000);
+    imu.set_accel_odr(accel::AccelODR::_952Hz).unwrap();
+    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b1100_0000);
+}
+
+#[test]
+fn gyro_set_odr() {
+    let mask = 0b1110_0000;
+    let interface = interface::FakeInterface::new();
+    let mut imu = LSM9DS1::from_interface(interface);
+    imu.set_gyro_odr(gyro::GyroODR::PowerDown).unwrap();
+    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b0000_0000);
+    imu.set_gyro_odr(gyro::GyroODR::_14_9Hz).unwrap();
+    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b0010_0000);
+    imu.set_gyro_odr(gyro::GyroODR::_59_5Hz).unwrap();
+    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b0100_0000);
+    imu.set_gyro_odr(gyro::GyroODR::_119Hz).unwrap();
+    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b0110_0000);
+    imu.set_gyro_odr(gyro::GyroODR::_238Hz).unwrap();
+    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b1000_0000);
+    imu.set_gyro_odr(gyro::GyroODR::_476Hz).unwrap();
+    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b1010_0000);
+    imu.set_gyro_odr(gyro::GyroODR::_952Hz).unwrap();
+    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b1100_0000);
+}
+
+#[test]
+fn mag_set_odr() {
+    let mask = 0b0001_1100;
+    let interface = interface::FakeInterface::new();
+    let mut imu = LSM9DS1::from_interface(interface);
+    imu.set_mag_odr(mag::MagODR::_0_625Hz).unwrap();
+    assert_eq!(imu.mag.ctrl_reg1_m() & mask, 0b0000_0000);
+    imu.set_mag_odr(mag::MagODR::_1_25Hz).unwrap();
+    assert_eq!(imu.mag.ctrl_reg1_m() & mask, 0b0000_0100);
+    imu.set_mag_odr(mag::MagODR::_2_5Hz).unwrap();
+    assert_eq!(imu.mag.ctrl_reg1_m() & mask, 0b0000_1000);
+    imu.set_mag_odr(mag::MagODR::_5Hz).unwrap();
+    assert_eq!(imu.mag.ctrl_reg1_m() & mask, 0b0000_1100);
+    imu.set_mag_odr(mag::MagODR::_10Hz).unwrap();
+    assert_eq!(imu.mag.ctrl_reg1_m() & mask, 0b0001_0000);
+    imu.set_mag_odr(mag::MagODR::_20Hz).unwrap();
+    assert_eq!(imu.mag.ctrl_reg1_m() & mask, 0b0001_0100);
+    imu.set_mag_odr(mag::MagODR::_40Hz).unwrap();
+    assert_eq!(imu.mag.ctrl_reg1_m() & mask, 0b0001_1000);
+    imu.set_mag_odr(mag::MagODR::_80Hz).unwrap();
+    assert_eq!(imu.mag.ctrl_reg1_m() & mask, 0b0001_1100);
 }
