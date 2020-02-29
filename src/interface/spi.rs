@@ -1,6 +1,7 @@
 use super::Interface;
 use super::Sensor;
 use embedded_hal::{blocking::spi::Transfer, blocking::spi::Write, digital::v2::OutputPin};
+use Sensor::*;
 
 /// R/W bit should be high for SPI Read operation
 const SPI_READ: u8 = 0x80;
@@ -45,12 +46,12 @@ where
     fn write(&mut self, sensor: Sensor, addr: u8, value: u8) -> Result<(), Self::Error> {
         let bytes = [addr, value];
         match sensor {
-            Sensor::Accelerometer | Sensor::Gyro | Sensor::Temperature => {
+            Accelerometer | Gyro | Temperature => {
                 self.ag_cs.set_low().map_err(Error::Pin)?;
                 self.spi.write(&bytes).map_err(Error::Comm)?;
                 self.ag_cs.set_high().map_err(Error::Pin)?;
             }
-            Sensor::Magnetometer => {
+            Magnetometer => {
                 self.m_cs.set_low().map_err(Error::Pin)?;
                 self.spi.write(&bytes).map_err(Error::Comm)?;
                 self.m_cs.set_high().map_err(Error::Pin)?;
@@ -61,13 +62,13 @@ where
 
     fn read(&mut self, sensor: Sensor, addr: u8, buffer: &mut [u8]) -> Result<(), Self::Error> {
         match sensor {
-            Sensor::Accelerometer | Sensor::Gyro | Sensor::Temperature => {
+            Accelerometer | Gyro | Temperature => {
                 self.ag_cs.set_low().map_err(Error::Pin)?;
                 self.spi.write(&[SPI_READ | addr]).map_err(Error::Comm)?;
                 self.spi.transfer(buffer).map_err(Error::Comm)?;
                 self.ag_cs.set_high().map_err(Error::Pin)?;
             }
-            Sensor::Magnetometer => {
+            Magnetometer => {
                 self.m_cs.set_low().map_err(Error::Pin)?;
                 self.spi.write(&[SPI_READ | addr]).map_err(Error::Comm)?;
                 self.spi.transfer(buffer).map_err(Error::Comm)?;

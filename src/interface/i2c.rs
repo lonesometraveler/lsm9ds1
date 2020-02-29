@@ -1,7 +1,7 @@
 use super::Interface;
 use super::Sensor;
 use embedded_hal::blocking::i2c::{Write, WriteRead};
-
+use Sensor::*;
 /// Errors in this crate
 #[derive(Debug)]
 pub enum Error<CommE> {
@@ -63,8 +63,8 @@ where
 
     fn write(&mut self, sensor: Sensor, addr: u8, value: u8) -> Result<(), Self::Error> {
         let sensor_addr = match sensor {
-            Sensor::Accelerometer | Sensor::Gyro | Sensor::Temperature => self.ag_addr,
-            Sensor::Magnetometer => self.mag_addr,
+            Accelerometer | Gyro | Temperature => self.ag_addr,
+            Magnetometer => self.mag_addr,
         };
         core::prelude::v1::Ok(
             self.i2c
@@ -75,8 +75,8 @@ where
 
     fn read(&mut self, sensor: Sensor, addr: u8, buffer: &mut [u8]) -> Result<(), Self::Error> {
         let sensor_addr = match sensor {
-            Sensor::Accelerometer | Sensor::Gyro | Sensor::Temperature => self.ag_addr,
-            Sensor::Magnetometer => self.mag_addr,
+            Accelerometer | Gyro | Temperature => self.ag_addr,
+            Magnetometer => self.mag_addr,
         };
         core::prelude::v1::Ok(
             self.i2c
