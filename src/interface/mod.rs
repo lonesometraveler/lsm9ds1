@@ -2,6 +2,8 @@ pub mod spi;
 pub use self::spi::SpiInterface;
 pub mod i2c;
 pub use self::i2c::I2cInterface;
+pub mod fake_interface;
+pub use self::fake_interface::FakeInterface;
 
 /// Interface Trait. SpiInterface and I2cInterface implements this.
 pub trait Interface {

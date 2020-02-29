@@ -43,6 +43,7 @@ pub enum Axis {
     Z,
 }
 
+/// LSM9DS1 IMU
 pub struct LSM9DS1<T>
 where
     T: Interface,
@@ -57,6 +58,10 @@ impl<T> LSM9DS1<T>
 where
     T: Interface,
 {
+    /// Construct a new LSM9DS1 driver instance with a I2C or SPI peripheral.
+    ///
+    /// # Arguments
+    /// * `interface` - `SpiInterface` or `I2cInterface`
     pub fn from_interface(interface: T) -> LSM9DS1<T> {
         Self {
             interface,
@@ -67,26 +72,26 @@ where
     }
 
     fn reachable(&mut self, sensor: Sensor) -> Result<bool, T::Error> {
+        use Sensor::*;
         let mut bytes = [0u8, 1];
         let (who_am_i, register) = match sensor {
-            Sensor::Accelerometer | Sensor::Gyro | Sensor::Temperature => {
-                (WHO_AM_I_AG, register::AG::WHO_AM_I.addr())
-            }
-            Sensor::Magnetometer => (WHO_AM_I_M, register::Mag::WHO_AM_I.addr()),
+            Accelerometer | Gyro | Temperature => (WHO_AM_I_AG, register::AG::WHO_AM_I.addr()),
+            Magnetometer => (WHO_AM_I_M, register::Mag::WHO_AM_I.addr()),
         };
 
         self.interface.read(sensor, register, &mut bytes)?;
         Ok(bytes[0] == who_am_i)
     }
 
+    /// Verify communication with WHO_AM_I register
     pub fn accel_is_reacheable(&mut self) -> Result<bool, T::Error> {
         self.reachable(Sensor::Accelerometer)
     }
-
+    /// Verify communication with WHO_AM_I register
     pub fn mag_is_reacheable(&mut self) -> Result<bool, T::Error> {
         self.reachable(Sensor::Magnetometer)
     }
-
+    /// Initialize Accelerometer with default settings.
     pub fn init_accel(&mut self) -> Result<(), T::Error> {
         self.interface.write(
             Sensor::Accelerometer,
@@ -105,7 +110,7 @@ where
         )?;
         Ok(())
     }
-
+    /// Initialize Gyro with default settings.
     pub fn init_gyro(&mut self) -> Result<(), T::Error> {
         self.interface.write(
             Sensor::Gyro,
@@ -129,7 +134,7 @@ where
         )?;
         Ok(())
     }
-
+    /// Initialize Magnetometer with default settings.
     pub fn init_mag(&mut self) -> Result<(), T::Error> {
         self.interface.write(
             Sensor::Magnetometer,
@@ -159,14 +164,19 @@ where
         Ok(())
     }
 
+    fn set_scale(&mut self, sensor: Sensor) -> Result<(), T::Error> {
+        use Sensor::*;
+        let (register, value) = match sensor {
+            Accelerometer => (register::AG::CTRL_REG6_XL.addr(), self.accel.ctrl_reg6_xl()),
+            Gyro => (register::AG::CTRL_REG1_G.addr(), self.gyro.ctrl_reg1_g()),
+            _ => (register::Mag::CTRL_REG2_M.addr(), self.mag.ctrl_reg2_m()),
+        };
+        self.interface.write(sensor, register, value)
+    }
+
     pub fn set_accel_scale(&mut self, scale: accel::AccelScale) -> Result<(), T::Error> {
         self.accel.scale = scale;
-        self.interface.write(
-            Sensor::Accelerometer,
-            register::AG::CTRL_REG6_XL.addr(),
-            self.accel.ctrl_reg6_xl(),
-        )?;
-        Ok(())
+        self.set_scale(Sensor::Accelerometer)
     }
 
     pub fn set_gyro_scale(&mut self, scale: gyro::GyroScale) -> Result<(), T::Error> {
@@ -187,6 +197,16 @@ where
             self.mag.ctrl_reg2_m(),
         )?;
         Ok(())
+    }
+
+    fn set_odr(&mut self, sensor: Sensor) -> Result<(), T::Error> {
+        use Sensor::*;
+        let (register, value) = match sensor {
+            Accelerometer => (register::AG::CTRL_REG6_XL.addr(), self.accel.ctrl_reg6_xl()),
+            Gyro => (register::AG::CTRL_REG1_G.addr(), self.gyro.ctrl_reg1_g()),
+            _ => (register::Mag::CTRL_REG1_M.addr(), self.mag.ctrl_reg1_m()),
+        };
+        self.interface.write(sensor, register, value)
     }
 
     pub fn set_accel_odr(&mut self, sample_rate: accel::AccelODR) -> Result<(), T::Error> {
@@ -260,41 +280,40 @@ where
     }
 
     fn data_available(&mut self, sensor: Sensor) -> Result<u8, T::Error> {
+        use Sensor::*;
         let register = match sensor {
-            Sensor::Accelerometer | Sensor::Gyro | Sensor::Temperature => {
-                register::AG::STATUS_REG_1.addr()
-            }
-            Sensor::Magnetometer => register::Mag::STATUS_REG_M.addr(),
+            Accelerometer | Gyro | Temperature => register::AG::STATUS_REG_1.addr(),
+            Magnetometer => register::Mag::STATUS_REG_M.addr(),
         };
         let mut bytes = [0u8, 1];
         self.interface.read(sensor, register, &mut bytes)?;
         Ok(bytes[0])
     }
-
+    /// See if new Accelerometer data is available
     pub fn accel_data_available(&mut self) -> Result<bool, T::Error> {
         match self.data_available(Sensor::Accelerometer)? {
             x if x & 0x01 > 0 => Ok(true),
             _ => Ok(false),
         }
     }
-
+    /// See if new Gyro data is available
     pub fn gyro_data_available(&mut self) -> Result<bool, T::Error> {
         match self.data_available(Sensor::Gyro)? {
             x if x & 0x02 > 0 => Ok(true),
             _ => Ok(false),
         }
     }
-
-    pub fn temp_data_available(&mut self) -> Result<bool, T::Error> {
-        match self.data_available(Sensor::Temperature)? {
-            x if x & 0x04 > 0 => Ok(true),
-            _ => Ok(false),
-        }
-    }
-
+    /// See if new Magnetometer data is available
     pub fn mag_data_available(&mut self) -> Result<bool, T::Error> {
         match self.data_available(Sensor::Magnetometer)? {
             x if x & 0x01 > 0 => Ok(true),
+            _ => Ok(false),
+        }
+    }
+    /// See if new Temperature data is available
+    pub fn temp_data_available(&mut self) -> Result<bool, T::Error> {
+        match self.data_available(Sensor::Temperature)? {
+            x if x & 0x04 > 0 => Ok(true),
             _ => Ok(false),
         }
     }
@@ -326,17 +345,6 @@ where
         )
     }
 
-    pub fn read_temp(&mut self) -> Result<f32, T::Error> {
-        let mut bytes = [0u8; 2];
-        self.interface.read(
-            Sensor::Accelerometer,
-            register::AG::OUT_TEMP_L.addr(),
-            &mut bytes,
-        )?;
-        let result: i16 = (bytes[1] as i16) << 8 | bytes[0] as i16;
-        Ok((result as f32) / TEMP_SCALE + TEMP_BIAS)
-    }
-
     pub fn read_gyro(&mut self) -> Result<(f32, f32, f32), T::Error> {
         self.read_sensor(
             Sensor::Gyro,
@@ -352,4 +360,58 @@ where
             self.mag.scale.sensitivity(),
         )
     }
+
+    pub fn read_temp(&mut self) -> Result<f32, T::Error> {
+        let mut bytes = [0u8; 2];
+        self.interface.read(
+            Sensor::Accelerometer,
+            register::AG::OUT_TEMP_L.addr(),
+            &mut bytes,
+        )?;
+        let result: i16 = (bytes[1] as i16) << 8 | bytes[0] as i16;
+        Ok((result as f32) / TEMP_SCALE + TEMP_BIAS)
+    }
+}
+
+#[test]
+fn accel_init_values() {
+    let interface = interface::FakeInterface::new();
+    let imu = LSM9DS1::from_interface(interface);
+    assert_eq!(imu.accel.ctrl_reg5_xl(), 0b00111000); // [DEC_1][DEC_0][Zen_XL][Yen_XL][Zen_XL][0][0][0]
+    assert_eq!(imu.accel.ctrl_reg6_xl(), 0b01100000); // [ODR_XL2][ODR_XL1][ODR_XL0][FS1_XL][FS0_XL][BW_SCAL_ODR][BW_XL1][BW_XL0]
+    assert_eq!(imu.accel.ctrl_reg7_xl(), 0b00000000); // [HR][DCF1][DCF0][0][0][FDS][0][HPIS1]
+}
+
+#[test]
+fn accel_set_scale() {
+    let mask = 0b00011000;
+    let interface = interface::FakeInterface::new();
+    let mut imu = LSM9DS1::from_interface(interface);
+    imu.set_accel_scale(accel::AccelScale::LA_FS_16G).unwrap();
+    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b00001000);
+    imu.set_accel_scale(accel::AccelScale::LA_FS_4G).unwrap();
+    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b00010000);
+    imu.set_accel_scale(accel::AccelScale::LA_FS_8G).unwrap();
+    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b00011000);
+    imu.set_accel_scale(accel::AccelScale::LA_FS_2G).unwrap();
+    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b00000000);
+}
+
+fn gyro_init_values() {
+    let interface = interface::FakeInterface::new();
+    let imu = LSM9DS1::from_interface(interface);
+    assert_eq!(imu.gyro.ctrl_reg1_g(), 56);
+    assert_eq!(imu.gyro.ctrl_reg2_g(), 56);
+    assert_eq!(imu.gyro.ctrl_reg3_g(), 56);
+    assert_eq!(imu.gyro.ctrl_reg4(), 56);
+}
+
+fn mag_init_values() {
+    let interface = interface::FakeInterface::new();
+    let imu = LSM9DS1::from_interface(interface);
+    assert_eq!(imu.mag.ctrl_reg1_m(), 56);
+    assert_eq!(imu.mag.ctrl_reg2_m(), 56);
+    assert_eq!(imu.mag.ctrl_reg3_m(), 56);
+    assert_eq!(imu.mag.ctrl_reg4_m(), 56);
+    assert_eq!(imu.mag.ctrl_reg5_m(), 56);
 }
