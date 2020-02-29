@@ -10,6 +10,7 @@ pub struct MagSettings {
     pub scale: MagScale,
     pub system_op: SysOpMode,
     pub low_power: LowPowerMode,
+    pub spi_mode: SpiMode,
     pub z_performance: OpModeZ,
 }
 
@@ -18,12 +19,13 @@ impl Default for MagSettings {
         MagSettings {
             enabled: true,
             temp_compensation: TempComp::Disabled,
-            x_y_performance: OpModeXY::Low,
+            x_y_performance: OpModeXY::High,
             sample_rate: MagODR::ODR_10,
             scale: MagScale::FS_4,
             system_op: SysOpMode::Continuous,
             low_power: LowPowerMode::Disabled,
-            z_performance: OpModeZ::Low,
+            spi_mode: SpiMode::RW,
+            z_performance: OpModeZ::High,
         }
     }
 }
@@ -59,12 +61,12 @@ impl MagSettings {
     /// [I2C_DISABLE][0][LP][0][0][SIM][MD1][MD0]
     /// I2C_DISABLE - Disable I2C interace (0:enable, 1:disable) // TODO
     /// LP - Low-power mode cofiguration (1:enable)
-    /// SIM - SPI mode selection (0:write-only, 1:read/write enable) // TODO
+    /// SIM - SPI mode selection (0:write-only, 1:read/write enable)
     /// MD[1:0] - Operating mode
     /// 00:continuous conversion, 01:single-conversion,
     /// 10,11: Power-down
     pub fn ctrl_reg3_m(&self) -> u8 {
-        self.system_op.value() | self.low_power.value()
+        self.low_power.value() | self.spi_mode.value() | self.system_op.value()
     }
 
     /// CTRL_REG4_M (Default value: 0x00)
@@ -165,11 +167,37 @@ impl MagScale {
     /// return Magnetic sensitivity depending on scale. see page 12.
     pub fn sensitivity(self) -> f32 {
         match self {
-            MagScale::FS_4 => 0.000_14,
-            MagScale::FS_8 => 0.000_29,
-            MagScale::FS_12 => 0.000_43,
-            MagScale::FS_16 => 0.000_58,
+            MagScale::FS_4 => 0.14,
+            MagScale::FS_8 => 0.29,
+            MagScale::FS_12 => 0.43,
+            MagScale::FS_16 => 0.58,
         }
+    }
+}
+
+/// Low Power Mode
+#[derive(Debug, Clone, Copy)]
+pub enum LowPowerMode {
+    Disabled = 0,
+    Enabled = 1,
+}
+
+impl LowPowerMode {
+    pub fn value(self) -> u8 {
+        (self as u8) << 5
+    }
+}
+
+/// SPI Serial Interface mode selection. Default value: 0 (Refer to Table 115)
+#[derive(Debug, Clone, Copy)]
+pub enum SpiMode {
+    W = 0,
+    RW = 1,
+}
+
+impl SpiMode {
+    pub fn value(self) -> u8 {
+        (self as u8) << 2
     }
 }
 
@@ -184,18 +212,5 @@ pub enum SysOpMode {
 impl SysOpMode {
     pub fn value(self) -> u8 {
         self as u8
-    }
-}
-
-/// Low Power Mode
-#[derive(Debug, Clone, Copy)]
-pub enum LowPowerMode {
-    Disabled = 0,
-    Enabled = 1,
-}
-
-impl LowPowerMode {
-    pub fn value(self) -> u8 {
-        (self as u8) << 5
     }
 }
