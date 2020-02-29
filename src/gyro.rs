@@ -9,9 +9,9 @@ pub struct GyroSettings {
     pub flip_x: bool,
     pub flip_y: bool,
     pub flip_z: bool,
-    pub scale: GyroScale,
-    pub sample_rate: GyroODR,
-    pub bandwidth: GyroBandwidth,
+    pub scale: Scale,
+    pub sample_rate: ODR,
+    pub bandwidth: Bandwidth,
     pub int_selection: GyroIntSelection,
     pub out_selection: GyroOutSelection,
     pub low_power_mode: LowPowerMode,
@@ -30,9 +30,9 @@ impl Default for GyroSettings {
             flip_x: false,
             flip_y: false,
             flip_z: false,
-            scale: GyroScale::_245DPS,
-            sample_rate: GyroODR::_952Hz,
-            bandwidth: GyroBandwidth::LPF_0,
+            scale: Scale::_245DPS,
+            sample_rate: ODR::_952Hz,
+            bandwidth: Bandwidth::LPF_0,
             int_selection: GyroIntSelection::SEL_0,
             out_selection: GyroOutSelection::SEL_0,
             low_power_mode: LowPowerMode::Disabled,
@@ -118,7 +118,7 @@ impl GyroSettings {
 
 /// gyro_scale defines the possible full-scale ranges of the gyroscope:
 #[derive(Debug, Clone, Copy)]
-pub enum GyroScale {
+pub enum Scale {
     /// 245 degrees per second
     _245DPS = 0b00,
     /// 500 dps
@@ -127,7 +127,7 @@ pub enum GyroScale {
     _2000DPS = 0b11,
 }
 
-impl GyroScale {
+impl Scale {
     pub fn value(self) -> u8 {
         (self as u8) << 3
     }
@@ -135,16 +135,16 @@ impl GyroScale {
     /// return Angular rate sensitivity depending on scale. see page 12.
     pub fn sensitivity(self) -> f32 {
         match self {
-            GyroScale::_245DPS => 0.00875,
-            GyroScale::_500DPS => 0.0175,
-            GyroScale::_2000DPS => 0.07,
+            Scale::_245DPS => 0.00875,
+            Scale::_500DPS => 0.0175,
+            Scale::_2000DPS => 0.07,
         }
     }
 }
 
 /// Gyroscope operating modes. See table 9.
 #[derive(Debug, Clone, Copy)]
-pub enum GyroODR {
+pub enum ODR {
     /// Power down (0)
     PowerDown = 0b000,
     /// 14.9 Hz (1)
@@ -161,7 +161,7 @@ pub enum GyroODR {
     _952Hz = 0b110,
 }
 
-impl GyroODR {
+impl ODR {
     pub fn value(self) -> u8 {
         (self as u8) << 5
     }
@@ -169,7 +169,7 @@ impl GyroODR {
 
 /// Gyroscope bandwidth selection. Default value: 00 see table 47
 #[derive(Debug, Clone, Copy)]
-pub enum GyroBandwidth {
+pub enum Bandwidth {
     /// 00
     LPF_0 = 0b00,
     /// 01
@@ -180,13 +180,13 @@ pub enum GyroBandwidth {
     LPF_3 = 0b11,
 }
 
-impl GyroBandwidth {
+impl Bandwidth {
     pub fn value(self) -> u8 {
         self as u8
     }
 }
 
-/// Gyroscope bandwidth selection. Default value: 00 see table 47
+/// INT selection configuration. Default value: 00 (Refer to table 49)
 #[derive(Debug, Clone, Copy)]
 pub enum GyroIntSelection {
     /// 00
@@ -205,7 +205,7 @@ impl GyroIntSelection {
     }
 }
 
-/// Gyroscope bandwidth selection. Default value: 00 see table 47
+/// Out selection configuration. Default value: 00 (Refer to table 49)
 #[derive(Debug, Clone, Copy)]
 pub enum GyroOutSelection {
     /// 00

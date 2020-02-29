@@ -6,10 +6,10 @@ pub struct AccelSettings {
     pub enable_x: bool,
     pub enable_y: bool,
     pub enable_z: bool,
-    pub sample_rate: AccelODR,
-    pub scale: AccelScale,
-    pub bandwidth_selection: AccelBandwidthSelection,
-    pub bandwidth: AccelBandwidth,
+    pub sample_rate: ODR,
+    pub scale: Scale,
+    pub bandwidth_selection: BandwidthSelection,
+    pub bandwidth: Bandwidth,
     pub high_res_bandwidth: HighRes,
 }
 
@@ -19,10 +19,10 @@ impl Default for AccelSettings {
             enable_x: true,
             enable_y: true,
             enable_z: true,
-            sample_rate: AccelODR::_119Hz,
-            scale: AccelScale::_2G,
-            bandwidth_selection: AccelBandwidthSelection::ByODR,
-            bandwidth: AccelBandwidth::_408Hz,
+            sample_rate: ODR::_119Hz,
+            scale: Scale::_2G,
+            bandwidth_selection: BandwidthSelection::ByODR,
+            bandwidth: Bandwidth::_408Hz,
             high_res_bandwidth: HighRes::Disabled,
         }
     }
@@ -81,7 +81,7 @@ impl AccelSettings {
 
 /// Accelerometer full-scale selection. Default value: 00. See table 67.
 #[derive(Debug, Clone, Copy)]
-pub enum AccelScale {
+pub enum Scale {
     /// 2g
     _2G = 0b00,
     /// 16g
@@ -92,7 +92,7 @@ pub enum AccelScale {
     _8G = 0b11,
 }
 
-impl AccelScale {
+impl Scale {
     pub fn value(self) -> u8 {
         (self as u8) << 3
     }
@@ -100,17 +100,17 @@ impl AccelScale {
     /// return Linear acceleration sensitivity depending on scale. see page 12.
     pub fn sensitivity(self) -> f32 {
         match self {
-            AccelScale::_2G => 0.000_061,
-            AccelScale::_4G => 0.000_122,
-            AccelScale::_8G => 0.000_244,
-            AccelScale::_16G => 0.000_732,
+            Scale::_2G => 0.000_061,
+            Scale::_4G => 0.000_122,
+            Scale::_8G => 0.000_244,
+            Scale::_16G => 0.000_732,
         }
     }
 }
 
 /// Output data rate and power mode selection (ODR_XL). default value: 000 (see Table 68)
 #[derive(Debug, Clone, Copy)]
-pub enum AccelODR {
+pub enum ODR {
     /// Power-down mode
     PowerDown = 0b000,
     /// 10 Hz
@@ -127,30 +127,30 @@ pub enum AccelODR {
     _952Hz = 0b110,
 }
 
-impl AccelODR {
+impl ODR {
     pub fn value(self) -> u8 {
         (self as u8) << 5
     }
 }
 
 #[derive(Debug)]
-pub enum AccelBandwidthSelection {
+pub enum BandwidthSelection {
     ByODR,
     ByBW,
 }
 
-impl AccelBandwidthSelection {
+impl BandwidthSelection {
     pub fn value(&self) -> u8 {
         match self {
-            AccelBandwidthSelection::ByODR => 0 << 2,
-            AccelBandwidthSelection::ByBW => 1 << 2,
+            BandwidthSelection::ByODR => 0 << 2,
+            BandwidthSelection::ByBW => 1 << 2,
         }
     }
 }
 
 /// Anti-aliasing filter bandwidth selection (BW_XL). Default value: 00. See table 67
 #[derive(Debug, Clone, Copy)]
-pub enum AccelBandwidth {
+pub enum Bandwidth {
     /// 408 Hz
     _408Hz = 0b00,
     /// 211 Hz
@@ -161,7 +161,7 @@ pub enum AccelBandwidth {
     _50Hz = 0b11,
 }
 
-impl AccelBandwidth {
+impl Bandwidth {
     pub fn value(self) -> u8 {
         self as u8
     }

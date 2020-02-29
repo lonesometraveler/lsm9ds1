@@ -4,10 +4,10 @@
 #[derive(Debug)]
 pub struct MagSettings {
     pub enabled: bool,
-    pub sample_rate: MagODR,
+    pub sample_rate: ODR,
     pub temp_compensation: TempComp,
     pub x_y_performance: OpModeXY,
-    pub scale: MagScale,
+    pub scale: Scale,
     pub system_op: SysOpMode,
     pub low_power: LowPowerMode,
     pub spi_mode: SpiMode,
@@ -20,8 +20,8 @@ impl Default for MagSettings {
             enabled: true,
             temp_compensation: TempComp::Disabled,
             x_y_performance: OpModeXY::High,
-            sample_rate: MagODR::_10Hz,
-            scale: MagScale::_4G,
+            sample_rate: ODR::_10Hz,
+            scale: Scale::_4G,
             system_op: SysOpMode::Continuous,
             low_power: LowPowerMode::Disabled,
             spi_mode: SpiMode::RW,
@@ -61,7 +61,7 @@ impl MagSettings {
     /// [I2C_DISABLE][0][LP][0][0][SIM][MD1][MD0]
     /// I2C_DISABLE - Disable I2C interace (0:enable, 1:disable) // TODO
     /// LP - Low-power mode cofiguration (1:enable)
-    /// SIM - SPI mode selection (0:write-only, 1:read/write enable)
+    /// SIM - SPI mode selection (0:read/write enable, 1:write-only)
     /// MD[1:0] - Operating mode
     /// 00:continuous conversion, 01:single-conversion,
     /// 10,11: Power-down
@@ -133,7 +133,7 @@ impl OpModeZ {
 
 /// Output data rate selection. Default value: 100 (Refer to Table 111)
 #[derive(Debug, Clone, Copy)]
-pub enum MagODR {
+pub enum ODR {
     _0_625Hz = 0b000,
     _1_25Hz = 0b001,
     _2_5Hz = 0b010,
@@ -144,7 +144,7 @@ pub enum MagODR {
     _80Hz = 0b111,
 }
 
-impl MagODR {
+impl ODR {
     pub fn value(self) -> u8 {
         (self as u8) << 2
     }
@@ -152,7 +152,7 @@ impl MagODR {
 
 /// Full-scale selection. Default value: 00. See table 114
 #[derive(Debug, Clone, Copy)]
-pub enum MagScale {
+pub enum Scale {
     /// ± 4 gauss
     _4G = 0b00,
     /// ± 8 gauss
@@ -163,7 +163,7 @@ pub enum MagScale {
     _16G = 0b11,
 }
 
-impl MagScale {
+impl Scale {
     pub fn value(self) -> u8 {
         (self as u8) << 5
     }
@@ -171,10 +171,10 @@ impl MagScale {
     /// return Magnetic sensitivity depending on scale. see page 12.
     pub fn sensitivity(self) -> f32 {
         match self {
-            MagScale::_4G => 0.14,
-            MagScale::_8G => 0.29,
-            MagScale::_12G => 0.43,
-            MagScale::_16G => 0.58,
+            Scale::_4G => 0.14,
+            Scale::_8G => 0.29,
+            Scale::_12G => 0.43,
+            Scale::_16G => 0.58,
         }
     }
 }
@@ -192,11 +192,11 @@ impl LowPowerMode {
     }
 }
 
-/// SPI Serial Interface mode selection. Default value: 0 (Refer to Table 115)
+/// SPI Serial Interface mode selection. Default value: 0 (Refer to Table 115 -> table 115 is wrong. W and RW should be the other way.) 
 #[derive(Debug, Clone, Copy)]
 pub enum SpiMode {
-    W = 0,
-    RW = 1,
+    W = 1,
+    RW = 0,
 }
 
 impl SpiMode {
