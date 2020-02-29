@@ -5,8 +5,61 @@
 //!
 //! # Examples
 //!```rust
+//! #[entry]
+//! fn main() -> ! {
+//!     let cp = cortex_m::Peripherals::take().unwrap();
+//!     let mut itm = cp.ITM;
+//!     let dp = stm32::Peripherals::take().unwrap();
+//!     let mut flash = dp.FLASH.constrain();
+//!     let mut rcc = dp.RCC.constrain();
+//!     let mut gpiob = dp.GPIOB.split(&mut rcc.ahb);
+//!     // Accelerometer/Gyroscope CS pin
+//!     let mut ag_cs = gpiob
+//!         .pb5
+//!         .into_push_pull_output(&mut gpiob.moder, &mut gpiob.otyper);
+//!     ag_cs.set_high().unwrap();
+//!     // Magnetometer CS pin
+//!     let mut m_cs = gpiob
+//!         .pb4
+//!         .into_push_pull_output(&mut gpiob.moder, &mut gpiob.otyper);
+//!     m_cs.set_high().unwrap();
 //!
+//!     let mut gpioa = dp.GPIOA.split(&mut rcc.ahb);
+//!     let clocks = rcc.cfgr.freeze(&mut flash.acr);
 //!
+//!     // Configure pins for SPI
+//!     let sck = gpioa.pa5.into_af5(&mut gpioa.moder, &mut gpioa.afrl);
+//!     let miso = gpioa.pa6.into_af5(&mut gpioa.moder, &mut gpioa.afrl);
+//!     let mosi = gpioa.pa7.into_af5(&mut gpioa.moder, &mut gpioa.afrl);
+//!
+//!     let spi = Spi::spi1(
+//!         dp.SPI1,
+//!         (sck, miso, mosi),
+//!         MODE_0,
+//!         1.mhz(),
+//!         clocks,
+//!         &mut rcc.apb2,
+//!     );
+//!     // Create SPI interface
+//!     let spi_interface = SpiInterface::new(spi, ag_cs, m_cs);
+//!     // Create LSM9DS1
+//!     let mut lsm9ds1 = LSM9DS1::from_interface(spi_interface);
+//!     lsm9ds1.init_accel().unwrap();
+//!     lsm9ds1.init_gyro().unwrap();
+//! 
+//!     loop {
+//!         let temp = lsm9ds1.read_temp().unwrap();
+//!         iprintln!(&mut itm.stim[0], "temp: {}", temp);
+//!
+//!         let (x, y, z) = lsm9ds1.read_accel().unwrap();
+//!         iprintln!(&mut itm.stim[0], "xl: {}, {}, {}", x, y, z);
+//!
+//!         let (x, y, z) = lsm9ds1.read_gyro().unwrap();
+//!         iprintln!(&mut itm.stim[0], "gy: {}, {}, {}", x, y, z);
+//! 
+//!         cortex_m::asm::delay(8_000_000);
+//!     }
+//! }
 //! ```
 #![no_std]
 // #![deny(warnings, missing_docs)]
