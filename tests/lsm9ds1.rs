@@ -1,8 +1,8 @@
-use lsm9ds1::LSM9DS1;
 use lsm9ds1::accel;
 use lsm9ds1::gyro;
-use lsm9ds1::mag;
 use lsm9ds1::interface;
+use lsm9ds1::mag;
+use lsm9ds1::LSM9DS1;
 
 #[test]
 fn accel_init_values() {
@@ -140,4 +140,47 @@ fn mag_set_odr() {
     assert_eq!(imu.mag.ctrl_reg1_m() & mask, 0b0001_1000);
     imu.set_mag_odr(mag::ODR::_80Hz).unwrap();
     assert_eq!(imu.mag.ctrl_reg1_m() & mask, 0b0001_1100);
+}
+
+#[test]
+fn set_accel_bandwidth_selection() {
+    let mask = 0b0000_0100;
+    let interface = interface::FakeInterface::new();
+    let mut imu = LSM9DS1::from_interface(interface);
+    imu.set_accel_bandwidth_selection(accel::BandwidthSelection::ByBW)
+        .unwrap();
+    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0000_0100);
+    imu.set_accel_bandwidth_selection(accel::BandwidthSelection::ByODR)
+        .unwrap();
+    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0000_0000);
+}
+
+#[test]
+fn set_accel_bandwidth() {
+    let mask = 0b0000_0011;
+    let interface = interface::FakeInterface::new();
+    let mut imu = LSM9DS1::from_interface(interface);
+    imu.set_accel_bandwidth(accel::Bandwidth::_211Hz).unwrap();
+    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0000_0001);
+    imu.set_accel_bandwidth(accel::Bandwidth::_105Hz).unwrap();
+    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0000_0010);
+    imu.set_accel_bandwidth(accel::Bandwidth::_50Hz).unwrap();
+    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0000_0011);
+    imu.set_accel_bandwidth(accel::Bandwidth::_408Hz).unwrap();
+    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0000_0000);
+}
+
+#[test]
+fn set_gyro_bandwidth() {
+    let mask = 0b0000_0011;
+    let interface = interface::FakeInterface::new();
+    let mut imu = LSM9DS1::from_interface(interface);
+    imu.set_gyro_bandwidth(gyro::Bandwidth::LPF_1).unwrap();
+    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b0000_0001);
+    imu.set_gyro_bandwidth(gyro::Bandwidth::LPF_2).unwrap();
+    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b0000_0010);
+    imu.set_gyro_bandwidth(gyro::Bandwidth::LPF_3).unwrap();
+    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b0000_0011);
+    imu.set_gyro_bandwidth(gyro::Bandwidth::LPF_0).unwrap();
+    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b0000_0000);
 }
