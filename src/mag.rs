@@ -20,8 +20,8 @@ impl Default for MagSettings {
             enabled: true,
             temp_compensation: TempComp::Disabled,
             x_y_performance: OpModeXY::High,
-            sample_rate: MagODR::ODR_10,
-            scale: MagScale::FS_4,
+            sample_rate: MagODR::_10Hz,
+            scale: MagScale::_4G,
             system_op: SysOpMode::Continuous,
             low_power: LowPowerMode::Disabled,
             spi_mode: SpiMode::RW,
@@ -134,14 +134,14 @@ impl OpModeZ {
 /// Output data rate selection. Default value: 100 (Refer to Table 111)
 #[derive(Debug, Clone, Copy)]
 pub enum MagODR {
-    ODR_0_625 = 0b000,
-    ODR_1_25 = 0b001,
-    ODR_2_5 = 0b010,
-    ODR_5 = 0b011,
-    ODR_10 = 0b100,
-    ODR_20 = 0b101,
-    ODR_40 = 0b110,
-    ODR_80 = 0b111,
+    _0_625Hz = 0b000,
+    _1_25Hz = 0b001,
+    _2_5Hz = 0b010,
+    _5Hz = 0b011,
+    _10Hz = 0b100,
+    _20Hz = 0b101,
+    _40Hz = 0b110,
+    _80Hz = 0b111,
 }
 
 impl MagODR {
@@ -153,10 +153,14 @@ impl MagODR {
 /// Full-scale selection. Default value: 00. See table 114
 #[derive(Debug, Clone, Copy)]
 pub enum MagScale {
-    FS_4 = 0b00,
-    FS_8 = 0b01,
-    FS_12 = 0b10,
-    FS_16 = 0b11,
+    /// ± 4 gauss
+    _4G = 0b00,
+    /// ± 8 gauss
+    _8G = 0b01,
+    /// ± 12 gauss
+    _12G = 0b10,
+    /// ± 16 gauss
+    _16G = 0b11,
 }
 
 impl MagScale {
@@ -167,10 +171,10 @@ impl MagScale {
     /// return Magnetic sensitivity depending on scale. see page 12.
     pub fn sensitivity(self) -> f32 {
         match self {
-            MagScale::FS_4 => 0.14,
-            MagScale::FS_8 => 0.29,
-            MagScale::FS_12 => 0.43,
-            MagScale::FS_16 => 0.58,
+            MagScale::_4G => 0.14,
+            MagScale::_8G => 0.29,
+            MagScale::_12G => 0.43,
+            MagScale::_16G => 0.58,
         }
     }
 }

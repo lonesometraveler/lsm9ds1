@@ -19,10 +19,10 @@ impl Default for AccelSettings {
             enable_x: true,
             enable_y: true,
             enable_z: true,
-            sample_rate: AccelODR::ODR_119,
-            scale: AccelScale::LA_FS_2G,
+            sample_rate: AccelODR::_119Hz,
+            scale: AccelScale::_2G,
             bandwidth_selection: AccelBandwidthSelection::ByODR,
-            bandwidth: AccelBandwidth::BW_408,
+            bandwidth: AccelBandwidth::_408Hz,
             high_res_bandwidth: HighRes::Disabled,
         }
     }
@@ -83,13 +83,13 @@ impl AccelSettings {
 #[derive(Debug, Clone, Copy)]
 pub enum AccelScale {
     /// 2g
-    LA_FS_2G = 0b00,
+    _2G = 0b00,
     /// 16g
-    LA_FS_16G = 0b01,
+    _16G = 0b01,
     /// 4g
-    LA_FS_4G = 0b10,
+    _4G = 0b10,
     /// 8g
-    LA_FS_8G = 0b11,
+    _8G = 0b11,
 }
 
 impl AccelScale {
@@ -100,10 +100,10 @@ impl AccelScale {
     /// return Linear acceleration sensitivity depending on scale. see page 12.
     pub fn sensitivity(self) -> f32 {
         match self {
-            AccelScale::LA_FS_2G => 0.000_061,
-            AccelScale::LA_FS_4G => 0.000_122,
-            AccelScale::LA_FS_8G => 0.000_244,
-            AccelScale::LA_FS_16G => 0.000_732,
+            AccelScale::_2G => 0.000_061,
+            AccelScale::_4G => 0.000_122,
+            AccelScale::_8G => 0.000_244,
+            AccelScale::_16G => 0.000_732,
         }
     }
 }
@@ -112,19 +112,19 @@ impl AccelScale {
 #[derive(Debug, Clone, Copy)]
 pub enum AccelODR {
     /// Power-down mode
-    POWER_DOWN = 0b000,
+    PowerDown = 0b000,
     /// 10 Hz
-    ODR_10 = 0b001,
+    _10Hz = 0b001,
     /// 50 Hz
-    ODR_50 = 0b010,
+    _50Hz = 0b010,
     /// 119 Hz
-    ODR_119 = 0b011,
+    _119Hz = 0b011,
     /// 238 Hz
-    ODR_238 = 0b100,
+    _238Hz = 0b100,
     /// 476 Hz
-    ODR_476 = 0b101,
+    _476Hz = 0b101,
     /// 952 Hz
-    ODR_952 = 0b110,
+    _952Hz = 0b110,
 }
 
 impl AccelODR {
@@ -152,13 +152,13 @@ impl AccelBandwidthSelection {
 #[derive(Debug, Clone, Copy)]
 pub enum AccelBandwidth {
     /// 408 Hz
-    BW_408 = 0b00,
+    _408Hz = 0b00,
     /// 211 Hz
-    BW_211 = 0b01,
+    _211Hz = 0b01,
     /// 105 Hz
-    BW_105 = 0b10,
+    _105Hz = 0b10,
     ///  50 Hz
-    BW_50 = 0b11,
+    _50Hz = 0b11,
 }
 
 impl AccelBandwidth {

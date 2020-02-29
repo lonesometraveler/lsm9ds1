@@ -30,8 +30,8 @@ impl Default for GyroSettings {
             flip_x: false,
             flip_y: false,
             flip_z: false,
-            scale: GyroScale::G_FS_245DPS,
-            sample_rate: GyroODR::ODR_952,
+            scale: GyroScale::_245DPS,
+            sample_rate: GyroODR::_952Hz,
             bandwidth: GyroBandwidth::LPF_0,
             int_selection: GyroIntSelection::SEL_0,
             out_selection: GyroOutSelection::SEL_0,
@@ -81,7 +81,7 @@ impl GyroSettings {
     /// Zen_G - Z-axis output enable (0:disable, 1:enable)
     /// Yen_G - Y-axis output enable (0:disable, 1:enable)
     /// Xen_G - X-axis output enable (0:disable, 1:enable)
-    /// LIR_XL1 - Latched interrupt (0:not latched, 1:latched)
+    /// LIR_XL1 - Latched interrupt (0:not latched, 1:latched) // TODO:
     /// 4D_XL1 - 4D option on interrupt (0:6D used, 1:4D used) // TODO:
     pub fn ctrl_reg4(&self) -> u8 {
         let mut result = 0_u8;
@@ -120,11 +120,11 @@ impl GyroSettings {
 #[derive(Debug, Clone, Copy)]
 pub enum GyroScale {
     /// 245 degrees per second
-    G_FS_245DPS = 0b00,
+    _245DPS = 0b00,
     /// 500 dps
-    G_FS_500DPS = 0b01,
+    _500DPS = 0b01,
     /// 2000 dps
-    G_FS_2000DPS = 0b11,
+    _2000DPS = 0b11,
 }
 
 impl GyroScale {
@@ -135,9 +135,9 @@ impl GyroScale {
     /// return Angular rate sensitivity depending on scale. see page 12.
     pub fn sensitivity(self) -> f32 {
         match self {
-            GyroScale::G_FS_245DPS => 0.00875,
-            GyroScale::G_FS_500DPS => 0.0175,
-            GyroScale::G_FS_2000DPS => 0.07,
+            GyroScale::_245DPS => 0.00875,
+            GyroScale::_500DPS => 0.0175,
+            GyroScale::_2000DPS => 0.07,
         }
     }
 }
@@ -146,19 +146,19 @@ impl GyroScale {
 #[derive(Debug, Clone, Copy)]
 pub enum GyroODR {
     /// Power down (0)
-    ODR_PD = 0b000,
+    PowerDown = 0b000,
     /// 14.9 Hz (1)
-    ODR_149 = 0b001,
+    _14_9Hz = 0b001,
     /// 59.5 Hz (2)
-    ODR_595 = 0b010,
+    _59_5Hz = 0b010,
     /// 119 Hz (3)
-    ODR_119 = 0b011,
+    _119Hz = 0b011,
     /// 238 Hz (4)
-    ODR_238 = 0b100,
+    _238Hz = 0b100,
     /// 476 Hz (5)
-    ODR_476 = 0b101,
+    _476Hz = 0b101,
     /// 952 Hz (6)
-    ODR_952 = 0b110,
+    _952Hz = 0b110,
 }
 
 impl GyroODR {
