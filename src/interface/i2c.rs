@@ -1,3 +1,4 @@
+//! I2C Interface
 use super::Interface;
 use super::Sensor;
 use embedded_hal::blocking::i2c::{Write, WriteRead};

@@ -1,3 +1,4 @@
+//! Magnetometer settings, types
 #![allow(dead_code, non_camel_case_types)]
 
 /// Magnetometer settings
@@ -150,7 +151,7 @@ impl ODR {
     }
 }
 
-/// Full-scale selection. Default value: 00. See table 114
+/// Full-scale selection. Default value: 00. (Refer to Table 114)
 #[derive(Debug, Clone, Copy)]
 pub enum Scale {
     /// ± 4 gauss
@@ -168,7 +169,7 @@ impl Scale {
         (self as u8) << 5
     }
 
-    /// return Magnetic sensitivity depending on scale. see page 12.
+    /// return Magnetic sensitivity depending on scale. (Refer to Page 12)
     pub fn sensitivity(self) -> f32 {
         match self {
             Scale::_4G => 0.14,
@@ -192,7 +193,7 @@ impl LowPowerMode {
     }
 }
 
-/// SPI Serial Interface mode selection. Default value: 0 (Refer to Table 115 -> table 115 is wrong. W and RW should be the other way.) 
+/// SPI Serial Interface mode selection. Default value: 0 (Refer to Table 115 -> table 115 is wrong. W and RW should be the other way.)
 #[derive(Debug, Clone, Copy)]
 pub enum SpiMode {
     W = 1,
@@ -205,7 +206,7 @@ impl SpiMode {
     }
 }
 
-/// Operating mode selection. Default value: 11 Refer to Table 117.
+/// Operating mode selection. Default value: 11 (Refer to Table 117)
 #[derive(Debug, Clone, Copy)]
 pub enum SysOpMode {
     Continuous = 0b00,

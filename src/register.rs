@@ -1,3 +1,5 @@
+//! Register mapping
+
 /// LSM9DS1 Accel/Gyro (XL/G) Registers
 #[allow(non_camel_case_types)]
 #[derive(Clone, Copy)]

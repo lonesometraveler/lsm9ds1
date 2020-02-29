@@ -1,3 +1,4 @@
+//! Accelerometer settings, types
 #![allow(dead_code, non_camel_case_types)]
 
 /// Accelerometer settings
@@ -79,7 +80,7 @@ impl AccelSettings {
     }
 }
 
-/// Accelerometer full-scale selection. Default value: 00. See table 67.
+/// Accelerometer full-scale selection. Default value: 00. (Refer to Table 67)
 #[derive(Debug, Clone, Copy)]
 pub enum Scale {
     /// 2g
@@ -97,7 +98,7 @@ impl Scale {
         (self as u8) << 3
     }
 
-    /// return Linear acceleration sensitivity depending on scale. see page 12.
+    /// return Linear acceleration sensitivity depending on scale. (Refer to Page 12)
     pub fn sensitivity(self) -> f32 {
         match self {
             Scale::_2G => 0.000_061,
@@ -108,7 +109,7 @@ impl Scale {
     }
 }
 
-/// Output data rate and power mode selection (ODR_XL). default value: 000 (see Table 68)
+/// Output data rate and power mode selection (ODR_XL). default value: 000 (Refer to Table 68)
 #[derive(Debug, Clone, Copy)]
 pub enum ODR {
     /// Power-down mode
@@ -133,6 +134,7 @@ impl ODR {
     }
 }
 
+/// Bandwidth selection. Default value: 0. (Refer to Table 67)
 #[derive(Debug)]
 pub enum BandwidthSelection {
     ByODR,
@@ -148,7 +150,7 @@ impl BandwidthSelection {
     }
 }
 
-/// Anti-aliasing filter bandwidth selection (BW_XL). Default value: 00. See table 67
+/// Anti-aliasing filter bandwidth selection (BW_XL). Default value: 00. (Refer to Table 67)
 #[derive(Debug, Clone, Copy)]
 pub enum Bandwidth {
     /// 408 Hz
@@ -168,7 +170,7 @@ impl Bandwidth {
 }
 
 /// Accelerometer digital filter (high pass and low pass) cutoff frequency selection:
-/// the band- width of the high-pass filter depends on the selected ODR. Refer to Table 71
+/// the band- width of the high-pass filter depends on the selected ODR. (Refer to Table 71)
 #[derive(Debug, Clone, Copy)]
 pub enum HighRes {
     Disabled = 0b000,

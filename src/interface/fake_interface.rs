@@ -1,3 +1,4 @@
+//! Fake Interface for unit tests
 use super::Interface;
 use super::Sensor;
 use Sensor::*;
@@ -9,7 +10,7 @@ pub enum Error {
     Invalid,
 }
 
-/// This holds registers
+/// This holds fake registers
 pub struct FakeInterface {
     ag_registers: [u8; 256],
     mag_registers: [u8; 256],
@@ -24,9 +25,7 @@ impl Default for FakeInterface {
     }
 }
 
-impl FakeInterface
-
-{
+impl FakeInterface {
     /// create a fake interface
     pub fn new() -> Self {
         Default::default()
@@ -34,9 +33,7 @@ impl FakeInterface
 }
 
 /// Implementation of `Interface`
-impl Interface for FakeInterface
-where
-{
+impl Interface for FakeInterface {
     type Error = Error;
 
     fn write(&mut self, sensor: Sensor, addr: u8, value: u8) -> Result<(), Self::Error> {

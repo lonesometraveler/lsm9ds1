@@ -1,8 +1,4 @@
-//! A platform agnostic driver to interface with LSM9DS1 3D accelerometer, 3D gyroscope, 3D magnetometer sesor module
-//!
-//! This driver was built using [`embedded-hal`] traits.
-//!
-//! [`embedded-hal`]: https://docs.rs/embedded-hal/~0.2
+//! A platform agnostic driver to interface with LSM9DS1 3D accelerometer, 3D gyroscope, 3D magnetometer sensor module.
 //!
 //! ### Datasheets
 //! - [LSM9DS1](https://www.st.com/resource/en/datasheet/lsm9ds1.pdf)
@@ -173,17 +169,17 @@ where
         };
         self.interface.write(sensor, register, value)
     }
-
+    /// update accelerometer scale
     pub fn set_accel_scale(&mut self, scale: accel::Scale) -> Result<(), T::Error> {
         self.accel.scale = scale;
         self.set_scale(Sensor::Accelerometer)
     }
-
+    /// update gyro scale
     pub fn set_gyro_scale(&mut self, scale: gyro::Scale) -> Result<(), T::Error> {
         self.gyro.scale = scale;
         self.set_scale(Sensor::Gyro)
     }
-
+    /// update magnetometer scale
     pub fn set_mag_scale(&mut self, scale: mag::Scale) -> Result<(), T::Error> {
         self.mag.scale = scale;
         self.set_scale(Sensor::Magnetometer)
@@ -198,22 +194,22 @@ where
         };
         self.interface.write(sensor, register, value)
     }
-
+    /// update accelerometer sample rate (ODR: output data rate)
     pub fn set_accel_odr(&mut self, sample_rate: accel::ODR) -> Result<(), T::Error> {
         self.accel.sample_rate = sample_rate;
         self.set_odr(Sensor::Accelerometer)
     }
-
+    /// update gyro sample rate (ODR: output data rate)
     pub fn set_gyro_odr(&mut self, sample_rate: gyro::ODR) -> Result<(), T::Error> {
         self.gyro.sample_rate = sample_rate;
         self.set_odr(Sensor::Gyro)
     }
-
+    /// update magnetometer sample rate (ODR: output data rate)
     pub fn set_mag_odr(&mut self, sample_rate: mag::ODR) -> Result<(), T::Error> {
         self.mag.sample_rate = sample_rate;
         self.set_odr(Sensor::Magnetometer)
     }
-
+    /// update accelerometer bandwidth selection
     pub fn set_accel_bandwidth_selection(
         &mut self,
         bandwidth_selection: accel::BandwidthSelection,
@@ -226,16 +222,24 @@ where
         )?;
         Ok(())
     }
-
-    pub fn set_accel_bandwidth(
-        &mut self,
-        bandwidth: accel::Bandwidth,
-    ) -> Result<(), T::Error> {
+    /// update accelerometer Anti-aliasing filter bandwidth
+    pub fn set_accel_bandwidth(&mut self, bandwidth: accel::Bandwidth) -> Result<(), T::Error> {
         self.accel.bandwidth = bandwidth;
         self.interface.write(
             Sensor::Accelerometer,
             register::AG::CTRL_REG6_XL.addr(),
             self.accel.ctrl_reg6_xl(),
+        )?;
+        Ok(())
+    }
+
+    /// update gyro bandwidth
+    pub fn set_gyro_bandwidth(&mut self, bandwidth: gyro::Bandwidth) -> Result<(), T::Error> {
+        self.gyro.bandwidth = bandwidth;
+        self.interface.write(
+            Sensor::Gyro,
+            register::AG::CTRL_REG1_G.addr(),
+            self.gyro.ctrl_reg1_g(),
         )?;
         Ok(())
     }
@@ -292,50 +296,58 @@ where
             _ => Ok(false),
         }
     }
-
-    fn read_sensor(
-        &mut self,
-        sensor: Sensor,
-        addr: u8,
-        sensitivity: f32,
-    ) -> Result<(f32, f32, f32), T::Error> {
+    /// raw sensor reading for x, y, z axis
+    fn read_sensor_raw(&mut self, sensor: Sensor, addr: u8) -> Result<(i16, i16, i16), T::Error> {
         let mut bytes = [0u8; 6];
         self.interface.read(sensor, addr, &mut bytes)?;
         let x: i16 = (bytes[1] as i16) << 8 | bytes[0] as i16;
         let y: i16 = (bytes[3] as i16) << 8 | bytes[2] as i16;
         let z: i16 = (bytes[5] as i16) << 8 | bytes[4] as i16;
-
+        Ok((x, y, z))
+    }
+    /// raw accelerometer readings
+    pub fn read_accel_raw(&mut self) -> Result<(i16, i16, i16), T::Error> {
+        self.read_sensor_raw(Sensor::Accelerometer, register::AG::OUT_X_L_XL.addr())
+    }
+    /// calculated accelerometer readings
+    pub fn read_accel(&mut self) -> Result<(f32, f32, f32), T::Error> {
+        let (x, y, z) = self.read_accel_raw()?;
+        let sensitivity = self.accel.scale.sensitivity();
         Ok((
             x as f32 * sensitivity,
             y as f32 * sensitivity,
             z as f32 * sensitivity,
         ))
     }
-
-    pub fn read_accel(&mut self) -> Result<(f32, f32, f32), T::Error> {
-        self.read_sensor(
-            Sensor::Accelerometer,
-            register::AG::OUT_X_L_XL.addr(),
-            self.accel.scale.sensitivity(),
-        )
+    /// raw gyro readings
+    pub fn read_gyro_raw(&mut self) -> Result<(i16, i16, i16), T::Error> {
+        self.read_sensor_raw(Sensor::Gyro, register::AG::OUT_X_L_G.addr())
     }
-
+    /// calculated gyro readings
     pub fn read_gyro(&mut self) -> Result<(f32, f32, f32), T::Error> {
-        self.read_sensor(
-            Sensor::Gyro,
-            register::AG::OUT_X_L_G.addr(),
-            self.gyro.scale.sensitivity(),
-        )
+        let (x, y, z) = self.read_gyro_raw()?;
+        let sensitivity = self.gyro.scale.sensitivity();
+        Ok((
+            x as f32 * sensitivity,
+            y as f32 * sensitivity,
+            z as f32 * sensitivity,
+        ))
     }
-
+    /// raw magnetometer readings
+    pub fn read_mag_raw(&mut self) -> Result<(i16, i16, i16), T::Error> {
+        self.read_sensor_raw(Sensor::Magnetometer, register::Mag::OUT_X_L_M.addr())
+    }
+    /// calculated magnetometer readings
     pub fn read_mag(&mut self) -> Result<(f32, f32, f32), T::Error> {
-        self.read_sensor(
-            Sensor::Magnetometer,
-            register::Mag::OUT_X_L_M.addr(),
-            self.mag.scale.sensitivity(),
-        )
+        let (x, y, z) = self.read_mag_raw()?;
+        let sensitivity = self.mag.scale.sensitivity();
+        Ok((
+            x as f32 * sensitivity,
+            y as f32 * sensitivity,
+            z as f32 * sensitivity,
+        ))
     }
-
+    /// calculated temperature readings
     pub fn read_temp(&mut self) -> Result<f32, T::Error> {
         let mut bytes = [0u8; 2];
         self.interface.read(

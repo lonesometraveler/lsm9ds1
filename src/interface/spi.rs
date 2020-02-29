@@ -1,3 +1,4 @@
+//! SPI Interface
 use super::Interface;
 use super::Sensor;
 use embedded_hal::{blocking::spi::Transfer, blocking::spi::Write, digital::v2::OutputPin};

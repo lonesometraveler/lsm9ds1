@@ -1,3 +1,4 @@
+//! Interface trait
 pub mod spi;
 pub use self::spi::SpiInterface;
 pub mod i2c;

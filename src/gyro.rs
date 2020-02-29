@@ -1,3 +1,4 @@
+//! Gyroscope settings, types
 #![allow(dead_code, non_camel_case_types)]
 
 /// Gyro settings
@@ -132,7 +133,7 @@ impl Scale {
         (self as u8) << 3
     }
 
-    /// return Angular rate sensitivity depending on scale. see page 12.
+    /// return Angular rate sensitivity depending on scale. (Refer to Page 12)
     pub fn sensitivity(self) -> f32 {
         match self {
             Scale::_245DPS => 0.00875,
@@ -142,7 +143,7 @@ impl Scale {
     }
 }
 
-/// Gyroscope operating modes. See table 9.
+/// Gyroscope operating modes. (Refer to Table 9)
 #[derive(Debug, Clone, Copy)]
 pub enum ODR {
     /// Power down (0)
@@ -167,7 +168,7 @@ impl ODR {
     }
 }
 
-/// Gyroscope bandwidth selection. Default value: 00 see table 47
+/// Gyroscope bandwidth selection. Default value: 00 (Refer to Table 47)
 #[derive(Debug, Clone, Copy)]
 pub enum Bandwidth {
     /// 00
@@ -224,7 +225,7 @@ impl GyroOutSelection {
     }
 }
 
-/// Low-power mode enable. Default value: Disabled. see table 51
+/// Low-power mode enable. Default value: Disabled. (Refer to Table 51)
 #[derive(Debug, Clone, Copy)]
 pub enum LowPowerMode {
     Disabled = 0,
@@ -237,7 +238,7 @@ impl LowPowerMode {
     }
 }
 
-/// High-pass filter enable. Default value: Disabled. see table 51
+/// High-pass filter enable. Default value: Disabled. (Refer to Table 51)
 #[derive(Debug, Clone, Copy)]
 pub enum HpFilter {
     Disabled = 0,
@@ -250,7 +251,7 @@ impl HpFilter {
     }
 }
 
-/// Low-power mode enable. Default value: Disabled. see table 51
+/// Low-power mode enable. Default value: Disabled. (Refer to Table 51)
 #[derive(Debug, Clone, Copy)]
 pub enum LatchInterrupt {
     Disabled = 0,
@@ -263,7 +264,7 @@ impl LatchInterrupt {
     }
 }
 
-/// Gyroscope high-pass filter cutoff frequency selection. Default value: 0000. see table 52
+/// Gyroscope high-pass filter cutoff frequency selection. Default value: 0000. (Refer to Table 52)
 #[derive(Debug, Clone, Copy)]
 pub enum HpFilterCutoff {
     HPCF_1 = 0b0000,
