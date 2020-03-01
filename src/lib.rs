@@ -5,61 +5,6 @@
 //!
 //! # Examples
 //!```rust
-//! #[entry]
-//! fn main() -> ! {
-//!     let cp = cortex_m::Peripherals::take().unwrap();
-//!     let mut itm = cp.ITM;
-//!     let dp = stm32::Peripherals::take().unwrap();
-//!     let mut flash = dp.FLASH.constrain();
-//!     let mut rcc = dp.RCC.constrain();
-//!     let mut gpiob = dp.GPIOB.split(&mut rcc.ahb);
-//!     // Accelerometer/Gyroscope CS pin
-//!     let mut ag_cs = gpiob
-//!         .pb5
-//!         .into_push_pull_output(&mut gpiob.moder, &mut gpiob.otyper);
-//!     ag_cs.set_high().unwrap();
-//!     // Magnetometer CS pin
-//!     let mut m_cs = gpiob
-//!         .pb4
-//!         .into_push_pull_output(&mut gpiob.moder, &mut gpiob.otyper);
-//!     m_cs.set_high().unwrap();
-//!
-//!     let mut gpioa = dp.GPIOA.split(&mut rcc.ahb);
-//!     let clocks = rcc.cfgr.freeze(&mut flash.acr);
-//!
-//!     // Configure pins for SPI
-//!     let sck = gpioa.pa5.into_af5(&mut gpioa.moder, &mut gpioa.afrl);
-//!     let miso = gpioa.pa6.into_af5(&mut gpioa.moder, &mut gpioa.afrl);
-//!     let mosi = gpioa.pa7.into_af5(&mut gpioa.moder, &mut gpioa.afrl);
-//!
-//!     let spi = Spi::spi1(
-//!         dp.SPI1,
-//!         (sck, miso, mosi),
-//!         MODE_0,
-//!         1.mhz(),
-//!         clocks,
-//!         &mut rcc.apb2,
-//!     );
-//!     // Create SPI interface
-//!     let spi_interface = SpiInterface::new(spi, ag_cs, m_cs);
-//!     // Create LSM9DS1
-//!     let mut lsm9ds1 = LSM9DS1::from_interface(spi_interface);
-//!     lsm9ds1.init_accel().unwrap();
-//!     lsm9ds1.init_gyro().unwrap();
-//! 
-//!     loop {
-//!         let temp = lsm9ds1.read_temp().unwrap();
-//!         iprintln!(&mut itm.stim[0], "temp: {}", temp);
-//!
-//!         let (x, y, z) = lsm9ds1.read_accel().unwrap();
-//!         iprintln!(&mut itm.stim[0], "xl: {}, {}, {}", x, y, z);
-//!
-//!         let (x, y, z) = lsm9ds1.read_gyro().unwrap();
-//!         iprintln!(&mut itm.stim[0], "gy: {}, {}, {}", x, y, z);
-//! 
-//!         cortex_m::asm::delay(8_000_000);
-//!     }
-//! }
 //! ```
 #![no_std]
 // #![deny(warnings, missing_docs)]
@@ -98,9 +43,9 @@ where
     T: Interface,
 {
     interface: T,
-    pub accel: AccelSettings,
-    pub gyro: GyroSettings,
-    pub mag: MagSettings,
+    accel: AccelSettings,
+    gyro: GyroSettings,
+    mag: MagSettings,
 }
 
 impl<T> LSM9DS1<T>
@@ -296,17 +241,33 @@ where
         )?;
         Ok(())
     }
-
-    pub fn enable_axis(&mut self, axis: Axis, enabled: bool) -> Result<(), T::Error> {
+    /// enable/disable accelerometer axis
+    pub fn enable_accel_axis(&mut self, axis: Axis, enabled: bool) -> Result<(), T::Error> {
+        use Axis::*;
         match axis {
-            Axis::X => self.accel.enable_x = enabled,
-            Axis::Y => self.accel.enable_y = enabled,
-            Axis::Z => self.accel.enable_z = enabled,
+            X => self.accel.enable_x = enabled,
+            Y => self.accel.enable_y = enabled,
+            Z => self.accel.enable_z = enabled,
         }
         self.interface.write(
             Sensor::Accelerometer,
             register::AG::CTRL_REG5_XL.addr(),
             self.accel.ctrl_reg5_xl(),
+        )?;
+        Ok(())
+    }
+    /// enable/disable gyro axis
+    pub fn enable_gyro_axis(&mut self, axis: Axis, enabled: bool) -> Result<(), T::Error> {
+        use Axis::*;
+        match axis {
+            X => self.gyro.enable_x = enabled,
+            Y => self.gyro.enable_y = enabled,
+            Z => self.gyro.enable_z = enabled,
+        }
+        self.interface.write(
+            Sensor::Gyro,
+            register::AG::CTRL_REG4.addr(),
+            self.gyro.ctrl_reg4(),
         )?;
         Ok(())
     }
@@ -411,4 +372,232 @@ where
         let result: i16 = (bytes[1] as i16) << 8 | bytes[0] as i16;
         Ok((result as f32) / TEMP_SCALE + TEMP_BIAS)
     }
+}
+
+#[test]
+fn accel_init_values() {
+    let interface = interface::FakeInterface::new();
+    let imu = LSM9DS1::from_interface(interface);
+    assert_eq!(imu.accel.ctrl_reg5_xl(), 0b0011_1000); // [DEC_1][DEC_0][Zen_XL][Yen_XL][Zen_XL][0][0][0]
+    assert_eq!(imu.accel.ctrl_reg6_xl(), 0b0110_0000); // [ODR_XL2][ODR_XL1][ODR_XL0][FS1_XL][FS0_XL][BW_SCAL_ODR][BW_XL1][BW_XL0]
+    assert_eq!(imu.accel.ctrl_reg7_xl(), 0b0000_0000); // [HR][DCF1][DCF0][0][0][FDS][0][HPIS1]
+}
+
+#[test]
+fn gyro_init_values() {
+    let interface = interface::FakeInterface::new();
+    let imu = LSM9DS1::from_interface(interface);
+    assert_eq!(imu.gyro.ctrl_reg1_g(), 0b1100_0000); // [ODR_G2][ODR_G1][ODR_G0][FS_G1][FS_G0][0][BW_G1][BW_G0]
+    assert_eq!(imu.gyro.ctrl_reg2_g(), 0b0000_0000); // [0][0][0][0][INT_SEL1][INT_SEL0][OUT_SEL1][OUT_SEL0]
+    assert_eq!(imu.gyro.ctrl_reg3_g(), 0b0000_0000); // [LP_mode][HP_EN][0][0][HPCF3_G][HPCF2_G][HPCF1_G][HPCF0_G]
+    assert_eq!(imu.gyro.ctrl_reg4(), 0b0011_1000); // [0][0][Zen_G][Yen_G][Xen_G][0][LIR_XL1][4D_XL1]
+}
+
+#[test]
+fn mag_init_values() {
+    let interface = interface::FakeInterface::new();
+    let imu = LSM9DS1::from_interface(interface);
+    assert_eq!(imu.mag.ctrl_reg1_m(), 0b0101_0000); // [TEMP_COMP][OM1][OM0][DO2][DO1][DO0][0][ST]
+    assert_eq!(imu.mag.ctrl_reg2_m(), 0b0000_0000); // [0][FS1][FS0][0][REBOOT][SOFT_RST][0][0]
+    assert_eq!(imu.mag.ctrl_reg3_m(), 0b0000_0000); // [I2C_DISABLE][0][LP][0][0][SIM][MD1][MD0]
+    assert_eq!(imu.mag.ctrl_reg4_m(), 0b0000_1000); // [0][0][0][0][OMZ1][OMZ0][BLE][0]
+    assert_eq!(imu.mag.ctrl_reg5_m(), 0b0000_0000); // [0][BDU][0][0][0][0][0][0]
+}
+
+#[test]
+fn accel_set_scale() {
+    use accel::Scale::*;
+    let mask = 0b0001_1000;
+    let interface = interface::FakeInterface::new();
+    let mut imu = LSM9DS1::from_interface(interface);
+    imu.set_accel_scale(_16G).unwrap();
+    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0000_1000);
+    imu.set_accel_scale(_4G).unwrap();
+    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0001_0000);
+    imu.set_accel_scale(_8G).unwrap();
+    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0001_1000);
+    imu.set_accel_scale(_2G).unwrap();
+    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0000_0000);
+}
+
+#[test]
+fn gyro_set_scale() {
+    use gyro::Scale::*;
+    let mask = 0b0001_1000;
+    let interface = interface::FakeInterface::new();
+    let mut imu = LSM9DS1::from_interface(interface);
+    imu.set_gyro_scale(_500DPS).unwrap();
+    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b0000_1000);
+    imu.set_gyro_scale(_2000DPS).unwrap();
+    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b0001_1000);
+    imu.set_gyro_scale(_245DPS).unwrap();
+    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b0000_0000);
+}
+
+#[test]
+fn mag_set_scale() {
+    use mag::Scale::*;
+    let mask = 0b0110_0000;
+    let interface = interface::FakeInterface::new();
+    let mut imu = LSM9DS1::from_interface(interface);
+    imu.set_mag_scale(_8G).unwrap();
+    assert_eq!(imu.mag.ctrl_reg2_m() & mask, 0b0010_0000);
+    imu.set_mag_scale(_12G).unwrap();
+    assert_eq!(imu.mag.ctrl_reg2_m() & mask, 0b0100_0000);
+    imu.set_mag_scale(_16G).unwrap();
+    assert_eq!(imu.mag.ctrl_reg2_m() & mask, 0b0110_0000);
+    imu.set_mag_scale(_4G).unwrap();
+    assert_eq!(imu.mag.ctrl_reg2_m() & mask, 0b0000_0000);
+}
+
+#[test]
+fn accel_set_odr() {
+    use accel::ODR::*;
+    let mask = 0b1110_0000;
+    let interface = interface::FakeInterface::new();
+    let mut imu = LSM9DS1::from_interface(interface);
+    imu.set_accel_odr(PowerDown).unwrap();
+    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0000_0000);
+    imu.set_accel_odr(_10Hz).unwrap();
+    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0010_0000);
+    imu.set_accel_odr(_50Hz).unwrap();
+    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0100_0000);
+    imu.set_accel_odr(_119Hz).unwrap();
+    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0110_0000);
+    imu.set_accel_odr(_238Hz).unwrap();
+    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b1000_0000);
+    imu.set_accel_odr(_476Hz).unwrap();
+    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b1010_0000);
+    imu.set_accel_odr(_952Hz).unwrap();
+    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b1100_0000);
+}
+
+#[test]
+fn gyro_set_odr() {
+    use gyro::ODR::*;
+    let mask = 0b1110_0000;
+    let interface = interface::FakeInterface::new();
+    let mut imu = LSM9DS1::from_interface(interface);
+    imu.set_gyro_odr(PowerDown).unwrap();
+    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b0000_0000);
+    imu.set_gyro_odr(_14_9Hz).unwrap();
+    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b0010_0000);
+    imu.set_gyro_odr(_59_5Hz).unwrap();
+    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b0100_0000);
+    imu.set_gyro_odr(_119Hz).unwrap();
+    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b0110_0000);
+    imu.set_gyro_odr(_238Hz).unwrap();
+    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b1000_0000);
+    imu.set_gyro_odr(_476Hz).unwrap();
+    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b1010_0000);
+    imu.set_gyro_odr(_952Hz).unwrap();
+    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b1100_0000);
+}
+
+#[test]
+fn mag_set_odr() {
+    use mag::ODR::*;
+    let mask = 0b0001_1100;
+    let interface = interface::FakeInterface::new();
+    let mut imu = LSM9DS1::from_interface(interface);
+    imu.set_mag_odr(_0_625Hz).unwrap();
+    assert_eq!(imu.mag.ctrl_reg1_m() & mask, 0b0000_0000);
+    imu.set_mag_odr(_1_25Hz).unwrap();
+    assert_eq!(imu.mag.ctrl_reg1_m() & mask, 0b0000_0100);
+    imu.set_mag_odr(_2_5Hz).unwrap();
+    assert_eq!(imu.mag.ctrl_reg1_m() & mask, 0b0000_1000);
+    imu.set_mag_odr(_5Hz).unwrap();
+    assert_eq!(imu.mag.ctrl_reg1_m() & mask, 0b0000_1100);
+    imu.set_mag_odr(_10Hz).unwrap();
+    assert_eq!(imu.mag.ctrl_reg1_m() & mask, 0b0001_0000);
+    imu.set_mag_odr(_20Hz).unwrap();
+    assert_eq!(imu.mag.ctrl_reg1_m() & mask, 0b0001_0100);
+    imu.set_mag_odr(_40Hz).unwrap();
+    assert_eq!(imu.mag.ctrl_reg1_m() & mask, 0b0001_1000);
+    imu.set_mag_odr(_80Hz).unwrap();
+    assert_eq!(imu.mag.ctrl_reg1_m() & mask, 0b0001_1100);
+}
+
+#[test]
+fn set_accel_bandwidth_selection() {
+    use accel::BandwidthSelection::*;
+    let mask = 0b0000_0100;
+    let interface = interface::FakeInterface::new();
+    let mut imu = LSM9DS1::from_interface(interface);
+    imu.set_accel_bandwidth_selection(ByBW).unwrap();
+    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0000_0100);
+    imu.set_accel_bandwidth_selection(ByODR).unwrap();
+    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0000_0000);
+}
+
+#[test]
+fn set_accel_bandwidth() {
+    use accel::Bandwidth::*;
+    let mask = 0b0000_0011;
+    let interface = interface::FakeInterface::new();
+    let mut imu = LSM9DS1::from_interface(interface);
+    imu.set_accel_bandwidth(_211Hz).unwrap();
+    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0000_0001);
+    imu.set_accel_bandwidth(_105Hz).unwrap();
+    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0000_0010);
+    imu.set_accel_bandwidth(_50Hz).unwrap();
+    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0000_0011);
+    imu.set_accel_bandwidth(_408Hz).unwrap();
+    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0000_0000);
+}
+
+#[test]
+fn set_gyro_bandwidth() {
+    use gyro::Bandwidth::*;
+    let mask = 0b0000_0011;
+    let interface = interface::FakeInterface::new();
+    let mut imu = LSM9DS1::from_interface(interface);
+    imu.set_gyro_bandwidth(LPF_1).unwrap();
+    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b0000_0001);
+    imu.set_gyro_bandwidth(LPF_2).unwrap();
+    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b0000_0010);
+    imu.set_gyro_bandwidth(LPF_3).unwrap();
+    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b0000_0011);
+    imu.set_gyro_bandwidth(LPF_0).unwrap();
+    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b0000_0000);
+}
+
+#[test]
+fn enable_accel_axis() {
+    use Axis::*;
+    let mask = 0b0011_1000;
+    let interface = interface::FakeInterface::new();
+    let mut imu = LSM9DS1::from_interface(interface);
+    imu.enable_accel_axis(Z, false).unwrap();
+    assert_eq!(imu.accel.ctrl_reg5_xl() & mask, 0b0001_1000);
+    imu.enable_accel_axis(Y, false).unwrap();
+    assert_eq!(imu.accel.ctrl_reg5_xl() & mask, 0b0000_1000);
+    imu.enable_accel_axis(X, false).unwrap();
+    assert_eq!(imu.accel.ctrl_reg5_xl() & mask, 0b0000_0000);
+    imu.enable_accel_axis(Z, true).unwrap();
+    assert_eq!(imu.accel.ctrl_reg5_xl() & mask, 0b0010_0000);
+    imu.enable_accel_axis(Y, true).unwrap();
+    assert_eq!(imu.accel.ctrl_reg5_xl() & mask, 0b0011_0000);
+    imu.enable_accel_axis(X, true).unwrap();
+    assert_eq!(imu.accel.ctrl_reg5_xl() & mask, 0b0011_1000);
+}
+
+#[test]
+fn enable_gyro_axis() {
+    use Axis::*;
+    let mask = 0b0011_1000;
+    let interface = interface::FakeInterface::new();
+    let mut imu = LSM9DS1::from_interface(interface);
+    imu.enable_gyro_axis(Z, false).unwrap();
+    assert_eq!(imu.gyro.ctrl_reg4() & mask, 0b0001_1000);
+    imu.enable_gyro_axis(Y, false).unwrap();
+    assert_eq!(imu.gyro.ctrl_reg4() & mask, 0b0000_1000);
+    imu.enable_gyro_axis(X, false).unwrap();
+    assert_eq!(imu.gyro.ctrl_reg4() & mask, 0b0000_0000);
+    imu.enable_gyro_axis(Z, true).unwrap();
+    assert_eq!(imu.gyro.ctrl_reg4() & mask, 0b0010_0000);
+    imu.enable_gyro_axis(Y, true).unwrap();
+    assert_eq!(imu.gyro.ctrl_reg4() & mask, 0b0011_0000);
+    imu.enable_gyro_axis(X, true).unwrap();
+    assert_eq!(imu.gyro.ctrl_reg4() & mask, 0b0011_1000);
 }

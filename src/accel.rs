@@ -36,7 +36,7 @@ impl AccelSettings {
     }
 
     /// CTRL_REG5_XL (0x1F) (Default value: 0x38)
-    /// [DEC_1][DEC_0][Zen_XL][Yen_XL][Zen_XL][0][0][0]
+    /// [DEC_1][DEC_0][Zen_XL][Yen_XL][Xen_XL][0][0][0]
     /// DEC[0:1] - Decimation of accel data on OUT REG and FIFO.
     /// 00: None, 01: 2 samples, 10: 4 samples 11: 8 samples
     /// Zen_XL - Z-axis output enabled
