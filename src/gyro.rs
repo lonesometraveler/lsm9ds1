@@ -135,10 +135,11 @@ impl Scale {
 
     /// return Angular rate sensitivity depending on scale. (Refer to Page 12)
     pub fn sensitivity(self) -> f32 {
+        use Scale::*;
         match self {
-            Scale::_245DPS => 0.00875,
-            Scale::_500DPS => 0.0175,
-            Scale::_2000DPS => 0.07,
+            _245DPS => 0.00875,
+            _500DPS => 0.0175,
+            _2000DPS => 0.07,
         }
     }
 }

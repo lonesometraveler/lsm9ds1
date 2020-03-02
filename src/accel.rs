@@ -100,11 +100,12 @@ impl Scale {
 
     /// return Linear acceleration sensitivity depending on scale. (Refer to Page 12)
     pub fn sensitivity(self) -> f32 {
+        use Scale::*;
         match self {
-            Scale::_2G => 0.000_061,
-            Scale::_4G => 0.000_122,
-            Scale::_8G => 0.000_244,
-            Scale::_16G => 0.000_732,
+            _2G => 0.000_061,
+            _4G => 0.000_122,
+            _8G => 0.000_244,
+            _16G => 0.000_732,
         }
     }
 }

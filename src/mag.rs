@@ -171,11 +171,12 @@ impl Scale {
 
     /// return Magnetic sensitivity depending on scale. (Refer to Page 12)
     pub fn sensitivity(self) -> f32 {
+        use Scale::*;
         match self {
-            Scale::_4G => 0.14,
-            Scale::_8G => 0.29,
-            Scale::_12G => 0.43,
-            Scale::_16G => 0.58,
+            _4G => 0.14,
+            _8G => 0.29,
+            _12G => 0.43,
+            _16G => 0.58,
         }
     }
 }
