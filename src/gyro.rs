@@ -284,3 +284,12 @@ impl HpFilterCutoff {
         self as u8
     }
 }
+
+#[test]
+fn gyro_init_values() {
+    let settings = GyroSettings::new();
+    assert_eq!(settings.ctrl_reg1_g(), 0b1100_0000); // [ODR_G2][ODR_G1][ODR_G0][FS_G1][FS_G0][0][BW_G1][BW_G0]
+    assert_eq!(settings.ctrl_reg2_g(), 0b0000_0000); // [0][0][0][0][INT_SEL1][INT_SEL0][OUT_SEL1][OUT_SEL0]
+    assert_eq!(settings.ctrl_reg3_g(), 0b0000_0000); // [LP_mode][HP_EN][0][0][HPCF3_G][HPCF2_G][HPCF1_G][HPCF0_G]
+    assert_eq!(settings.ctrl_reg4(), 0b0011_1000); // [0][0][Zen_G][Yen_G][Xen_G][0][LIR_XL1][4D_XL1]
+}

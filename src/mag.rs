@@ -219,3 +219,13 @@ impl SysOpMode {
         self as u8
     }
 }
+
+#[test]
+fn mag_init_values() {
+    let settings = MagSettings::new();
+    assert_eq!(settings.ctrl_reg1_m(), 0b0101_0000); // [TEMP_COMP][OM1][OM0][DO2][DO1][DO0][0][ST]
+    assert_eq!(settings.ctrl_reg2_m(), 0b0000_0000); // [0][FS1][FS0][0][REBOOT][SOFT_RST][0][0]
+    assert_eq!(settings.ctrl_reg3_m(), 0b0000_0000); // [I2C_DISABLE][0][LP][0][0][SIM][MD1][MD0]
+    assert_eq!(settings.ctrl_reg4_m(), 0b0000_1000); // [0][0][0][0][OMZ1][OMZ0][BLE][0]
+    assert_eq!(settings.ctrl_reg5_m(), 0b0000_0000); // [0][BDU][0][0][0][0][0][0]
+}
