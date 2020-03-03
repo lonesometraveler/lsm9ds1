@@ -270,6 +270,16 @@ where
         )?;
         Ok(())
     }
+    /// update magnetometer temperature compensation
+    pub fn set_mag_temp_comp(&mut self, temp_compensation: mag::TempComp) -> Result<(), T::Error> {
+        self.mag.temp_compensation = temp_compensation;
+        self.interface.write(
+            Sensor::Magnetometer,
+            register::Mag::CTRL_REG1_M.addr(),
+            self.mag.ctrl_reg1_m(),
+        )?;
+        Ok(())
+    }
 
     fn data_available(&mut self, sensor: Sensor) -> Result<u8, T::Error> {
         use Sensor::*;
