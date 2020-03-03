@@ -230,7 +230,6 @@ where
         )?;
         Ok(())
     }
-
     /// update gyro bandwidth
     pub fn set_gyro_bandwidth(&mut self, bandwidth: gyro::Bandwidth) -> Result<(), T::Error> {
         self.gyro.bandwidth = bandwidth;

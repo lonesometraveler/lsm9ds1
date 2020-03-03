@@ -30,6 +30,10 @@ where
     M: OutputPin<Error = PinE>,
 {
     /// create Interface with `SPI` instance and AG and M chip select `OutputPin`s
+    /// # Arguments
+    /// * `spi` - SPI instance
+    /// * `ag_cs` - Chip Select pin for Accelerometer/Gyroscope 
+    /// * `m_cs` - Chip Select pin for Magnetometer 
     pub fn new(spi: SPI, ag_cs: AG, m_cs: M) -> Self {
         Self { spi, ag_cs, m_cs }
     }

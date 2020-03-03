@@ -46,6 +46,10 @@ where
     I2C: WriteRead<Error = CommE> + Write<Error = CommE>,
 {
     /// create Interface with `I2C` instance and AG and Mag addresses
+    /// # Arguments
+    /// * `i2C` - I2C instance
+    /// * `ag_addr` - `AgAddress`: register address for Accelerometer/Gyroscope 
+    /// * `mag_addr` - `MagAddress`: register address for Magnetometer 
     pub fn new(i2c: I2C, ag_addr: AgAddress, mag_addr: MagAddress) -> Self {
         Self {
             i2c,
