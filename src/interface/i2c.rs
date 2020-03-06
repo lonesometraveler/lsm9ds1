@@ -41,15 +41,12 @@ pub struct I2cInterface<I2C> {
     mag_addr: u8,
 }
 
-impl<I2C, CommE> I2cInterface<I2C>
-where
-    I2C: WriteRead<Error = CommE> + Write<Error = CommE>,
-{
+impl<I2C> I2cInterface<I2C> {
     /// create Interface with `I2C` instance and AG and Mag addresses
     /// # Arguments
     /// * `i2C` - I2C instance
-    /// * `ag_addr` - `AgAddress`: register address for Accelerometer/Gyroscope 
-    /// * `mag_addr` - `MagAddress`: register address for Magnetometer 
+    /// * `ag_addr` - `AgAddress`: register address for Accelerometer/Gyroscope
+    /// * `mag_addr` - `MagAddress`: register address for Magnetometer
     pub fn new(i2c: I2C, ag_addr: AgAddress, mag_addr: MagAddress) -> Self {
         Self {
             i2c,

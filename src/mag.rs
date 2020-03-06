@@ -85,7 +85,7 @@ impl MagSettings {
     /// BDU - Block data update for magnetic data // TODO
     /// 0:continuous, 1:not updated until MSB/LSB are read
     pub fn ctrl_reg5_m(&self) -> u8 {
-        0 // TODO
+        0x00 // TODO
     }
 }
 

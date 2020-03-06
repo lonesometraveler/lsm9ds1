@@ -67,7 +67,7 @@ where
 
     fn reachable(&mut self, sensor: Sensor) -> Result<bool, T::Error> {
         use Sensor::*;
-        let mut bytes = [0u8, 1];
+        let mut bytes = [0u8; 1];
         let (who_am_i, register) = match sensor {
             Accelerometer | Gyro | Temperature => (WHO_AM_I_AG, register::AG::WHO_AM_I.addr()),
             Magnetometer => (WHO_AM_I_M, register::Mag::WHO_AM_I.addr()),
@@ -287,7 +287,7 @@ where
             Accelerometer | Gyro | Temperature => register::AG::STATUS_REG_1.addr(),
             Magnetometer => register::Mag::STATUS_REG_M.addr(),
         };
-        let mut bytes = [0u8, 1];
+        let mut bytes = [0u8; 1];
         self.interface.read(sensor, register, &mut bytes)?;
         Ok(bytes[0])
     }
