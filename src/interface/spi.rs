@@ -77,7 +77,9 @@ where
             }
             Magnetometer => {
                 self.m_cs.set_low().map_err(Error::Pin)?;
-                self.spi.write(&[SPI_READ | MS_BIT | addr]).map_err(Error::Comm)?;
+                self.spi
+                    .write(&[SPI_READ | MS_BIT | addr])
+                    .map_err(Error::Comm)?;
                 self.spi.transfer(buffer).map_err(Error::Comm)?;
                 self.m_cs.set_high().map_err(Error::Pin)?;
             }
