@@ -6,6 +6,8 @@ use Sensor::*;
 
 /// R/W bit should be high for SPI Read operation
 const SPI_READ: u8 = 0x80;
+/// Magnetometer MS bit. When 0, does not increment the address; when 1, increments the address in multiple reads. (Refer to page 34)
+const MS_BIT: u8 = 0x40;
 
 /// Errors in this crate
 #[derive(Debug)]
@@ -75,7 +77,7 @@ where
             }
             Magnetometer => {
                 self.m_cs.set_low().map_err(Error::Pin)?;
-                self.spi.write(&[SPI_READ | addr]).map_err(Error::Comm)?;
+                self.spi.write(&[SPI_READ | MS_BIT | addr]).map_err(Error::Comm)?;
                 self.spi.transfer(buffer).map_err(Error::Comm)?;
                 self.m_cs.set_high().map_err(Error::Pin)?;
             }
