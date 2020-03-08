@@ -5,6 +5,54 @@
 //!
 //! # Examples
 //!```rust
+//! // Accelerometer/Gyroscope Chip select pin
+//! let mut gpiob = dp.GPIOB.split(&mut rcc.ahb);
+//! let mut ag_cs = gpiob
+//!     .pb5
+//!     .into_push_pull_output(&mut gpiob.moder, &mut gpiob.otyper);
+//! ag_cs.set_high().unwrap();
+//!
+//! // Magnetometer Chip select pin
+//! let mut m_cs = gpiob
+//!     .pb4
+//!     .into_push_pull_output(&mut gpiob.moder, &mut gpiob.otyper);
+//! m_cs.set_high().unwrap();
+//!
+//! // Configure pins for SPI
+//! let mut gpioa = dp.GPIOA.split(&mut rcc.ahb);
+//! let clocks = rcc.cfgr.freeze(&mut flash.acr);
+//! let sck = gpioa.pa5.into_af5(&mut gpioa.moder, &mut gpioa.afrl);
+//! let miso = gpioa.pa6.into_af5(&mut gpioa.moder, &mut gpioa.afrl);
+//! let mosi = gpioa.pa7.into_af5(&mut gpioa.moder, &mut gpioa.afrl);
+//!
+//! let spi = Spi::spi1(
+//!     dp.SPI1,
+//!     (sck, miso, mosi),
+//!     MODE_0,
+//!     1.mhz(),
+//!     clocks,
+//!     &mut rcc.apb2,
+//! );
+//!
+//! // Create SPI interface
+//! let spi_interface = SpiInterface::new(spi, ag_cs, m_cs);
+//! let mut lsm9ds1 = LSM9DS1::from_interface(spi_interface);
+//! lsm9ds1.init_accel().unwrap();
+//! lsm9ds1.init_gyro().unwrap();
+//! lsm9ds1.init_mag().unwrap();
+//!
+//! // Read sensors
+//! let temp = lsm9ds1.read_temp().unwrap();
+//! iprintln!(&mut itm.stim[0], "temp: {}", temp);
+//!
+//! let (x, y, z) = lsm9ds1.read_accel().unwrap();
+//! iprintln!(&mut itm.stim[0], "xl: {}, {}, {}", x, y, z);
+//!
+//! let (x, y, z) = lsm9ds1.read_gyro().unwrap();
+//! iprintln!(&mut itm.stim[0], "gy: {}, {}, {}", x, y, z);
+//!
+//! let (x, y, z) = lsm9ds1.read_mag().unwrap();
+//! iprintln!(&mut itm.stim[0], "mg: {}, {}, {}", x, y, z);
 //! ```
 #![no_std]
 // #![deny(warnings, missing_docs)]
