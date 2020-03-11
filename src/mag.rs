@@ -9,6 +9,7 @@ pub struct MagSettings {
     pub temp_compensation: TempComp,
     pub x_y_performance: OpModeXY,
     pub scale: Scale,
+    pub i2c_mode: I2cMode,
     pub system_op: SysOpMode,
     pub low_power: LowPowerMode,
     pub spi_mode: SpiMode,
@@ -23,6 +24,7 @@ impl Default for MagSettings {
             x_y_performance: OpModeXY::High,
             sample_rate: ODR::_10Hz,
             scale: Scale::_4G,
+            i2c_mode: I2cMode::Enabled,
             system_op: SysOpMode::Continuous,
             low_power: LowPowerMode::Disabled,
             spi_mode: SpiMode::RW,
@@ -60,14 +62,17 @@ impl MagSettings {
 
     /// CTRL_REG3_M (Default value: 0x03)
     /// [I2C_DISABLE][0][LP][0][0][SIM][MD1][MD0]
-    /// I2C_DISABLE - Disable I2C interace (0:enable, 1:disable) // TODO
+    /// I2C_DISABLE - Disable I2C interace (0:enable, 1:disable)
     /// LP - Low-power mode cofiguration (1:enable)
     /// SIM - SPI mode selection (0:read/write enable, 1:write-only)
     /// MD[1:0] - Operating mode
     /// 00:continuous conversion, 01:single-conversion,
     /// 10,11: Power-down
     pub fn ctrl_reg3_m(&self) -> u8 {
-        self.low_power.value() | self.spi_mode.value() | self.system_op.value()
+        self.i2c_mode.value()
+            | self.low_power.value()
+            | self.spi_mode.value()
+            | self.system_op.value()
     }
 
     /// CTRL_REG4_M (Default value: 0x00)
@@ -178,6 +183,19 @@ impl Scale {
             _12G => 0.43,
             _16G => 0.58,
         }
+    }
+}
+
+/// I2C Interface mode selection. Disable I2C interface. Default value 0. (0: I2C enable; 1: I2C disable) (Refer to table 116)
+#[derive(Debug, Clone, Copy)]
+pub enum I2cMode {
+    Enabled = 0,
+    Disabled = 1,
+}
+
+impl I2cMode {
+    pub fn value(self) -> u8 {
+        (self as u8) << 7
     }
 }
 
