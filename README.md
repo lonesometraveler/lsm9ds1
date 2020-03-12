@@ -4,7 +4,7 @@ A platform agnostic driver to interface with LSM9DS1 3D accelerometer, 3D gyrosc
 
 * [LSM9DS1 datasheet](https://www.st.com/resource/en/datasheet/lsm9ds1.pdf)
 
-##Features
+## Features
 
 * [x] SPI communication with Accelerometer, Gyroscope and Magnetometer
 * [x] SPI communication with Magnetometer
@@ -14,7 +14,7 @@ A platform agnostic driver to interface with LSM9DS1 3D accelerometer, 3D gyrosc
 * [x] Sensor Reading (Accel, Gyro, Mag, Temperature)
 * [x] Sensor Raw reading (Accel, Gyro, Mag, Temperature)
 
-###Example: SPI communication
+### Example: SPI communication
 ```rust
 //! Target board: STM32F3DISCOVERY
 #![no_std]
