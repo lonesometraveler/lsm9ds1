@@ -4,7 +4,7 @@ A platform agnostic driver to interface with LSM9DS1 3D accelerometer, 3D gyrosc
 
 * [LSM9DS1 datasheet](https://www.st.com/resource/en/datasheet/lsm9ds1.pdf)
 
-This library is work in progress. Not all features are implemented.
+This library is work in progress. Not all features are implemented yet. Contributions are welcome.
 
 ## Features
 
@@ -15,17 +15,18 @@ This library is work in progress. Not all features are implemented.
 * [ ] I2C communication with Magnetometer
 * [x] I2C communication with Temperature Sensor
 * [x] Sensor reading (Accel, Gyro, Mag, Temperature) See `read_accel()`, `read_gyro()`, etc.
-* [x] Sensor Raw reading (Accel, Gyro, Mag, Temperature) See `read_accel_raw()`, `read_gyro_raw`
+* [x] Raw Sensor reading (Accel, Gyro, Mag, Temperature) See `read_accel_raw()`, `read_gyro_raw`
 * [x] Output Data Rate config for Accel, Gyro, Mag
-* [x] Scale config for Accel, Gyro, Mag
+* [x] Sensitivity config for Accel, Gyro, Mag
 * [x] Bandwidth config for Accel and Gyro
+* [ ] Calibration
 * [ ] Interrupt
 * [ ] FIFO Mode
 
 
 ## Usage
 
-To use this driver, import this crate and an `embedded-hal`. Instantiate either SPI or I2C interface. The code below shows how to read sensor values with SPI interface.
+To use this driver, import this crate and instantiate either SPI or I2C interface. The code below shows how to read sensor values with SPI interface.
 
 ```rust
 //! Target board: STM32F3DISCOVERY
