@@ -3,57 +3,6 @@
 //! ### Datasheets
 //! - [LSM9DS1](https://www.st.com/resource/en/datasheet/lsm9ds1.pdf)
 //!
-//! # Examples
-//!```rust
-//! // Accelerometer/Gyroscope Chip select pin
-//! let mut gpiob = dp.GPIOB.split(&mut rcc.ahb);
-//! let mut ag_cs = gpiob
-//!     .pb5
-//!     .into_push_pull_output(&mut gpiob.moder, &mut gpiob.otyper);
-//! ag_cs.set_high().unwrap();
-//!
-//! // Magnetometer Chip select pin
-//! let mut m_cs = gpiob
-//!     .pb4
-//!     .into_push_pull_output(&mut gpiob.moder, &mut gpiob.otyper);
-//! m_cs.set_high().unwrap();
-//!
-//! // Configure pins for SPI
-//! let mut gpioa = dp.GPIOA.split(&mut rcc.ahb);
-//! let clocks = rcc.cfgr.freeze(&mut flash.acr);
-//! let sck = gpioa.pa5.into_af5(&mut gpioa.moder, &mut gpioa.afrl);
-//! let miso = gpioa.pa6.into_af5(&mut gpioa.moder, &mut gpioa.afrl);
-//! let mosi = gpioa.pa7.into_af5(&mut gpioa.moder, &mut gpioa.afrl);
-//!
-//! let spi = Spi::spi1(
-//!     dp.SPI1,
-//!     (sck, miso, mosi),
-//!     MODE_0,
-//!     1.mhz(),
-//!     clocks,
-//!     &mut rcc.apb2,
-//! );
-//!
-//! // Create SPI interface
-//! let spi_interface = SpiInterface::new(spi, ag_cs, m_cs);
-//! let mut lsm9ds1 = LSM9DS1::from_interface(spi_interface);
-//! lsm9ds1.init_accel().unwrap();
-//! lsm9ds1.init_gyro().unwrap();
-//! lsm9ds1.init_mag().unwrap();
-//!
-//! // Read sensors
-//! let temp = lsm9ds1.read_temp().unwrap();
-//! iprintln!(&mut itm.stim[0], "temp: {}", temp);
-//!
-//! let (x, y, z) = lsm9ds1.read_accel().unwrap();
-//! iprintln!(&mut itm.stim[0], "xl: {}, {}, {}", x, y, z);
-//!
-//! let (x, y, z) = lsm9ds1.read_gyro().unwrap();
-//! iprintln!(&mut itm.stim[0], "gy: {}, {}, {}", x, y, z);
-//!
-//! let (x, y, z) = lsm9ds1.read_mag().unwrap();
-//! iprintln!(&mut itm.stim[0], "mg: {}, {}, {}", x, y, z);
-//! ```
 #![no_std]
 // #![deny(warnings, missing_docs)]
 pub mod accel;
@@ -78,11 +27,58 @@ const TEMP_SCALE: f32 = 16.0;
 /// The output of the temperature sensor is 0 (typ.) at 25 °C. see page 14: Temperature sensor characteristics
 const TEMP_BIAS: f32 = 25.0;
 
-/// Axis selection
-pub enum Axis {
-    X,
-    Y,
-    Z,
+/// LSM9DS1 init struct.
+/// Use this struct to configure sensors and init LSM9DS1 with an interface of your choice.
+/// * Example 1: default setting with SPI interface
+/// ```
+/// LSM9DS1Init {
+///     Default::default()
+/// }
+/// .with_interface(interface_of_your_choice);
+/// ```
+/// * Example 2: Custom setting. Accelerometer Scale is set to 16G. Everything else is default.
+/// ```
+/// LSM9DS1Init {
+///     accel: AccelSettings {
+///         scale: accel::Scale::_16G,
+///         ..Default::default()
+///     },
+///     ..Default::default()
+/// }
+/// .with_interface(interface_of_your_choice);
+/// ```
+pub struct LSM9DS1Init {
+    pub accel: AccelSettings,
+    pub gyro: GyroSettings,
+    pub mag: MagSettings,
+}
+
+impl Default for LSM9DS1Init {
+    fn default() -> Self {
+        Self {
+            accel: AccelSettings::default(),
+            gyro: GyroSettings::default(),
+            mag: MagSettings::default(),
+        }
+    }
+}
+
+impl LSM9DS1Init {
+    /// Construct a new LSM9DS1 driver instance with a I2C or SPI peripheral.
+    ///
+    /// # Arguments
+    /// * `interface` - `SpiInterface` or `I2cInterface`
+    pub fn with_interface<T>(self, interface: T) -> LSM9DS1<T>
+    where
+        T: Interface,
+    {
+        LSM9DS1 {
+            interface,
+            accel: self.accel,
+            gyro: self.gyro,
+            mag: self.mag,
+        }
+    }
 }
 
 /// LSM9DS1 IMU
@@ -100,19 +96,6 @@ impl<T> LSM9DS1<T>
 where
     T: Interface,
 {
-    /// Construct a new LSM9DS1 driver instance with a I2C or SPI peripheral.
-    ///
-    /// # Arguments
-    /// * `interface` - `SpiInterface` or `I2cInterface`
-    pub fn from_interface(interface: T) -> LSM9DS1<T> {
-        Self {
-            interface,
-            accel: AccelSettings::new(),
-            gyro: GyroSettings::new(),
-            mag: MagSettings::new(),
-        }
-    }
-
     fn reachable(&mut self, sensor: Sensor) -> Result<bool, T::Error> {
         use Sensor::*;
         let mut bytes = [0u8; 1];
@@ -133,8 +116,8 @@ where
     pub fn mag_is_reacheable(&mut self) -> Result<bool, T::Error> {
         self.reachable(Sensor::Magnetometer)
     }
-    /// Initialize Accelerometer with default settings.
-    pub fn init_accel(&mut self) -> Result<(), T::Error> {
+    /// Initialize Accelerometer with sensor settings.
+    pub fn begin_accel(&mut self) -> Result<(), T::Error> {
         self.interface.write(
             Sensor::Accelerometer,
             register::AG::CTRL_REG5_XL.addr(),
@@ -152,8 +135,8 @@ where
         )?;
         Ok(())
     }
-    /// Initialize Gyro with default settings.
-    pub fn init_gyro(&mut self) -> Result<(), T::Error> {
+    /// Initialize Gyro with sensor settings.
+    pub fn begin_gyro(&mut self) -> Result<(), T::Error> {
         self.interface.write(
             Sensor::Gyro,
             register::AG::CTRL_REG1_G.addr(),
@@ -176,8 +159,8 @@ where
         )?;
         Ok(())
     }
-    /// Initialize Magnetometer with default settings.
-    pub fn init_mag(&mut self) -> Result<(), T::Error> {
+    /// Initialize Magnetometer with sensor settings.
+    pub fn begin_mag(&mut self) -> Result<(), T::Error> {
         self.interface.write(
             Sensor::Magnetometer,
             register::Mag::CTRL_REG1_M.addr(),
@@ -202,129 +185,6 @@ where
             Sensor::Magnetometer,
             register::Mag::CTRL_REG5_M.addr(),
             self.mag.ctrl_reg5_m(),
-        )?;
-        Ok(())
-    }
-
-    fn set_scale(&mut self, sensor: Sensor) -> Result<(), T::Error> {
-        use Sensor::*;
-        let (register, value) = match sensor {
-            Accelerometer => (register::AG::CTRL_REG6_XL.addr(), self.accel.ctrl_reg6_xl()),
-            Gyro => (register::AG::CTRL_REG1_G.addr(), self.gyro.ctrl_reg1_g()),
-            _ => (register::Mag::CTRL_REG2_M.addr(), self.mag.ctrl_reg2_m()),
-        };
-        self.interface.write(sensor, register, value)
-    }
-    /// update accelerometer scale
-    pub fn set_accel_scale(&mut self, scale: accel::Scale) -> Result<(), T::Error> {
-        self.accel.scale = scale;
-        self.set_scale(Sensor::Accelerometer)
-    }
-    /// update gyro scale
-    pub fn set_gyro_scale(&mut self, scale: gyro::Scale) -> Result<(), T::Error> {
-        self.gyro.scale = scale;
-        self.set_scale(Sensor::Gyro)
-    }
-    /// update magnetometer scale
-    pub fn set_mag_scale(&mut self, scale: mag::Scale) -> Result<(), T::Error> {
-        self.mag.scale = scale;
-        self.set_scale(Sensor::Magnetometer)
-    }
-
-    fn set_odr(&mut self, sensor: Sensor) -> Result<(), T::Error> {
-        use Sensor::*;
-        let (register, value) = match sensor {
-            Accelerometer => (register::AG::CTRL_REG6_XL.addr(), self.accel.ctrl_reg6_xl()),
-            Gyro => (register::AG::CTRL_REG1_G.addr(), self.gyro.ctrl_reg1_g()),
-            _ => (register::Mag::CTRL_REG1_M.addr(), self.mag.ctrl_reg1_m()),
-        };
-        self.interface.write(sensor, register, value)
-    }
-    /// update accelerometer sample rate (ODR: output data rate)
-    pub fn set_accel_odr(&mut self, sample_rate: accel::ODR) -> Result<(), T::Error> {
-        self.accel.sample_rate = sample_rate;
-        self.set_odr(Sensor::Accelerometer)
-    }
-    /// update gyro sample rate (ODR: output data rate)
-    pub fn set_gyro_odr(&mut self, sample_rate: gyro::ODR) -> Result<(), T::Error> {
-        self.gyro.sample_rate = sample_rate;
-        self.set_odr(Sensor::Gyro)
-    }
-    /// update magnetometer sample rate (ODR: output data rate)
-    pub fn set_mag_odr(&mut self, sample_rate: mag::ODR) -> Result<(), T::Error> {
-        self.mag.sample_rate = sample_rate;
-        self.set_odr(Sensor::Magnetometer)
-    }
-    /// update accelerometer bandwidth selection
-    pub fn set_accel_bandwidth_selection(
-        &mut self,
-        bandwidth_selection: accel::BandwidthSelection,
-    ) -> Result<(), T::Error> {
-        self.accel.bandwidth_selection = bandwidth_selection;
-        self.interface.write(
-            Sensor::Accelerometer,
-            register::AG::CTRL_REG6_XL.addr(),
-            self.accel.ctrl_reg6_xl(),
-        )?;
-        Ok(())
-    }
-    /// update accelerometer Anti-aliasing filter bandwidth
-    pub fn set_accel_bandwidth(&mut self, bandwidth: accel::Bandwidth) -> Result<(), T::Error> {
-        self.accel.bandwidth = bandwidth;
-        self.interface.write(
-            Sensor::Accelerometer,
-            register::AG::CTRL_REG6_XL.addr(),
-            self.accel.ctrl_reg6_xl(),
-        )?;
-        Ok(())
-    }
-    /// update gyro bandwidth
-    pub fn set_gyro_bandwidth(&mut self, bandwidth: gyro::Bandwidth) -> Result<(), T::Error> {
-        self.gyro.bandwidth = bandwidth;
-        self.interface.write(
-            Sensor::Gyro,
-            register::AG::CTRL_REG1_G.addr(),
-            self.gyro.ctrl_reg1_g(),
-        )?;
-        Ok(())
-    }
-    /// enable/disable accelerometer axis
-    pub fn enable_accel_axis(&mut self, axis: Axis, enabled: bool) -> Result<(), T::Error> {
-        use Axis::*;
-        match axis {
-            X => self.accel.enable_x = enabled,
-            Y => self.accel.enable_y = enabled,
-            Z => self.accel.enable_z = enabled,
-        }
-        self.interface.write(
-            Sensor::Accelerometer,
-            register::AG::CTRL_REG5_XL.addr(),
-            self.accel.ctrl_reg5_xl(),
-        )?;
-        Ok(())
-    }
-    /// enable/disable gyro axis
-    pub fn enable_gyro_axis(&mut self, axis: Axis, enabled: bool) -> Result<(), T::Error> {
-        use Axis::*;
-        match axis {
-            X => self.gyro.enable_x = enabled,
-            Y => self.gyro.enable_y = enabled,
-            Z => self.gyro.enable_z = enabled,
-        }
-        self.interface.write(
-            Sensor::Gyro,
-            register::AG::CTRL_REG4.addr(),
-            self.gyro.ctrl_reg4(),
-        )?;
-        Ok(())
-    }
-    /// update magnetometer temperature compensation
-    pub fn set_mag_temp_comp(&mut self, temp_compensation: mag::TempComp) -> Result<(), T::Error> {
-        self.mag.temp_compensation = temp_compensation;
-        self.interface.write(
-            Sensor::Magnetometer,
-            register::Mag::CTRL_REG1_M.addr(),
-            self.mag.ctrl_reg1_m(),
         )?;
         Ok(())
     }
@@ -429,202 +289,4 @@ where
         let result: i16 = (bytes[1] as i16) << 8 | bytes[0] as i16;
         Ok((result as f32) / TEMP_SCALE + TEMP_BIAS)
     }
-}
-
-#[test]
-fn accel_set_scale() {
-    use accel::Scale::*;
-    let mask = 0b0001_1000;
-    let interface = interface::FakeInterface::new();
-    let mut imu = LSM9DS1::from_interface(interface);
-    imu.set_accel_scale(_16G).unwrap();
-    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0000_1000);
-    imu.set_accel_scale(_4G).unwrap();
-    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0001_0000);
-    imu.set_accel_scale(_8G).unwrap();
-    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0001_1000);
-    imu.set_accel_scale(_2G).unwrap();
-    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0000_0000);
-}
-
-#[test]
-fn gyro_set_scale() {
-    use gyro::Scale::*;
-    let mask = 0b0001_1000;
-    let interface = interface::FakeInterface::new();
-    let mut imu = LSM9DS1::from_interface(interface);
-    imu.set_gyro_scale(_500DPS).unwrap();
-    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b0000_1000);
-    imu.set_gyro_scale(_2000DPS).unwrap();
-    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b0001_1000);
-    imu.set_gyro_scale(_245DPS).unwrap();
-    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b0000_0000);
-}
-
-#[test]
-fn mag_set_scale() {
-    use mag::Scale::*;
-    let mask = 0b0110_0000;
-    let interface = interface::FakeInterface::new();
-    let mut imu = LSM9DS1::from_interface(interface);
-    imu.set_mag_scale(_8G).unwrap();
-    assert_eq!(imu.mag.ctrl_reg2_m() & mask, 0b0010_0000);
-    imu.set_mag_scale(_12G).unwrap();
-    assert_eq!(imu.mag.ctrl_reg2_m() & mask, 0b0100_0000);
-    imu.set_mag_scale(_16G).unwrap();
-    assert_eq!(imu.mag.ctrl_reg2_m() & mask, 0b0110_0000);
-    imu.set_mag_scale(_4G).unwrap();
-    assert_eq!(imu.mag.ctrl_reg2_m() & mask, 0b0000_0000);
-}
-
-#[test]
-fn accel_set_odr() {
-    use accel::ODR::*;
-    let mask = 0b1110_0000;
-    let interface = interface::FakeInterface::new();
-    let mut imu = LSM9DS1::from_interface(interface);
-    imu.set_accel_odr(PowerDown).unwrap();
-    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0000_0000);
-    imu.set_accel_odr(_10Hz).unwrap();
-    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0010_0000);
-    imu.set_accel_odr(_50Hz).unwrap();
-    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0100_0000);
-    imu.set_accel_odr(_119Hz).unwrap();
-    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0110_0000);
-    imu.set_accel_odr(_238Hz).unwrap();
-    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b1000_0000);
-    imu.set_accel_odr(_476Hz).unwrap();
-    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b1010_0000);
-    imu.set_accel_odr(_952Hz).unwrap();
-    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b1100_0000);
-}
-
-#[test]
-fn gyro_set_odr() {
-    use gyro::ODR::*;
-    let mask = 0b1110_0000;
-    let interface = interface::FakeInterface::new();
-    let mut imu = LSM9DS1::from_interface(interface);
-    imu.set_gyro_odr(PowerDown).unwrap();
-    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b0000_0000);
-    imu.set_gyro_odr(_14_9Hz).unwrap();
-    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b0010_0000);
-    imu.set_gyro_odr(_59_5Hz).unwrap();
-    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b0100_0000);
-    imu.set_gyro_odr(_119Hz).unwrap();
-    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b0110_0000);
-    imu.set_gyro_odr(_238Hz).unwrap();
-    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b1000_0000);
-    imu.set_gyro_odr(_476Hz).unwrap();
-    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b1010_0000);
-    imu.set_gyro_odr(_952Hz).unwrap();
-    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b1100_0000);
-}
-
-#[test]
-fn mag_set_odr() {
-    use mag::ODR::*;
-    let mask = 0b0001_1100;
-    let interface = interface::FakeInterface::new();
-    let mut imu = LSM9DS1::from_interface(interface);
-    imu.set_mag_odr(_0_625Hz).unwrap();
-    assert_eq!(imu.mag.ctrl_reg1_m() & mask, 0b0000_0000);
-    imu.set_mag_odr(_1_25Hz).unwrap();
-    assert_eq!(imu.mag.ctrl_reg1_m() & mask, 0b0000_0100);
-    imu.set_mag_odr(_2_5Hz).unwrap();
-    assert_eq!(imu.mag.ctrl_reg1_m() & mask, 0b0000_1000);
-    imu.set_mag_odr(_5Hz).unwrap();
-    assert_eq!(imu.mag.ctrl_reg1_m() & mask, 0b0000_1100);
-    imu.set_mag_odr(_10Hz).unwrap();
-    assert_eq!(imu.mag.ctrl_reg1_m() & mask, 0b0001_0000);
-    imu.set_mag_odr(_20Hz).unwrap();
-    assert_eq!(imu.mag.ctrl_reg1_m() & mask, 0b0001_0100);
-    imu.set_mag_odr(_40Hz).unwrap();
-    assert_eq!(imu.mag.ctrl_reg1_m() & mask, 0b0001_1000);
-    imu.set_mag_odr(_80Hz).unwrap();
-    assert_eq!(imu.mag.ctrl_reg1_m() & mask, 0b0001_1100);
-}
-
-#[test]
-fn set_accel_bandwidth_selection() {
-    use accel::BandwidthSelection::*;
-    let mask = 0b0000_0100;
-    let interface = interface::FakeInterface::new();
-    let mut imu = LSM9DS1::from_interface(interface);
-    imu.set_accel_bandwidth_selection(ByBW).unwrap();
-    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0000_0100);
-    imu.set_accel_bandwidth_selection(ByODR).unwrap();
-    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0000_0000);
-}
-
-#[test]
-fn set_accel_bandwidth() {
-    use accel::Bandwidth::*;
-    let mask = 0b0000_0011;
-    let interface = interface::FakeInterface::new();
-    let mut imu = LSM9DS1::from_interface(interface);
-    imu.set_accel_bandwidth(_211Hz).unwrap();
-    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0000_0001);
-    imu.set_accel_bandwidth(_105Hz).unwrap();
-    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0000_0010);
-    imu.set_accel_bandwidth(_50Hz).unwrap();
-    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0000_0011);
-    imu.set_accel_bandwidth(_408Hz).unwrap();
-    assert_eq!(imu.accel.ctrl_reg6_xl() & mask, 0b0000_0000);
-}
-
-#[test]
-fn set_gyro_bandwidth() {
-    use gyro::Bandwidth::*;
-    let mask = 0b0000_0011;
-    let interface = interface::FakeInterface::new();
-    let mut imu = LSM9DS1::from_interface(interface);
-    imu.set_gyro_bandwidth(LPF_1).unwrap();
-    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b0000_0001);
-    imu.set_gyro_bandwidth(LPF_2).unwrap();
-    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b0000_0010);
-    imu.set_gyro_bandwidth(LPF_3).unwrap();
-    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b0000_0011);
-    imu.set_gyro_bandwidth(LPF_0).unwrap();
-    assert_eq!(imu.gyro.ctrl_reg1_g() & mask, 0b0000_0000);
-}
-
-#[test]
-fn enable_accel_axis() {
-    use Axis::*;
-    let mask = 0b0011_1000;
-    let interface = interface::FakeInterface::new();
-    let mut imu = LSM9DS1::from_interface(interface);
-    imu.enable_accel_axis(Z, false).unwrap();
-    assert_eq!(imu.accel.ctrl_reg5_xl() & mask, 0b0001_1000);
-    imu.enable_accel_axis(Y, false).unwrap();
-    assert_eq!(imu.accel.ctrl_reg5_xl() & mask, 0b0000_1000);
-    imu.enable_accel_axis(X, false).unwrap();
-    assert_eq!(imu.accel.ctrl_reg5_xl() & mask, 0b0000_0000);
-    imu.enable_accel_axis(Z, true).unwrap();
-    assert_eq!(imu.accel.ctrl_reg5_xl() & mask, 0b0010_0000);
-    imu.enable_accel_axis(Y, true).unwrap();
-    assert_eq!(imu.accel.ctrl_reg5_xl() & mask, 0b0011_0000);
-    imu.enable_accel_axis(X, true).unwrap();
-    assert_eq!(imu.accel.ctrl_reg5_xl() & mask, 0b0011_1000);
-}
-
-#[test]
-fn enable_gyro_axis() {
-    use Axis::*;
-    let mask = 0b0011_1000;
-    let interface = interface::FakeInterface::new();
-    let mut imu = LSM9DS1::from_interface(interface);
-    imu.enable_gyro_axis(Z, false).unwrap();
-    assert_eq!(imu.gyro.ctrl_reg4() & mask, 0b0001_1000);
-    imu.enable_gyro_axis(Y, false).unwrap();
-    assert_eq!(imu.gyro.ctrl_reg4() & mask, 0b0000_1000);
-    imu.enable_gyro_axis(X, false).unwrap();
-    assert_eq!(imu.gyro.ctrl_reg4() & mask, 0b0000_0000);
-    imu.enable_gyro_axis(Z, true).unwrap();
-    assert_eq!(imu.gyro.ctrl_reg4() & mask, 0b0010_0000);
-    imu.enable_gyro_axis(Y, true).unwrap();
-    assert_eq!(imu.gyro.ctrl_reg4() & mask, 0b0011_0000);
-    imu.enable_gyro_axis(X, true).unwrap();
-    assert_eq!(imu.gyro.ctrl_reg4() & mask, 0b0011_1000);
 }
