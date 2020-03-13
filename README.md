@@ -4,27 +4,24 @@ A platform agnostic driver to interface with LSM9DS1 3D accelerometer, 3D gyrosc
 
 * [LSM9DS1 datasheet](https://www.st.com/resource/en/datasheet/lsm9ds1.pdf)
 
-This library is work in progress.
+This library is work in progress. Not all features are implemented.
 
 ## Features
 
-* [x] SPI communication with Accelerometer, Gyroscope and Magnetometer
+* [x] SPI communication with Accelerometer/Gyroscope
 * [x] SPI communication with Magnetometer
 * [x] SPI communication with Temperature Sensor
-* [x] I2C communication with Accelerometer and Gyroscope
+* [x] I2C communication with Accelerometer/Gyroscope
 * [ ] I2C communication with Magnetometer
 * [x] I2C communication with Temperature Sensor
-* [x] Sensor Reading (Accel, Gyro, Mag, Temperature)
-* [x] Sensor Raw reading (Accel, Gyro, Mag, Temperature)
+* [x] Sensor reading (Accel, Gyro, Mag, Temperature) See `read_accel()`, `read_gyro()`, etc.
+* [x] Sensor Raw reading (Accel, Gyro, Mag, Temperature) See `read_accel_raw()`, `read_gyro_raw`
 * [x] Output Data Rate config for Accel, Gyro, Mag
 * [x] Scale config for Accel, Gyro, Mag
 * [x] Bandwidth config for Accel and Gyro
 * [ ] Interrupt
 * [ ] FIFO Mode
 
-## Requirements
-* `embedded-hal` implementation
-* MSB first SPI (if you want to use `spi_interface`)
 
 ## Usage
 
