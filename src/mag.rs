@@ -34,11 +34,6 @@ impl Default for MagSettings {
 }
 
 impl MagSettings {
-    /// return the default setting
-    pub fn new() -> MagSettings {
-        Default::default()
-    }
-
     /// CTRL_REG1_M (Default value: 0x10)
     /// [TEMP_COMP][OM1][OM0][DO2][DO1][DO0][0][ST]
     /// TEMP_COMP - Temperature compensation
@@ -241,7 +236,7 @@ impl SysOpMode {
 
 #[test]
 fn mag_init_values() {
-    let settings = MagSettings::new();
+    let settings = MagSettings::default();
     assert_eq!(settings.ctrl_reg1_m(), 0b0101_0000); // [TEMP_COMP][OM1][OM0][DO2][DO1][DO0][0][ST]
     assert_eq!(settings.ctrl_reg2_m(), 0b0000_0000); // [0][FS1][FS0][0][REBOOT][SOFT_RST][0][0]
     assert_eq!(settings.ctrl_reg3_m(), 0b0000_0000); // [I2C_DISABLE][0][LP][0][0][SIM][MD1][MD0]

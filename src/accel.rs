@@ -30,11 +30,6 @@ impl Default for AccelSettings {
 }
 
 impl AccelSettings {
-    /// return the default setting
-    pub fn new() -> AccelSettings {
-        Default::default()
-    }
-
     /// CTRL_REG5_XL (0x1F) (Default value: 0x38)
     /// [DEC_1][DEC_0][Zen_XL][Yen_XL][Xen_XL][0][0][0]
     /// DEC[0:1] - Decimation of accel data on OUT REG and FIFO.
@@ -189,7 +184,7 @@ impl HighRes {
 
 #[test]
 fn accel_init_values() {
-    let settings = AccelSettings::new();
+    let settings = AccelSettings::default();
     assert_eq!(settings.ctrl_reg5_xl(), 0b0011_1000); // [DEC_1][DEC_0][Zen_XL][Yen_XL][Zen_XL][0][0][0]
     assert_eq!(settings.ctrl_reg6_xl(), 0b0110_0000); // [ODR_XL2][ODR_XL1][ODR_XL0][FS1_XL][FS0_XL][BW_SCAL_ODR][BW_XL1][BW_XL0]
     assert_eq!(settings.ctrl_reg7_xl(), 0b0000_0000); // [HR][DCF1][DCF0][0][0][FDS][0][HPIS1]

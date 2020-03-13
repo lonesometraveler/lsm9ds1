@@ -46,11 +46,6 @@ impl Default for GyroSettings {
 }
 
 impl GyroSettings {
-    /// return the default setting
-    pub fn new() -> GyroSettings {
-        Default::default()
-    }
-
     /// CTRL_REG1_G (Default value: 0x00), page 45
     /// [ODR_G2][ODR_G1][ODR_G0][FS_G1][FS_G0][0][BW_G1][BW_G0]
     /// ODR_G[2:0] - Output data rate selection
@@ -288,7 +283,7 @@ impl HpFilterCutoff {
 
 #[test]
 fn gyro_init_values() {
-    let settings = GyroSettings::new();
+    let settings = GyroSettings::default();
     assert_eq!(settings.ctrl_reg1_g(), 0b1100_0000); // [ODR_G2][ODR_G1][ODR_G0][FS_G1][FS_G0][0][BW_G1][BW_G0]
     assert_eq!(settings.ctrl_reg2_g(), 0b0000_0000); // [0][0][0][0][INT_SEL1][INT_SEL0][OUT_SEL1][OUT_SEL0]
     assert_eq!(settings.ctrl_reg3_g(), 0b0000_0000); // [LP_mode][HP_EN][0][0][HPCF3_G][HPCF2_G][HPCF1_G][HPCF0_G]
