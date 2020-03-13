@@ -289,3 +289,105 @@ fn gyro_init_values() {
     assert_eq!(settings.ctrl_reg3_g(), 0b0000_0000); // [LP_mode][HP_EN][0][0][HPCF3_G][HPCF2_G][HPCF1_G][HPCF0_G]
     assert_eq!(settings.ctrl_reg4(), 0b0011_1000); // [0][0][Zen_G][Yen_G][Xen_G][0][LIR_XL1][4D_XL1]
 }
+
+#[test]
+fn gyro_set_scale() {
+    use Scale::*;
+    let mask = 0b0001_1000;
+
+    let gyro = GyroSettings {
+        scale: _245DPS,
+        ..Default::default()
+    };
+    assert_eq!(gyro.ctrl_reg1_g() & mask, 0b0000_0000);
+
+    let gyro = GyroSettings {
+        scale: _500DPS,
+        ..Default::default()
+    };
+    assert_eq!(gyro.ctrl_reg1_g() & mask, 0b0000_1000);
+
+    let gyro = GyroSettings {
+        scale: _2000DPS,
+        ..Default::default()
+    };
+    assert_eq!(gyro.ctrl_reg1_g() & mask, 0b0001_1000);
+}
+
+#[test]
+fn gyro_set_odr() {
+    use ODR::*;
+    let mask = 0b1110_0000;
+
+    let gyro = GyroSettings {
+        sample_rate: PowerDown,
+        ..Default::default()
+    };
+    assert_eq!(gyro.ctrl_reg1_g() & mask, 0b0000_0000);
+
+    let gyro = GyroSettings {
+        sample_rate: _14_9Hz,
+        ..Default::default()
+    };
+    assert_eq!(gyro.ctrl_reg1_g() & mask, 0b0010_0000);
+
+    let gyro = GyroSettings {
+        sample_rate: _59_5Hz,
+        ..Default::default()
+    };
+    assert_eq!(gyro.ctrl_reg1_g() & mask, 0b0100_0000);
+
+    let gyro = GyroSettings {
+        sample_rate: _119Hz,
+        ..Default::default()
+    };
+    assert_eq!(gyro.ctrl_reg1_g() & mask, 0b0110_0000);
+
+    let gyro = GyroSettings {
+        sample_rate: _238Hz,
+        ..Default::default()
+    };
+    assert_eq!(gyro.ctrl_reg1_g() & mask, 0b1000_0000);
+
+    let gyro = GyroSettings {
+        sample_rate: _476Hz,
+        ..Default::default()
+    };
+    assert_eq!(gyro.ctrl_reg1_g() & mask, 0b1010_0000);
+
+    let gyro = GyroSettings {
+        sample_rate: _952Hz,
+        ..Default::default()
+    };
+    assert_eq!(gyro.ctrl_reg1_g() & mask, 0b1100_0000);
+}
+
+#[test]
+fn set_gyro_bandwidth() {
+    use Bandwidth::*;
+    let mask = 0b0000_0011;
+
+    let gyro = GyroSettings {
+        bandwidth: LPF_0,
+        ..Default::default()
+    };
+    assert_eq!(gyro.ctrl_reg1_g() & mask, 0b0000_0000);
+
+    let gyro = GyroSettings {
+        bandwidth: LPF_1,
+        ..Default::default()
+    };
+    assert_eq!(gyro.ctrl_reg1_g() & mask, 0b0000_0001);
+
+    let gyro = GyroSettings {
+        bandwidth: LPF_2,
+        ..Default::default()
+    };
+    assert_eq!(gyro.ctrl_reg1_g() & mask, 0b0000_0010);
+
+    let gyro = GyroSettings {
+        bandwidth: LPF_3,
+        ..Default::default()
+    };
+    assert_eq!(gyro.ctrl_reg1_g() & mask, 0b0000_0011);
+}

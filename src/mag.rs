@@ -243,3 +243,87 @@ fn mag_init_values() {
     assert_eq!(settings.ctrl_reg4_m(), 0b0000_1000); // [0][0][0][0][OMZ1][OMZ0][BLE][0]
     assert_eq!(settings.ctrl_reg5_m(), 0b0000_0000); // [0][BDU][0][0][0][0][0][0]
 }
+
+#[test]
+fn mag_set_scale() {
+    use Scale::*;
+    let mask = 0b0110_0000;
+
+    let mag = MagSettings {
+        scale: _4G,
+        ..Default::default()
+    };
+    assert_eq!(mag.ctrl_reg2_m() & mask, 0b0000_0000);
+
+    let mag = MagSettings {
+        scale: _8G,
+        ..Default::default()
+    };
+    assert_eq!(mag.ctrl_reg2_m() & mask, 0b0010_0000);
+
+    let mag = MagSettings {
+        scale: _12G,
+        ..Default::default()
+    };
+    assert_eq!(mag.ctrl_reg2_m() & mask, 0b0100_0000);
+
+    let mag = MagSettings {
+        scale: _16G,
+        ..Default::default()
+    };
+    assert_eq!(mag.ctrl_reg2_m() & mask, 0b0110_0000);
+}
+
+#[test]
+fn mag_set_odr() {
+    use ODR::*;
+    let mask = 0b0001_1100;
+
+    let mag = MagSettings {
+        sample_rate: _0_625Hz,
+        ..Default::default()
+    };
+    assert_eq!(mag.ctrl_reg1_m() & mask, 0b0000_0000);
+
+    let mag = MagSettings {
+        sample_rate: _1_25Hz,
+        ..Default::default()
+    };
+    assert_eq!(mag.ctrl_reg1_m() & mask, 0b0000_0100);
+
+    let mag = MagSettings {
+        sample_rate: _2_5Hz,
+        ..Default::default()
+    };
+    assert_eq!(mag.ctrl_reg1_m() & mask, 0b0000_1000);
+
+    let mag = MagSettings {
+        sample_rate: _5Hz,
+        ..Default::default()
+    };
+    assert_eq!(mag.ctrl_reg1_m() & mask, 0b0000_1100);
+
+    let mag = MagSettings {
+        sample_rate: _10Hz,
+        ..Default::default()
+    };
+    assert_eq!(mag.ctrl_reg1_m() & mask, 0b0001_0000);
+
+    let mag = MagSettings {
+        sample_rate: _20Hz,
+        ..Default::default()
+    };
+    assert_eq!(mag.ctrl_reg1_m() & mask, 0b0001_0100);
+
+    let mag = MagSettings {
+        sample_rate: _40Hz,
+        ..Default::default()
+    };
+    assert_eq!(mag.ctrl_reg1_m() & mask, 0b0001_1000);
+
+    let mag = MagSettings {
+        sample_rate: _80Hz,
+        ..Default::default()
+    };
+    assert_eq!(mag.ctrl_reg1_m() & mask, 0b0001_1100);
+}

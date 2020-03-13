@@ -189,3 +189,128 @@ fn accel_init_values() {
     assert_eq!(settings.ctrl_reg6_xl(), 0b0110_0000); // [ODR_XL2][ODR_XL1][ODR_XL0][FS1_XL][FS0_XL][BW_SCAL_ODR][BW_XL1][BW_XL0]
     assert_eq!(settings.ctrl_reg7_xl(), 0b0000_0000); // [HR][DCF1][DCF0][0][0][FDS][0][HPIS1]
 }
+#[test]
+fn accel_scale_values() {
+    use Scale::*;
+    let mask = 0b0001_1000;
+
+    let accel = AccelSettings {
+        scale: _2G,
+        ..Default::default()
+    };
+    assert_eq!(accel.ctrl_reg6_xl() & mask, 0b0000_0000);
+
+    let accel = AccelSettings {
+        scale: _4G,
+        ..Default::default()
+    };
+    assert_eq!(accel.ctrl_reg6_xl() & mask, 0b0001_0000);
+
+    let accel = AccelSettings {
+        scale: _8G,
+        ..Default::default()
+    };
+    assert_eq!(accel.ctrl_reg6_xl() & mask, 0b0001_1000);
+
+    let accel = AccelSettings {
+        scale: _16G,
+        ..Default::default()
+    };
+    assert_eq!(accel.ctrl_reg6_xl() & mask, 0b0000_1000);
+}
+
+#[test]
+fn accel_set_odr() {
+    use ODR::*;
+    let mask = 0b1110_0000;
+
+    let accel = AccelSettings {
+        sample_rate: PowerDown,
+        ..Default::default()
+    };
+    assert_eq!(accel.ctrl_reg6_xl() & mask, 0b0000_0000);
+
+    let accel = AccelSettings {
+        sample_rate: _10Hz,
+        ..Default::default()
+    };
+    assert_eq!(accel.ctrl_reg6_xl() & mask, 0b0010_0000);
+
+    let accel = AccelSettings {
+        sample_rate: _50Hz,
+        ..Default::default()
+    };
+    assert_eq!(accel.ctrl_reg6_xl() & mask, 0b0100_0000);
+
+    let accel = AccelSettings {
+        sample_rate: _119Hz,
+        ..Default::default()
+    };
+    assert_eq!(accel.ctrl_reg6_xl() & mask, 0b0110_0000);
+
+    let accel = AccelSettings {
+        sample_rate: _238Hz,
+        ..Default::default()
+    };
+    assert_eq!(accel.ctrl_reg6_xl() & mask, 0b1000_0000);
+
+    let accel = AccelSettings {
+        sample_rate: _476Hz,
+        ..Default::default()
+    };
+    assert_eq!(accel.ctrl_reg6_xl() & mask, 0b1010_0000);
+
+    let accel = AccelSettings {
+        sample_rate: _952Hz,
+        ..Default::default()
+    };
+    assert_eq!(accel.ctrl_reg6_xl() & mask, 0b1100_0000);
+}
+
+#[test]
+fn set_accel_bandwidth_selection() {
+    use BandwidthSelection::*;
+    let mask = 0b0000_0100;
+
+    let accel = AccelSettings {
+        bandwidth_selection: ByBW,
+        ..Default::default()
+    };
+    assert_eq!(accel.ctrl_reg6_xl() & mask, 0b0000_0100);
+
+    let accel = AccelSettings {
+        bandwidth_selection: ByODR,
+        ..Default::default()
+    };
+    assert_eq!(accel.ctrl_reg6_xl() & mask, 0b0000_0000);
+}
+
+#[test]
+fn set_accel_bandwidth() {
+    use Bandwidth::*;
+    let mask = 0b0000_0011;
+
+    let accel = AccelSettings {
+        bandwidth: _211Hz,
+        ..Default::default()
+    };
+    assert_eq!(accel.ctrl_reg6_xl() & mask, 0b0000_0001);
+
+    let accel = AccelSettings {
+        bandwidth: _105Hz,
+        ..Default::default()
+    };
+    assert_eq!(accel.ctrl_reg6_xl() & mask, 0b0000_0010);
+
+    let accel = AccelSettings {
+        bandwidth: _50Hz,
+        ..Default::default()
+    };
+    assert_eq!(accel.ctrl_reg6_xl() & mask, 0b0000_0011);
+
+    let accel = AccelSettings {
+        bandwidth: _408Hz,
+        ..Default::default()
+    };
+    assert_eq!(accel.ctrl_reg6_xl() & mask, 0b0000_0000);
+}
