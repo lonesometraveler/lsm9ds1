@@ -14,11 +14,9 @@ This library is work in progress. Not all features are implemented yet. Contribu
 * [x] I2C communication with Accelerometer/Gyroscope
 * [ ] I2C communication with Magnetometer
 * [x] I2C communication with Temperature Sensor
+* [x] Custom sensor settings
 * [x] Sensor reading (Accel, Gyro, Mag, Temperature) See `read_accel()`, `read_gyro()`, etc.
 * [x] Raw Sensor reading (Accel, Gyro, Mag, Temperature) See `read_accel_raw()`, `read_gyro_raw`
-* [x] Output Data Rate config for Accel, Gyro, Mag
-* [x] Sensitivity config for Accel, Gyro, Mag
-* [x] Bandwidth config for Accel and Gyro
 * [ ] Calibration
 * [ ] Interrupt
 * [ ] FIFO Mode
