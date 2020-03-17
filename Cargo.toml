@@ -1,0 +1,15 @@
+[package]
+name = "lsm9ds1"
+version = "0.1.0"
+authors = ["KENTARO OKUDA <kentaro.okuda@gmail.com>"]
+edition = "2018"
+categories = ["embedded", "hardware-support", "no-std"]
+description = "A platform agnostic driver to interface with LSM9DS1 3D accelerometer, 3D gyroscope, 3D magnetometer sensor module."
+documentation = "https://docs.rs/lsm9ds1"
+readme = "README.md"
+keywords = ["embedded-hal-driver", "accelerometer", "gyroscope", "magnetometer"]
+license = "MIT"
+repository = "https://github.com/lonesometraveler/lsm9ds1"
+
+[dependencies]
+embedded-hal  = { version = "0.2.3" }
