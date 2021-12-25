@@ -304,6 +304,7 @@ where
         let data = self.read_register(sensor, address)?;
         Ok((data & bitmask) != 0)
     }
+    
 }
 
 /// Settings for various FIFO- and interrupt-related flags, Enabled or Disabled
