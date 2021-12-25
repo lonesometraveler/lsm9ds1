@@ -270,4 +270,58 @@ where
         let result: i16 = (bytes[1] as i16) << 8 | bytes[0] as i16;
         Ok((result as f32) / TEMP_SCALE + TEMP_BIAS)
     }
+
+    // --- ADDED GROUP OF FUNCTIONS ---
+    
+    /// Read a byte from the given register.
+    fn read_register(&mut self, sensor: Sensor, address: u8) -> Result<u8, T::Error> {
+ // pub fn read_register(&mut self, address: Registers) -> Result<u8, T::Error> {
+        let mut reg_data = [0u8];        
+        self.interface.read(sensor, address, &mut reg_data)?;
+        Ok(reg_data[0])
+    }
+
+    /// Clear selected bits using a bitmask
+    fn clear_register_bit_flag(&mut self, sensor: Sensor, address: u8, bitmask: u8) -> Result<(), T::Error> {
+        let mut reg_data = [0u8];
+        self.interface.read(sensor, address, &mut reg_data)?;
+        let payload: u8 = reg_data[0] & !bitmask;        
+        self.interface.write(sensor, address, payload)?;        
+        Ok(())
+    }
+
+    /// Set selected bits using a bitmask
+    fn set_register_bit_flag(&mut self, sensor: Sensor, address: u8, bitmask: u8) -> Result<(), T::Error> {
+        let mut reg_data = [0u8];
+        self.interface.read(sensor, address, &mut reg_data)?;
+        let payload: u8 = reg_data[0] | bitmask;
+        self.interface.write(sensor, address, payload)?;
+        Ok(())
+    }
+
+    /// Check if specific bits are set.
+    fn is_register_bit_flag_high(&mut self, sensor: Sensor, address: u8, bitmask: u8,) -> Result<bool, T::Error> {
+        let data = self.read_register(sensor, address)?;
+        Ok((data & bitmask) != 0)
+    }
+}
+
+/// Settings for various FIFO- and interrupt-related flags, Enabled or Disabled
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy)]
+pub enum FLAG {
+    /// Enabled (bit set)
+    Enabled,
+    /// Disabled (bit cleared)
+    Disabled,
+}
+
+impl FLAG {
+    pub fn status(self) -> bool {
+        let status = match self {
+            FLAG::Disabled => false,
+            FLAG::Enabled => true,
+        };
+        status
+    }
 }
