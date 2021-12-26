@@ -1,19 +1,23 @@
 //! Various functions related to FIFO
- 
+
 use super::*;
 
-/// CTRL_REG9 bit 4 FIFO_TEMP_EN
-const FIFO_TEMP_EN: u8 = 0b0001_0000;
-/// CTRL_REG9 bit 1 FIFO_EN
-const FIFO_EN: u8 = 0b0000_0010;
-/// CTRL_REG9 bit 0 STOP_ON_FTH
-const STOP_ON_FTH: u8 = 0b0000_0001; 
-/// FIFO_SRC bit 7 FTH
-const FTH: u8 = 0b1000_0000;
-/// FIFO_SRC bit 6 OVRN
-const OVRN: u8 = 0b0100_0000;
-/// FIFO_SRC bits 5:0 FSS
-const FSS: u8 = 0b0011_1111;
+#[allow(non_camel_case_types)]
+pub struct FIFO_Bitmasks;
+
+#[allow(dead_code)]
+/// Bitmasks for FIFO-related settings in CTRL_REG9 and CTRL_REG5_XL registers
+impl FIFO_Bitmasks {
+    pub (crate) const FTH: u8 = 0b1000_0000;
+    /// FIFO_SRC bit 6 OVRN
+    pub (crate) const OVRN: u8 = 0b0100_0000;
+    /// FIFO_SRC bits 5:0 FSS
+    pub (crate) const FSS: u8 = 0b0011_1111;
+    /// CTRL_REG9 FIFO-related settings 
+    pub (crate) const CTRL_REG9_FIFO: u8 = 0b0001_0011;
+    /// Decimation setting in CTRL_REG5_XL
+    pub (crate) const DEC: u8 = 0b1100_0000;
+}
 
 /// FIFO settings
 #[derive(Debug)]
@@ -27,7 +31,7 @@ pub struct FIFOConfig {
     /// Set the threshold level
     pub fifo_threshold: u8, // default 32
     /// Store temperature data in FIFO
-    fifo_temperature_enable: bool, 
+    fifo_temperature_enable: bool,     
     }
  
 impl Default for FIFOConfig {
@@ -49,15 +53,15 @@ impl FIFOConfig {
         data |= self.fifo_mode.value();
         data |= self.fifo_threshold;        
         data
-    }
+        }
     fn f_ctrl_reg9(&self) -> u8 {
         let mut data = 0u8;
         if self.fifo_temperature_enable {data |= 1 << 4;}        
         if self.fifo_enable { data |= 1 << 1;}
         if self.fifo_use_threshold { data |= 1;}        
         data
-    }   
-}
+        }   
+    }
 
 #[derive(Debug)]
 /// Contents of the FIFO_STATUS register (threshold reached, overrun, empty, stored data level)
@@ -70,7 +74,7 @@ pub struct FifoStatus {
     pub fifo_empty: bool,
     /// Number of unread samples stored into FIFO
     pub fifo_level: u8,    
-}
+    }
  
 impl<T> LSM9DS1<T>
 where
@@ -78,41 +82,34 @@ where
     {
     
     /// Enable and configure FIFO
-    pub fn configure_fifo(&mut self, config: FIFOConfig) -> Result<(), T::Error> {        
-        // set/clear the three bits of CTRL_REG9 register
-        match config.fifo_enable {
-            true => self.set_register_bit_flag(Sensor::Accelerometer, Registers::CTRL_REG9.addr(), FIFO_EN),
-            false => self.clear_register_bit_flag(Sensor::Accelerometer, Registers::CTRL_REG9.addr(), FIFO_EN),
-        }?;
-        match config.fifo_temperature_enable {
-            true => self.set_register_bit_flag(Sensor::Accelerometer, Registers::CTRL_REG9.addr(), FIFO_TEMP_EN),
-            false => self.clear_register_bit_flag(Sensor::Accelerometer, Registers::CTRL_REG9.addr(), FIFO_TEMP_EN),
-        }?;
-        match config.fifo_use_threshold {
-            true => self.set_register_bit_flag(Sensor::Accelerometer, Registers::CTRL_REG9.addr(), STOP_ON_FTH),
-            false => self.clear_register_bit_flag(Sensor::Accelerometer, Registers::CTRL_REG9.addr(), STOP_ON_FTH),
-        }?;
-                
-        // set the entire FIFO_CTRL register
-        self.interface.write(Registers::FIFO_CTRL.addr(), config.f_fifo_ctrl())?;
+    pub fn configure_fifo(&mut self, config: FIFOConfig) -> Result<(), T::Error> {                
+        
+        // write values to the FIFO_CTRL register
+        self.interface.write(Sensor::AG, Registers::FIFO_CTRL.addr(), config.f_fifo_ctrl())?;         
+
+        // write values to specific bits of the CTRL_REG9 register        
+        let ctrl_reg9: u8 = self.read_register(Sensor::AG, Registers::CTRL_REG9.addr())?; 
+        //let mask: u8 = 0b00010011;
+        let mut data: u8 = config.f_ctrl_reg9();
+        let mut payload: u8 = ctrl_reg9 & !FIFO_Bitmasks::CTRL_REG9_FIFO;       
+        payload |= data;        
+        self.interface.write(Sensor::AG, Registers::CTRL_REG9.addr(), payload)?;        
+        
         Ok(())
     }
  
- 
     /// Get flags and FIFO level from the FIFO_STATUS register
-    pub fn get_fifo_status(&mut self) -> Result<FifoStatus, T::Error> {         
-        let mut data = [0u8];
-        self.interface.read(Sensor::Accelerometer, Registers::FIFO_SRC.addr(), &mut data)?;                       
-        let fifo_level_value = data[0] & FSS; 
- 
+    pub fn get_fifo_status(&mut self) -> Result<FifoStatus, T::Error> {                 
+        let fifo_src = self.read_register(Sensor::AG, Registers::FIFO_SRC.addr())?;        
+        let fifo_level_value = fifo_src & FIFO_Bitmasks::FSS;  
         let status = FifoStatus {
             /// Is FIFO filling equal or higher than the threshold?
-            fifo_thresh_reached: match data & FTH {
+            fifo_thresh_reached: match fifo_src & FTH {
                 0 => false,
                 _ => true,
             },
             /// Is FIFO full and at least one sample has been overwritten?
-            fifo_overrun: match data & OVRN {
+            fifo_overrun: match fifo_src & FIFO_Bitmasks::OVRN {
                 0 => false,
                 _ => true,
             },                        
@@ -126,6 +123,14 @@ where
         };
         Ok(status)
     }
+
+    pub fn set_decimation(&mut self, decimation: DECIMATE) -> Result<(), T::Error> {
+        let data: u8 = self.read_register(Sensor::AG, Registers::CTRL_REG5_XL.addr())?; // read current content of the register
+        let mut payload: u8 = data & !FIFO_Bitmasks::DEC; // use bitmask to affect only bits [7:6]
+        payload |= decimation.value(); // set the selected decimation value
+        self.interface.write(Sensor::AG, Registers::CTRL_REG5_XL, payload)?;
+        Ok(())
+        }
 }
 
 /// FIFO mode selection. (Refer to datasheets)
@@ -150,3 +155,22 @@ impl FIFO_MODE {
     }
 }
 
+/// Decimation of acceleration data on OUT REG and FIFO (Refer to table 65)
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy)]
+pub enum DECIMATE {
+    /// No decimation
+    NoDecimation = 0b00,
+    /// update every 2 samples;
+    _2samples = 0b01,
+    /// update every 4 samples;
+    _4samples = 0b10,
+    /// update every 8 samples;
+    _8samples = 0b11,
+}
+
+impl DECIMATE {
+    pub fn value(self) -> u8 {
+        (self as u8) << 6 // shifted to bits [7:6], can be used directly
+    }
+}
