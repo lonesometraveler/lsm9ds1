@@ -85,26 +85,26 @@ where
     pub fn configure_fifo(&mut self, config: FIFOConfig) -> Result<(), T::Error> {                
         
         // write values to the FIFO_CTRL register
-        self.interface.write(Sensor::AG, Registers::FIFO_CTRL.addr(), config.f_fifo_ctrl())?;         
+        self.interface.write(Sensor::Accelerometer, register::AG::FIFO_CTRL.addr(), config.f_fifo_ctrl())?;         
 
         // write values to specific bits of the CTRL_REG9 register        
-        let ctrl_reg9: u8 = self.read_register(Sensor::AG, Registers::CTRL_REG9.addr())?; 
+        let ctrl_reg9: u8 = self.read_register(Sensor::Accelerometer, register::AG::CTRL_REG9.addr())?; 
         //let mask: u8 = 0b00010011;
-        let mut data: u8 = config.f_ctrl_reg9();
+        let data: u8 = config.f_ctrl_reg9();
         let mut payload: u8 = ctrl_reg9 & !FIFO_Bitmasks::CTRL_REG9_FIFO;       
         payload |= data;        
-        self.interface.write(Sensor::AG, Registers::CTRL_REG9.addr(), payload)?;        
+        self.interface.write(Sensor::Accelerometer, register::AG::CTRL_REG9.addr(), payload)?;        
         
         Ok(())
     }
  
     /// Get flags and FIFO level from the FIFO_STATUS register
     pub fn get_fifo_status(&mut self) -> Result<FifoStatus, T::Error> {                 
-        let fifo_src = self.read_register(Sensor::AG, Registers::FIFO_SRC.addr())?;        
+        let fifo_src = self.read_register(Sensor::Accelerometer, register::AG::FIFO_SRC.addr())?;        
         let fifo_level_value = fifo_src & FIFO_Bitmasks::FSS;  
         let status = FifoStatus {
             /// Is FIFO filling equal or higher than the threshold?
-            fifo_thresh_reached: match fifo_src & FTH {
+            fifo_thresh_reached: match fifo_src & FIFO_Bitmasks::FTH {
                 0 => false,
                 _ => true,
             },
@@ -125,10 +125,10 @@ where
     }
 
     pub fn set_decimation(&mut self, decimation: DECIMATE) -> Result<(), T::Error> {
-        let data: u8 = self.read_register(Sensor::AG, Registers::CTRL_REG5_XL.addr())?; // read current content of the register
+        let data: u8 = self.read_register(Sensor::Accelerometer, register::AG::CTRL_REG5_XL.addr())?; // read current content of the register
         let mut payload: u8 = data & !FIFO_Bitmasks::DEC; // use bitmask to affect only bits [7:6]
         payload |= decimation.value(); // set the selected decimation value
-        self.interface.write(Sensor::AG, Registers::CTRL_REG5_XL, payload)?;
+        self.interface.write(Sensor::Accelerometer, register::AG::CTRL_REG5_XL.addr(), payload)?;
         Ok(())
         }
 }

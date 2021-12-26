@@ -33,25 +33,31 @@
  
 use super::*;
  
+#[allow(non_camel_case_types)]
+pub struct INT_Bitmasks;
 
-const PTH_X: u8 = 0b1000_0000;
-const PTH_Y: u8 = 0b0100_0000;
-const PTH_Z: u8 = 0b0010_0000;
-const NTH_X: u8 = 0b0001_0000;
-const NTH_Y: u8 = 0b0000_1000;
-const NTH_Z: u8 = 0b0000_0100;
-const MROI: u8 = 0b0000_0010;
-const INT: u8 = 0b0000_0001;
+#[allow(dead_code)]
+/// Bitmasks for interrupt-related settings in INT_SRC_M register
+impl INT_Bitmasks {
+    pub (crate) const PTH_X: u8 = 0b1000_0000;
+    pub (crate) const PTH_Y: u8 = 0b0100_0000;
+    pub (crate) const PTH_Z: u8 = 0b0010_0000;
+    pub (crate) const NTH_X: u8 = 0b0001_0000;
+    pub (crate) const NTH_Y: u8 = 0b0000_1000;
+    pub (crate) const NTH_Z: u8 = 0b0000_0100;
+    pub (crate) const MROI: u8 = 0b0000_0010;
+    pub (crate) const INT: u8 = 0b0000_0001;
+}
 
 /// Magnetometer interrupt pin (INT_M) settings
 #[derive(Debug)]
 pub struct IntConfigMag {
     /// Enable interrupt generation on X-axis
-    pub interrupt_Xaxis: FLAG,
+    pub interrupt_xaxis: FLAG,
     /// Enable interrupt generation on Y-axis
-    pub interrupt_Yaxis: FLAG,
+    pub interrupt_yaxis: FLAG,
     /// Enable interrupt generation on Z-axis
-    pub interrupt_Zaxis: FLAG,
+    pub interrupt_zaxis: FLAG,
     /// Configure interrupt pin INT_M as active high or active low 
     pub active_high_or_low: INT_ACTIVE,
     /// Latch interrupt request (Once latched, the INT_M pin remains in the same state until INT_SRC_M is read)
@@ -63,9 +69,9 @@ pub struct IntConfigMag {
 impl Default for IntConfigMag {
     fn default() -> Self {
         IntConfigMag {                    
-            interrupt_Xaxis: FLAG::Disabled,            
-            interrupt_Yaxis: FLAG::Disabled,            
-            interrupt_Zaxis: FLAG::Disabled,            
+            interrupt_xaxis: FLAG::Disabled,            
+            interrupt_yaxis: FLAG::Disabled,            
+            interrupt_zaxis: FLAG::Disabled,            
             active_high_or_low: INT_ACTIVE::Low,            
             interrupt_latching: FLAG::Enabled,            
             enable_interrupt: FLAG::Disabled,            
@@ -77,13 +83,13 @@ impl IntConfigMag {
     /// Returns values to be written to INT_CFG_M:    
     fn int_cfg_m(&self) -> u8 {
         let mut data = 0u8;
-        if self.interrupt_Xaxis.status() {
+        if self.interrupt_xaxis.status() {
             data |= 1 << 7;
         }
-        if self.interrupt_Yaxis.status() {
+        if self.interrupt_yaxis.status() {
             data |= 1 << 6;
         }
-        if self.interrupt_Zaxis.status() {
+        if self.interrupt_zaxis.status() {
             data |= 1 << 5;
         }        
         if self.active_high_or_low.status() {
@@ -102,72 +108,70 @@ impl IntConfigMag {
 #[derive(Debug)]
 /// Contents of the INT_SOURCE register (interrupt active and differential pressure events flags)
 pub struct IntStatusMag {
-    pub Xaxis_exceeds_thresh_pos: bool,
-    pub Yaxis_exceeds_thresh_pos: bool,
-    pub Zaxis_exceeds_thresh_pos: bool,
-    pub Xaxis_exceeds_thresh_neg: bool,
-    pub Yaxis_exceeds_thresh_neg: bool,
-    pub Zaxis_exceeds_thresh_neg: bool,
+    pub xaxis_exceeds_thresh_pos: bool,
+    pub yaxis_exceeds_thresh_pos: bool,
+    pub zaxis_exceeds_thresh_pos: bool,
+    pub xaxis_exceeds_thresh_neg: bool,
+    pub yaxis_exceeds_thresh_neg: bool,
+    pub zaxis_exceeds_thresh_neg: bool,
     pub measurement_range_overflow: bool,
     pub interrupt_occurs: bool,     
 }
 
 
-impl<T, E> LSM9DS1<T>
+impl<T> LSM9DS1<T>
 where
     T: Interface,
     {
     /// Enable interrupts for magnetometer and configure the INT_M interrupt pin     
     pub fn configure_interrupts_mag(&mut self, config: IntConfigMag) -> Result<(), T::Error> {
-        self.interface.write(Sensor::Mag, Registers::INT_CFG_M.addr(), config.int_cfg_m())?;                
+        self.interface.write(Sensor::Magnetometer, register::Mag::INT_CFG_M.addr(), config.int_cfg_m())?;                
         Ok(())
     }
 
     /// Get all the flags from the INT_SRC_M register
     pub fn get_int_status(&mut self) -> Result<IntStatusMag, T::Error> {        
         
-        let mut reg_data = [0u8];
-        self.interface.read(Sensor::Mag, Registers::INT_SRC_M.addr(), &mut reg_data)?;      
+        let reg_data: u8 = self.read_register(Sensor::Magnetometer, register::Mag::INT_SRC_M.addr())?;
 
-        let status = IntStatusMag {
-            
+        let status = IntStatusMag {            
             /// Does value on X-axis exceed the threshold on the positive side?
-            Xaxis_exceeds_thresh_pos: match reg_value & PTH_X {
+            xaxis_exceeds_thresh_pos: match reg_data & INT_Bitmasks::PTH_X {
                 0 => false,
                 _ => true,
             },
             /// Does value on Y-axis exceed the threshold on the positive side?
-            Yaxis_exceeds_thresh_pos: match reg_value & PTH_Y {
+            yaxis_exceeds_thresh_pos: match reg_data & INT_Bitmasks::PTH_Y {
                 0 => false,
                 _ => true,
             },
             /// Does value on Z-axis exceed the threshold on the positive side?
-            Zaxis_exceeds_thresh_pos: match reg_value & PTH_Z {
+            zaxis_exceeds_thresh_pos: match reg_data & INT_Bitmasks::PTH_Z {
                 0 => false,
                 _ => true,
             },
             /// Does value on X-axis exceed the threshold on the negative side?
-            Xaxis_exceeds_thresh_neg: match reg_value & NTH_X {
+            xaxis_exceeds_thresh_neg: match reg_data & INT_Bitmasks::NTH_X {
                 0 => false,
                 _ => true,
             },
             /// Does value on Y-axis exceed the threshold on the negative side?
-            Yaxis_exceeds_thresh_neg: match reg_value & NTH_Y {
+            yaxis_exceeds_thresh_neg: match reg_data & INT_Bitmasks::NTH_Y {
                 0 => false,
                 _ => true,
             },
             /// Does value on Z-axis exceed the threshold on the negative side?
-            Zaxis_exceeds_thresh_neg: match reg_value & NTH_Z {
+            zaxis_exceeds_thresh_neg: match reg_data & INT_Bitmasks::NTH_Z {
                 0 => false,
                 _ => true,
             },
             /// Did internal measurement range overflow on magnetic value?
-            measurement_range_overflow: match reg_value & MROI {
+            measurement_range_overflow: match reg_data & INT_Bitmasks::MROI {
                 0 => false,
                 _ => true,
             },
             /// This bit signals when the interrupt event occurs.
-            interrupt_occurs: match reg_value & INT {
+            interrupt_occurs: match reg_data & INT_Bitmasks::INT {
                 0 => false,
                 _ => true,
             },
@@ -176,3 +180,22 @@ where
     }
 }
 
+// Interrupt active setting for the INT_DRDY pin: active high (default) or active low
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy)]
+pub enum INT_ACTIVE {
+    /// Active high
+    High,
+    /// Active low
+    Low,
+}
+
+impl INT_ACTIVE {
+    pub fn status(self) -> bool {
+        let status = match self {
+            INT_ACTIVE::High => false,
+            INT_ACTIVE::Low => true,
+        };
+        status
+    }
+}
