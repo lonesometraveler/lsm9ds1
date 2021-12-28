@@ -30,7 +30,12 @@
 
 
 //! Various functions related to interrupts
+//! 
+//! At the moment only the Magnetometer-related interrupst are implemented
+//! TO DO: add setting offset used to compensate environmental effects
+//! 
  
+
 use super::*;
  
 #[allow(non_camel_case_types)]
@@ -118,6 +123,25 @@ pub struct IntStatusMag {
     pub interrupt_occurs: bool,     
 }
 
+// Interrupt active setting for the INT_DRDY pin: active high (default) or active low
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy)]
+pub enum INT_ACTIVE {
+    /// Active high
+    High,
+    /// Active low
+    Low,
+}
+
+impl INT_ACTIVE {
+    pub fn status(self) -> bool {
+        let status = match self {
+            INT_ACTIVE::High => false,
+            INT_ACTIVE::Low => true,
+        };
+        status
+    }
+}
 
 impl<T> LSM9DS1<T>
 where
@@ -178,24 +202,42 @@ where
         };
         Ok(status)
     }
-}
 
-// Interrupt active setting for the INT_DRDY pin: active high (default) or active low
-#[allow(non_camel_case_types)]
-#[derive(Debug, Clone, Copy)]
-pub enum INT_ACTIVE {
-    /// Active high
-    High,
-    /// Active low
-    Low,
-}
+    /// Set threshold in miligauss
+    pub fn set_threshold(&mut self, threshold: f32) -> Result<(), T::Error> {
+        let sensitivity = self.mag.scale.sensitivity();
+        let mut data = threshold / sensitivity;
+        // make sure it's not more than 15 bits, and it must be a positive value
+        if data >= 32767.0 {
+            data = 32767.0;
+        } else if data < 0.0 {
+            data = 0.0;
+        }
+        //data = data as u16;
 
-impl INT_ACTIVE {
-    pub fn status(self) -> bool {
-        let status = match self {
-            INT_ACTIVE::High => false,
-            INT_ACTIVE::Low => true,
-        };
-        status
+        let data_low: u8 = data as u8;
+        let data_high: u8 = ((data as u16) >> 8) as u8;
+
+        self.interface.write(Sensor::Magnetometer, register::Mag::INT_THS_H_M.addr(), data_high)?;
+        self.interface.write(Sensor::Magnetometer, register::Mag::INT_THS_L_M.addr(), data_low)?;
+
+        Ok(())
+    }
+
+    /// Set threshold in miligauss
+    pub fn set_offset(&mut self, offset: (f32, f32, f32)) -> Result<(), T::Error> {
+        let (mut x, mut y, mut z) = offset;
+        let sensitivity = self.mag.scale.sensitivity();
+        x = x / sensitivity;
+        y = y / sensitivity;
+        z = z / sensitivity;
+
+        // convert x, y, z to u16
+        // write to offset registers
+
+        Ok(())
     }
 }
+
+
+
