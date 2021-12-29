@@ -34,7 +34,6 @@
 //! At the moment only the Magnetometer-related interrupst are implemented
 //! TO DO: add setting offset used to compensate environmental effects
 //! 
- 
 
 use super::*;
  
@@ -204,7 +203,7 @@ where
     }
 
     /// Set threshold in miligauss
-    pub fn set_threshold(&mut self, threshold: f32) -> Result<(), T::Error> {
+    pub fn set_mag_threshold(&mut self, threshold: f32) -> Result<(), T::Error> {
         let sensitivity = self.mag.scale.sensitivity();
         let mut data = threshold / sensitivity;
         // make sure it's not more than 15 bits, and it must be a positive value
@@ -224,19 +223,60 @@ where
         Ok(())
     }
 
-    /// Set threshold in miligauss
-    pub fn set_offset(&mut self, offset: (f32, f32, f32)) -> Result<(), T::Error> {
+    /// Read the magnetometer threshold setting (value in miligauss)
+    pub fn get_mag_threshold(&mut self) -> Result<f32, T::Error> {
+        let sensitivity = self.mag.scale.sensitivity();
+        
+        let mut buffer = [0u8;2];
+        self.interface.read(Sensor::Magnetometer, register::Mag::INT_THS_L_M.addr(), &mut buffer)?;
+        
+        let t: u16 = (buffer[1] as u16) << 8 | buffer[0] as u16; // threshold is a 15bit unsigned value
+        
+        Ok(t as f32 * sensitivity)
+        
+    }
+
+    /// Set offset for all three axes of the magnetometer in miligauss
+    pub fn set_mag_offset(&mut self, offset: (f32, f32, f32)) -> Result<(), T::Error> {
         let (mut x, mut y, mut z) = offset;
         let sensitivity = self.mag.scale.sensitivity();
         x = x / sensitivity;
         y = y / sensitivity;
         z = z / sensitivity;
 
-        // convert x, y, z to u16
-        // write to offset registers
+        let x_low: u8 = x as u8;
+        let x_high: u8 = ((x as i16) >> 8) as u8;
+        self.interface.write(Sensor::Magnetometer, register::Mag::OFFSET_X_REG_L_M.addr(), x_low)?;
+        self.interface.write(Sensor::Magnetometer, register::Mag::OFFSET_X_REG_H_M.addr(), x_high)?;
+        
+        let y_low: u8 = y as u8;
+        let y_high: u8 = ((y as i16) >> 8) as u8;
+        self.interface.write(Sensor::Magnetometer, register::Mag::OFFSET_Y_REG_L_M.addr(), y_low)?;
+        self.interface.write(Sensor::Magnetometer, register::Mag::OFFSET_Y_REG_H_M.addr(), y_high)?;
+
+        let z_low: u8 = z as u8;
+        let z_high: u8 = ((z as i16) >> 8) as u8;
+        self.interface.write(Sensor::Magnetometer, register::Mag::OFFSET_Z_REG_L_M.addr(), z_low)?;
+        self.interface.write(Sensor::Magnetometer, register::Mag::OFFSET_Z_REG_H_M.addr(), z_high)?;
 
         Ok(())
     }
+
+    /// Read the offset settings for all three axes of the magnetometer (values in miligauss)
+    pub fn get_mag_offset(&mut self) -> Result<(f32, f32, f32), T::Error> {
+        let sensitivity = self.mag.scale.sensitivity();
+        
+        let mut buffer = [0u8;6];
+        self.interface.read(Sensor::Magnetometer, register::Mag::OFFSET_X_REG_L_M.addr(), &mut buffer)?;
+        
+        let x: i16 = (buffer[1] as i16) << 8 | buffer[0] as i16;
+        let y: i16 = (buffer[3] as i16) << 8 | buffer[2] as i16;
+        let z: i16 = (buffer[5] as i16) << 8 | buffer[4] as i16;
+
+        Ok((x as f32 * sensitivity, y as f32 * sensitivity, z as f32 * sensitivity))
+        
+    }
+     
 }
 
 
