@@ -311,3 +311,24 @@ impl FLAG {
         status
     }
 }
+
+
+/// Possible combinations of interrupt events for the accelerometer
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy)]
+pub enum COMBINATION {
+    /// AND combination (bit set)
+    AND,
+    /// OR (bit cleared)
+    OR,
+}
+
+impl COMBINATION {
+    pub fn status(self) -> bool {
+        let status = match self {
+            COMBINATION::OR => false,
+            COMBINATION::AND => true,
+        };
+        status
+    }
+}
