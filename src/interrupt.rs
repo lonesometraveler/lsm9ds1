@@ -1,21 +1,5 @@
-// INT_GEN_CFG_XL (06h) Linear acceleration sensor interrupt generator configuration register.
-// enable interrupt generation for high/low event for X/Y/Z axis
-// AND/OR combination for interrupts
-// 6D detection for interrupt
-// INT_GEN_THS_X_XL (07h) Linear acceleration sensor interrupt threshold register for axis X, then also Y and Z
-// INT_GEN_DUR_XL (0Ah) Linear acceleration sensor interrupt duration register. - wait or not and for how long before exiting interrupt
-// INT1_CTRL (0Ch) INT1_A/G pin control register. (for pin 1)
-// gyroscope interrupt enable, accelerometer interrupt enable, 
-// inactivity, FSS, overrun, FIFO threshold, temperature data ready, accel data ready, gyro data ready signals, boot status
-// INT2_CTRL (0Dh) INT2_A/G pin control register. (for pin 2)
-//
-// INT_GEN_SRC_G (14h) - Angular rate sensor interrupt source register. (interrupt events flags for gyroscope)
-// INT_GEN_SRC_XL (26h) - Linear acceleration sensor interrupt source register. (interrupt events flags for gyroscope)
-//
 // STATUS_REG (17h) - contains inactivity signal flag, accel and gyro interrupt generated flag
 // CTRL_REG4 (1Eh) - has the LIR (interrupt latching) and 4D/6D switch 
-// STATUS_REG (27h)  ??? identical to STATUS_REG (17h)
-// INT_GEN_CFG_G (30h) Angular rate sensor interrupt generator configuration register. (AND/OR, LIR, enable generation on Low/High on X/Y/Z)
 // INT_GEN_THS_X_G (31h - 32h) Angular rate sensor interrupt generator threshold registers. The value is expressed as a 15- bit word in two’s complement. 
 // INT_GEN_THS_X_G contains also the reset/decrement switch for the counter
 // INT_GEN_THS_Y_G (33h - 34h) and INT_GEN_THS_Z_G (35h - 36h) 
@@ -31,9 +15,18 @@
 
 //! Various functions related to interrupts
 //! 
-//! At the moment only the Magnetometer-related interrupst are implemented
-//! TO DO: add setting offset used to compensate environmental effects
+//! TO DO:
+//! - CHECK IF ALL FUNCTIONS ARE IMPLEMENTED
+//! - MAKE SURE REGISTERS ARE NOT OVERWRITTEN BY MISTAKE
 //! 
+//! FUNCTIONS MISSING:
+//! - accelerometer interrupt threshold setting (should it be a struct?)
+//! - accelerometer interrupt threshold reading
+//! - IG_XL & IG_G reading (if necessary)
+//! - CTRL_REG4 LIR_XL1 and 4D_XL1 setting/reading
+//! - gyroscope interrupt threshold setting (should it be a struct?)
+//! - gyroscope interrupt threshold reading
+
 
 use super::*;
  
@@ -379,7 +372,7 @@ where
         }
 
 
-    // interrupt duration
+    /// accelerometer interrupt duration
     // set in INT_GEN_DUR_XL register
     pub fn accel_int_duration(&mut self, wait: FLAG, duration: u8) -> Result<(), T::Error()> {
         // read the current value of the register
@@ -650,7 +643,27 @@ where
         Ok(status)
     }
 
+    /// gyroscope interrupt duration
+    // set in INT_GEN_DUR_G register
+    pub fn gyro_int_duration(&mut self, wait: FLAG, duration: u8) -> Result<(), T::Error()> {
+        // read the current value of the register
+        
+        let mut reg_value = self.read_register(Sensor::Gyro, register::AG::INT_GEN_DUR_G.addr())?;
 
+        match wait {
+            FLAG::Enabled => reg_value & !0b1000_0000 | 0b1000_0000, // set bit
+            FLAG::Disabled => reg_value & !0b1000_0000, // clear bit
+        }
+
+        let duration = duration & !0b1000_0000;
+
+        reg_value =& !0b0111_1111;
+
+        reg_value |= duration; // need to make sure duration is 7 bit only!
+
+        self.interface.write(Sensor::Gyro, register::AG::INT_GEN_DUR_G.addr(), reg_value);
+
+    }
      
    
 

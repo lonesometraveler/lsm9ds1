@@ -1,4 +1,8 @@
 //! Various functions related to FIFO
+//! 
+//! TO DO:
+//! - CHECK IF ALL FUNCTIONS ARE IMPLEMENTED
+//! - MAKE SURE REGISTERS ARE NOT OVERWRITTEN BY MISTAKE
 
 use super::*;
 
