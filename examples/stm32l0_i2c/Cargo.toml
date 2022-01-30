@@ -1,0 +1,27 @@
+[package]
+name = "test"
+version = "0.1.0"
+authors = ["nebelgrau <nebelgrau@gmx.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+
+stm32l0 = {version = "0.13", features = ["stm32l0x1", "rt"]}
+
+# stm32l0xx-hal = {version = "0.9", features = ["io-STM32L031", "stm32l0x1", "rt"]}
+
+# stm32l0xx-hal = {version = "0.9", features = ["mcu-STM32L031K6Tx", "rt"]}
+stm32l0xx-hal = {path = "../../../../MCUs/stm32l0xx-hal", features = ["mcu-STM32L031K6Tx", "rt"]}
+panic-halt = "0.2"
+cortex-m = {version = "0.7"}
+cortex-m-rt = "0.6"    
+
+lsm9ds1 = { path = "../.."}
+
+[profile.release]
+# debug = true
+
+lto = true
+opt-level = "z"

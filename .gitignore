@@ -1,2 +1,12 @@
 /target
 Cargo.lock
+notes.md
+.gdb_history
+*.bin
+*.hex
+*.elf
+*.zip
+/examples/**/target
+*.bin
+**/*.bkp
+**/*.rs.bkp

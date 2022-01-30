@@ -91,6 +91,12 @@ where
         Ok(bytes[0] == who_am_i)
     }
 
+    pub fn whoami(&mut self, sensor: Sensor) -> Result<u8, T::Error> {
+        let mut bytes = [0u8; 1];
+        self.interface.read(Sensor::Accelerometer,register::AG::WHO_AM_I, &bytes)?;
+        Ok(bytes[0])
+    }
+
     /// Verifies communication with WHO_AM_I register
     pub fn accel_is_reacheable(&mut self) -> Result<bool, T::Error> {
         self.reachable(Sensor::Accelerometer)
