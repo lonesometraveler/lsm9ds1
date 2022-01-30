@@ -91,10 +91,12 @@ where
         Ok(bytes[0] == who_am_i)
     }
 
-    pub fn whoami(&mut self, sensor: Sensor) -> Result<u8, T::Error> {
-        let mut bytes = [0u8; 1];
-        self.interface.read(Sensor::Accelerometer,register::AG::WHO_AM_I, &bytes)?;
-        Ok(bytes[0])
+    pub fn whoami_ag(&mut self) -> Result<u8, T::Error> {
+        //let mut bytes = [0u8; 1];
+
+        let mut id = self.read_register(Sensor::Accelerometer, register::AG::WHO_AM_I.addr())?;
+        
+        Ok(id)
     }
 
     /// Verifies communication with WHO_AM_I register

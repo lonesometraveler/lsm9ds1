@@ -79,7 +79,7 @@ fn main() -> ! {
 
     loop {
         
-        let whoami = lsm9ds1.whoami().unwrap();
+        let whoami = lsm9ds1.whoami_ag().unwrap();
 
         writeln!(tx, "my name is {}\r", whoami).unwrap();
 
