@@ -10,7 +10,7 @@ pub mod gyro;
 pub mod mag;
 pub mod register;
 pub mod fifo;
-pub mod interrupt;
+pub mod interrupts;
 
 use accel::AccelSettings;
 use gyro::GyroSettings;

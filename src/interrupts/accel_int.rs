@@ -1,4 +1,7 @@
 /// Accelerometer interrupt generation settings
+use super::*;
+
+
 #[derive(Debug)]
 pub struct IntConfigAccel {
     /// Combination of accelerometer's interrupt events
@@ -93,3 +96,61 @@ impl IntConfigAccel {
         pub zaxis_high_event: bool,
         pub zaxis_low_event: bool, 
     }
+
+
+    impl<T> LSM9DS1<T>
+    where
+        T: Interface,
+        {
+
+    /// Enable and configure interrupts for accelrometer
+    pub fn configure_interrupts_accel(&mut self, config: IntConfigAccel) -> Result<(), T::Error> {
+        self.interface.write(Sensor::Accelerometer, register::AG::INT_GEN_CFG_XL.addr(), config.int_gen_cfg_xl())?;                
+        Ok(())
+    }
+    
+    /// Get all the flags from the INT_GEN_SRC_XL register
+    pub fn accel_int_status(&mut self) -> Result<IntStatusAccel, T::Error> {        
+            
+        let reg_data: u8 = self.read_register(Sensor::Accelerometer, register::AG::INT_GEN_SRC_XL.addr())?;
+
+        let status = IntStatusAccel {            
+            /// This bit signals whether one or more interrupt events occured.
+            interrupt_active: match reg_data & XL_INT_Bitmasks::IA_XL {
+                0 => false,
+                _ => true,
+            },
+            /// X-axis high event has occurred
+            xaxis_high_event: match reg_data & XL_INT_Bitmasks::XH_XL {
+                0 => false,
+                _ => true,
+            },
+            /// X-axis low event has occurred
+            xaxis_low_event: match reg_data & XL_INT_Bitmasks::XL_XL {
+                0 => false,
+                _ => true,
+            },
+            /// Y-axis high event has occurred
+            yaxis_high_event: match reg_data & XL_INT_Bitmasks::YH_XL {
+                0 => false,
+                _ => true,
+            },
+            /// Y-axis low event has occurred
+            yaxis_low_event: match reg_data & XL_INT_Bitmasks::YL_XL {
+                0 => false,
+                _ => true,
+            },
+            /// Z-axis high event has occurred
+            zaxis_high_event: match reg_data & XL_INT_Bitmasks::ZH_XL {
+                0 => false,
+                _ => true,
+            },
+            /// X-axis low event has occurred
+            zaxis_low_event: match reg_data & XL_INT_Bitmasks::ZL_XL {
+                0 => false,
+                _ => true,
+            },                
+        };
+        Ok(status)
+    }
+}

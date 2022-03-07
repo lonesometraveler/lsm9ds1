@@ -1,4 +1,4 @@
-
+use super::*;
 
     /// Gyroscope interrupt generator settings
     #[derive(Debug)]

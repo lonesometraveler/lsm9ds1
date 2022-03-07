@@ -1,4 +1,7 @@
 #[allow(non_camel_case_types)]
+
+use super::*;
+
 pub struct M_INT_Bitmasks;
 
 #[allow(dead_code)]

@@ -1,5 +1,5 @@
 // SPLIT THE INTERRUPTS CODE INTO SMALLER MODULES: ACCEL, GYRO, MAG and PINS
-
+use super::*;
 
 pub mod accel_int;
 pub mod gyro_int;

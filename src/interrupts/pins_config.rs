@@ -1,3 +1,5 @@
+use super::*;
+
 /// Magnetometer interrupt pin (INT_M) settings
 #[derive(Debug)]
 pub struct IntConfigMag {
