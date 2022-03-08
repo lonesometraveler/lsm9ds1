@@ -1,3 +1,5 @@
+/// Functions related to interrupt pins configuration
+
 use super::*;
 
 /// Magnetometer interrupt pin (INT_M) settings
@@ -189,3 +191,30 @@ impl IntConfigMag {
         }
     }
 
+/*
+   // WHICH SENSOR SHOULD I USE HERE? IT'S BOTH ACCEL AND GYRO!
+
+    /// Enable interrupts for accelerometer/gyroscope and configure the INT1_A/G interrupt pin     
+    pub fn configure_interrupts_ag1(&mut self, config: IntConfigAG1) -> Result<(), T::Error> {
+        self.interface.write(Sensor::Accelerometer, register::AG::INT1_CTRL.addr(), config.int1_ctrl())?;                
+        Ok(())
+    }
+
+
+
+    // WHICH SENSOR SHOULD I USE HERE? IT'S BOTH ACCEL AND GYRO!
+
+    /// Enable interrupts for accelerometer/gyroscope and configure the INT1_A/G interrupt pin     
+    pub fn configure_interrupts_ag2(&mut self, config: IntConfigAG2) -> Result<(), T::Error> {
+        
+        let reg_data = self.read_register(Sensor::Accelerometer, register::AG::INT2_CTRL.addr())?;
+        
+        let mut data: u8 = reg_data & !0b1100_0000;
+
+        data |= config.int2_ctrl();
+
+        self.interface.write(Sensor::Accelerometer, register::AG::INT2_CTRL.addr(), data)?;                
+        Ok(())
+    }
+
+*/
