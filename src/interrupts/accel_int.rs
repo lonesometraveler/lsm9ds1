@@ -177,7 +177,68 @@ where
         self.interface.write(Sensor::Accelerometer, register::AG::INT_GEN_DUR_XL.addr(), reg_value)?;
 
         Ok(())
-
     }
+
+    /// Get the current accelerometer interrupts configuration
+    pub fn get_accel_int_config(&self) -> IntConfigAccel {
+        let reg_value = self.read_register(Sensor::Accelerometer, 
+                                              register::AG::INT_GEN_CFG_XL)?;
+        
+        let config = IntConfigAccel {
+                    events_combination: match (reg_value & 0b1000_0000) >> 7 {
+                        1 => COMBINATION::AND,
+                        _ => COMBINATION::OR,
+                    },
+                    enable_6d: match (reg_value & 0b0100_0000) >> 6 {
+                        1 => FLAG::Enabled,
+                        _ => FLAG::Disabled,
+                    },
+                    interrupt_high_xaxis: match (reg_value & 0b0010_0000) >> 5 {
+                        1 => FLAG::Enabled,
+                        _ => FLAG::Disabled,
+                    },
+                    interrupt_low_xaxis: match (reg_value & 0b0001_0000) >> 4 {
+                        1 => FLAG::Enabled,
+                        _ => FLAG::Disabled,
+                    },
+                    interrupt_high_yaxis: match (reg_value & 0b0000_1000) >> 3 {
+                        1 => FLAG::Enabled,
+                        _ => FLAG::Disabled,
+                    },
+                    interrupt_low_yaxis: match (reg_value & 0b0000_0100) >> 2 {
+                        1 => FLAG::Enabled,
+                        _ => FLAG::Disabled,
+                    },
+                    interrupt_high_zaxis: match (reg_value & 0b0000_0010) >> 1 {
+                        1 => FLAG::Enabled,
+                        _ => FLAG::Disabled,
+                    },
+                    interrupt_low_zaxis: match (reg_value & 0b0000_0001) {
+                        1 => FLAG::Enabled,
+                        _ => FLAG::Disabled,
+                    }
+                };
+            Ok(config)
+        }
+
+}
+
+#[test]
+fn configure_accel_int() {
+    let config = IntConfigAccel::default();//IntConfigAccel {..Default::default()};
+    assert_eq!(config.int_gen_cfg_xl(), 0b0000_0000);
+
+    let config = IntConfigAccel {
+                    events_combination: COMBINATION::AND,
+                    enable_6d: FLAG::Enabled,
+                    interrupt_high_xaxis: FLAG::Enabled,
+                    interrupt_low_xaxis: FLAG::Enabled,
+                    interrupt_high_yaxis: FLAG::Enabled,
+                    interrupt_low_yaxis: FLAG::Enabled,
+                    interrupt_high_zaxis: FLAG::Enabled,
+                    interrupt_low_zaxis: FLAG::Enabled,
+                };
+    assert_eq!(config.int_gen_cfg_xl(), 0b1111_1111);
+
 
 }

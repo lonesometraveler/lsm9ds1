@@ -197,5 +197,71 @@ where
         Ok(())
 
     }
-     
+    
+    
+
+    /// Get the current gyroscope interrupts configuration
+    pub fn get_gyro_int_config(&self) -> IntConfigGyro {
+        let reg_value = self.read_register(Sensor::Gyro, 
+                                              register::AG::INT_GEN_CFG_G)?;
+        
+        let config = IntConfigGyro {
+                    events_combination: match (reg_value & 0b1000_0000) >> 7 {
+                        1 => COMBINATION::AND,
+                        _ => COMBINATION::OR,
+                    },
+                    latch_interrupts: match (reg_value & 0b0100_0000) >> 6 {
+                        1 => FLAG::Enabled,
+                        _ => FLAG::Disabled,
+                    },
+                    interrupt_high_xaxis: match (reg_value & 0b0010_0000) >> 5 {
+                        1 => FLAG::Enabled,
+                        _ => FLAG::Disabled,
+                    },
+                    interrupt_low_xaxis: match (reg_value & 0b0001_0000) >> 4 {
+                        1 => FLAG::Enabled,
+                        _ => FLAG::Disabled,
+                    },
+                    interrupt_high_yaxis: match (reg_value & 0b0000_1000) >> 3 {
+                        1 => FLAG::Enabled,
+                        _ => FLAG::Disabled,
+                    },
+                    interrupt_low_yaxis: match (reg_value & 0b0000_0100) >> 2 {
+                        1 => FLAG::Enabled,
+                        _ => FLAG::Disabled,
+                    },
+                    interrupt_high_zaxis: match (reg_value & 0b0000_0010) >> 1 {
+                        1 => FLAG::Enabled,
+                        _ => FLAG::Disabled,
+                    },
+                    interrupt_low_zaxis: match (reg_value & 0b0000_0001) {
+                        1 => FLAG::Enabled,
+                        _ => FLAG::Disabled,
+                    }
+                };
+            Ok(config)
+        }
+
+}
+
+
+
+#[test]
+fn configure_gyro_int() {
+    let config = IntConfigGyro::default();
+    assert_eq!(config.int_gen_cfg_g(), 0b0000_0000);
+
+    let config = IntConfigGyro {
+                events_combination: COMBINATION::AND,
+                latch_interrupts: FLAG::Enabled,
+                interrupt_high_xaxis: FLAG::Enabled,
+                interrupt_high_yaxis: FLAG::Enabled,
+                interrupt_high_zaxis: FLAG::Enabled,
+                interrupt_low_xaxis: FLAG::Enabled,
+                interrupt_low_yaxis: FLAG::Enabled,
+                interrupt_low_zaxis: FLAG::Enabled,
+                };
+    assert_eq!(config.int_gen_cfg_g(), 0b1111_1111);
+
+
 }
