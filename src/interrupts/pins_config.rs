@@ -3,6 +3,9 @@
 /// TO DO: 
 /// - add functions to set these configurations (write to registers)
 /// - add getters as well?
+/// 
+/// NOTE: INT2_CTRL has MSB that MUST NOT be overwritten (inactivity signal)
+/// 
 use super::*;
 
 // --- A/G PINS CONFIGURATION ---
@@ -134,6 +137,9 @@ impl IntConfigAG2 {
     }
 }
 
+
+// CHECK WHAT TO DO WITH THIS - MOVE TO mag_int???
+
 /// Magnetometer interrupt pin (INT_M) settings
 #[derive(Debug)]
 pub struct IntConfigM {
@@ -217,3 +223,61 @@ impl IntConfigM {
     }
 
 */
+
+
+#[test]
+fn configure_ag1() {
+        
+    let config = IntConfigAG1::default();
+    assert_eq!(config.int1_ctrl(), 0b0000_0000);
+        
+    let config = IntConfigAG1 {
+                enable_gyro_int: FLAG::Enabled,
+                enable_accel_int: FLAG::Enabled,
+                enable_fss5: FLAG::Enabled,
+                enable_overrun: FLAG::Enabled,
+                enable_fth: FLAG::Enabled,
+                enable_boot_status: FLAG::Enabled,
+                enable_gyro_dataready: FLAG::Enabled,
+                enable_accel_dataready: FLAG::Enabled,                
+            };
+    assert_eq!(config.int1_ctrl(), 0b1111_1111);    
+
+}
+
+
+#[test]
+fn configure_ag2() {
+        
+    let config = IntConfigAG2::default();
+    assert_eq!(config.int2_ctrl(), 0b0000_0000);
+        
+    let config = IntConfigAG2 {
+                enable_fss5: FLAG::Enabled,
+                enable_overrun: FLAG::Enabled,
+                enable_fth: FLAG::Enabled,
+                enable_temp_dataready: FLAG::Enabled,
+                enable_gyro_dataready: FLAG::Enabled,
+                enable_accel_dataready: FLAG::Enabled,
+            };
+    assert_eq!(config.int2_ctrl(), 0b0011_1111);    
+
+}
+
+#[test]
+fn configure_m() {
+        
+    let config = IntConfigM::default();
+    assert_eq!(config.int_cfg_m(), 0b0000_0000);
+        
+    let config = IntConfigAG2 {
+                enable_fss5: FLAG::Enabled,
+                enable_overrun: FLAG::Enabled,
+                enable_fth: FLAG::Enabled,
+                enable_temp_dataready: FLAG::Enabled,
+                enable_gyro_dataready: FLAG::Enabled,
+                enable_accel_dataready: FLAG::Enabled,
+            };
+    assert_eq!(config.int2_ctrl(), 0b0011_1111);    
+
+}

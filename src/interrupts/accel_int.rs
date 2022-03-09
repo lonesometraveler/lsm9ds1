@@ -180,9 +180,10 @@ where
     }
 
     /// Get the current accelerometer interrupts configuration
-    pub fn get_accel_int_config(&self) -> IntConfigAccel {
-        let reg_value = self.read_register(Sensor::Accelerometer, 
-                                              register::AG::INT_GEN_CFG_XL)?;
+    pub fn get_accel_int_config(&mut self) -> Result<IntConfigAccel, T::Error> {
+        
+        let reg_value: u8 = self.read_register(Sensor::Accelerometer, 
+                                              register::AG::INT_GEN_CFG_XL.addr())?;
         
         let config = IntConfigAccel {
                     events_combination: match (reg_value & 0b1000_0000) >> 7 {
@@ -213,7 +214,7 @@ where
                         1 => FLAG::Enabled,
                         _ => FLAG::Disabled,
                     },
-                    interrupt_low_zaxis: match (reg_value & 0b0000_0001) {
+                    interrupt_low_zaxis: match reg_value & 0b0000_0001 {
                         1 => FLAG::Enabled,
                         _ => FLAG::Disabled,
                     }

@@ -7,7 +7,7 @@ pub struct IntConfigGyro {
     /// Combination of gyroscope interrupt events
     pub events_combination: COMBINATION,
     /// Latch interrupt request
-    pub latch_interrupts: FLAG,
+    pub latch_interrupts: INT_LATCH,
     /// Enable interrupt generation on X-axis (pitch) high event
     pub interrupt_high_xaxis: FLAG,
     /// Enable interrupt generation on X-axis (pitch) low event
@@ -26,7 +26,7 @@ impl Default for IntConfigGyro {
     fn default() -> Self {
         IntConfigGyro {
             events_combination: COMBINATION::OR,
-            latch_interrupts: FLAG::Disabled,
+            latch_interrupts: INT_LATCH::NotLatched,
             interrupt_high_xaxis: FLAG::Disabled,
             interrupt_high_yaxis: FLAG::Disabled,
             interrupt_high_zaxis: FLAG::Disabled,
@@ -197,13 +197,12 @@ where
         Ok(())
 
     }
-    
-    
+       
 
     /// Get the current gyroscope interrupts configuration
-    pub fn get_gyro_int_config(&self) -> IntConfigGyro {
+    pub fn get_gyro_int_config(&mut self) -> Result<IntConfigGyro, T::Error> {
         let reg_value = self.read_register(Sensor::Gyro, 
-                                              register::AG::INT_GEN_CFG_G)?;
+                                              register::AG::INT_GEN_CFG_G.addr())?;
         
         let config = IntConfigGyro {
                     events_combination: match (reg_value & 0b1000_0000) >> 7 {
@@ -211,8 +210,8 @@ where
                         _ => COMBINATION::OR,
                     },
                     latch_interrupts: match (reg_value & 0b0100_0000) >> 6 {
-                        1 => FLAG::Enabled,
-                        _ => FLAG::Disabled,
+                        1 => INT_LATCH::Latched,
+                        _ => INT_LATCH::NotLatched,
                     },
                     interrupt_high_xaxis: match (reg_value & 0b0010_0000) >> 5 {
                         1 => FLAG::Enabled,
@@ -234,7 +233,7 @@ where
                         1 => FLAG::Enabled,
                         _ => FLAG::Disabled,
                     },
-                    interrupt_low_zaxis: match (reg_value & 0b0000_0001) {
+                    interrupt_low_zaxis: match reg_value & 0b0000_0001 {
                         1 => FLAG::Enabled,
                         _ => FLAG::Disabled,
                     }
@@ -244,8 +243,6 @@ where
 
 }
 
-
-
 #[test]
 fn configure_gyro_int() {
     let config = IntConfigGyro::default();
@@ -253,7 +250,7 @@ fn configure_gyro_int() {
 
     let config = IntConfigGyro {
                 events_combination: COMBINATION::AND,
-                latch_interrupts: FLAG::Enabled,
+                latch_interrupts: INT_LATCH::Latched,
                 interrupt_high_xaxis: FLAG::Enabled,
                 interrupt_high_yaxis: FLAG::Enabled,
                 interrupt_high_zaxis: FLAG::Enabled,
@@ -262,6 +259,5 @@ fn configure_gyro_int() {
                 interrupt_low_zaxis: FLAG::Enabled,
                 };
     assert_eq!(config.int_gen_cfg_g(), 0b1111_1111);
-
 
 }

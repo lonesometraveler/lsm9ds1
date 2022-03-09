@@ -26,3 +26,23 @@ impl INT_ACTIVE {
         status
     }
 }
+
+// Interrupt latching setting (interrupt request latched or not latched)
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy)]
+pub enum INT_LATCH {
+    /// Interrupt request latched
+    Latched,
+    /// Interrupt request not latched
+    NotLatched,
+}
+
+impl INT_LATCH {
+    pub fn status(self) -> bool {
+        let status = match self {
+            INT_LATCH::Latched => true,
+            INT_LATCH::NotLatched => false,
+        };
+        status
+    }
+}
