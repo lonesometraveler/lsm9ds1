@@ -41,61 +41,54 @@ fn main() {
 
     // let (a_x,a_y,a_z) = lsm9ds1.read_accel().unwrap();
 
-        /*
+        
 
-    let config = IntConfigAccel {
-                    events_combination: COMBINATION::AND,
-                    enable_6d: FLAG::Enabled,
+    let config_xl = IntConfigAccel {                    
                     ..Default::default()
                         };
+
+    lsm9ds1.configure_interrupts_accel(config_xl).unwrap();
     
-        
-        
+    println!("register INT_GEN_CFG_XL {:08b}", 
+            lsm9ds1.read_register(Sensor::Accelerometer, 
+                                register::AG::INT_GEN_CFG_XL.addr()).unwrap());
+
+    let cfg_xl = lsm9ds1.get_accel_int_config().unwrap();
+
+    println!("current configuration:\n{:?}", cfg_xl);
+
+    lsm9ds1.set_accel_events_combination(COMBINATION::AND).unwrap();
+
+    lsm9ds1.set_accel_enable_6d(FLAG::Enabled).unwrap();
+
+    println!("register INT_GEN_CFG_XL {:08b}", 
+            lsm9ds1.read_register(Sensor::Accelerometer, 
+                                register::AG::INT_GEN_CFG_XL.addr()).unwrap());
 
 
-    let config_xl = IntConfigAccel {
-        interrupt_high_xaxis: FLAG::Enabled,
+    let cfg_xl = lsm9ds1.get_accel_int_config().unwrap();
+
+
+
+    println!("current configuration:\n{:?}", cfg_xl);
+ /*
+    let config_xl = IntConfigAccel {                    
+        events_combination: COMBINATION::AND,
+        enable_6d: FLAG::Enabled,
         ..Default::default()
             };
 
     lsm9ds1.configure_interrupts_accel(config_xl).unwrap();
-    
-    println!("register INT_GEN_CFG_G {:08b}", 
-            lsm9ds1.read_register(Sensor::Gyro, 
-                                register::AG::INT_GEN_CFG_G.addr()).unwrap());
 
-    */
+    println!("register INT_GEN_CFG_XL {:08b}", 
+            lsm9ds1.read_register(Sensor::Accelerometer, 
+                                register::AG::INT_GEN_CFG_XL.addr()).unwrap());
 
-    let config_g = IntConfigGyro {                                            
-                        ..Default::default()
-                                        };
-                            
-    lsm9ds1.configure_interrupts_gyro(config_g).unwrap();
-    
-    let status = lsm9ds1.gyro_int_status().unwrap();
+    let cfg_xl = lsm9ds1.get_accel_int_config().unwrap();
 
-    println!("register INT_GEN_CFG_G {:08b}", 
-            lsm9ds1.read_register(Sensor::Gyro, 
-                                register::AG::INT_GEN_CFG_G.addr()).unwrap());
+    println!("current configuration:\n{:?}", cfg_xl);
 
-
-    println!("gyro int status: {:?}", status);
-
-    thread::sleep(Duration::from_millis(500));
-                    
-    
-    let config_g = IntConfigGyro {                                            
-                            events_combination: COMBINATION::AND,
-                            latch_interrupts: FLAG::Enabled,
-                            interrupt_high_xaxis: FLAG::Enabled,
-                            interrupt_low_xaxis: FLAG::Enabled,
-                            interrupt_high_yaxis: FLAG::Enabled,
-                            interrupt_low_yaxis: FLAG::Enabled,
-                            interrupt_high_zaxis: FLAG::Enabled,
-                            interrupt_low_zaxis: FLAG::Enabled,
-                        };
-            
-    lsm9ds1.configure_interrupts_gyro(config_g).unwrap();
+   
 
     let status = lsm9ds1.gyro_int_status().unwrap();
 
@@ -105,5 +98,5 @@ fn main() {
 
 
     println!("gyro int status: {:?}", status);
-
+    */
 }
