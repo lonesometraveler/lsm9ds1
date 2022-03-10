@@ -1,4 +1,10 @@
 /// Functions related to accelerometer-specific interrupts
+/// 
+/// TO DO:
+/// - add acceleration threshold setting for X, Y and Z axis (INT_GEN_THS_X/Y/Z_XL)
+/// - LIR_XL1 and 4D_XL1 bits of CTRL_REG4 ???
+/// 
+
 
 #[allow(non_camel_case_types)]
 
@@ -172,11 +178,10 @@ where
         Ok(status)
     }
 
-    /// accelerometer interrupt duration
-    // set in INT_GEN_DUR_XL register
+    /// Accelerometer interrupt duration
+    /// Enable/disable wait function and define for how many samples to wait before exiting interrupt    
     pub fn accel_int_duration(&mut self, wait: FLAG, duration: u8) -> Result<(), T::Error> {
-        // read the current value of the register
-        
+                
         let mut reg_value = self.read_register(Sensor::Accelerometer, register::AG::INT_GEN_DUR_XL.addr())?;
 
         match wait {
@@ -184,11 +189,14 @@ where
             FLAG::Disabled => reg_value & !0b1000_0000, // clear bit
         };
 
-        let duration = duration & !0b1000_0000;
+        let duration: u8 = match duration { // clamp duration to 7 bit values
+            0..=127 => duration,
+            _ => 127,
+        };
 
-        reg_value &= !0b0111_1111;
+        reg_value &= !0b0111_1111; // clear the lowest 7 bits
 
-        reg_value |= duration; // need to make sure duration is 7 bit only!
+        reg_value |= duration; 
 
         self.interface.write(Sensor::Accelerometer, register::AG::INT_GEN_DUR_XL.addr(), reg_value)?;
 
@@ -272,6 +280,29 @@ where
     
         Ok(())
     }
+
+    /*
+        pub fn set_accel_enable_6d (&mut self, setting: FLAG) -> Result<(), T::Error> {
+        }
+
+        pub fn set_accel_interrupt_high_xaxis (&mut self, setting: FLAG) -> Result<(), T::Error> {
+        }
+
+        pub fn set_accel_interrupt_high_yaxis (&mut self, setting: FLAG) -> Result<(), T::Error> {
+        }
+
+        pub fn set_accel_interrupt_high_zaxis (&mut self, setting: FLAG) -> Result<(), T::Error> {
+        }
+
+        pub fn set_accel_interrupt_low_xaxis (&mut self, setting: FLAG) -> Result<(), T::Error> {
+        }
+
+        pub fn set_accel_interrupt_low_yaxis (&mut self, setting: FLAG) -> Result<(), T::Error> {
+        }
+
+        pub fn set_accel_interrupt_low_zaxis (&mut self, setting: FLAG) -> Result<(), T::Error> {
+        }
+  */
         
 
 }
@@ -305,25 +336,3 @@ fn configure_accel_int() {
 
 
 
-/*
-pub fn set_accel_enable_6d (&mut self, setting: FLAG) -> Result<(), T::Error> {
-}
-
-pub fn set_accel_interrupt_high_xaxis (&mut self, setting: FLAG) -> Result<(), T::Error> {
-}
-
-pub fn set_accel_interrupt_high_yaxis (&mut self, setting: FLAG) -> Result<(), T::Error> {
-}
-
-pub fn set_accel_interrupt_high_zaxis (&mut self, setting: FLAG) -> Result<(), T::Error> {
-}
-
-pub fn set_accel_interrupt_low_xaxis (&mut self, setting: FLAG) -> Result<(), T::Error> {
-}
-
-pub fn set_accel_interrupt_low_yaxis (&mut self, setting: FLAG) -> Result<(), T::Error> {
-}
-
-pub fn set_accel_interrupt_low_zaxis (&mut self, setting: FLAG) -> Result<(), T::Error> {
-}
-  */

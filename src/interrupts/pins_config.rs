@@ -1,6 +1,8 @@
 /// Functions related to interrupt pins configuration
 /// 
 /// TO DO: 
+/// - H_LACTIVE and PP_OD of register CTRL_REG8???
+
 /// - add getters?
 use super::*;
 

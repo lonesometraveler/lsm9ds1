@@ -1,4 +1,9 @@
 /// Functions related to gyroscope-specific interrupts
+/// 
+/// TO DO:
+/// - ACT_THS and ACT_DUR registers - is it related to the Gyroscope only???
+/// - add gyroscope threshold setting for X, Y and Z axis (INT_GEN_THS_X/Y/Z_G)
+/// 
 use super::*;
 
 /// Gyroscope interrupt generator settings
@@ -168,14 +173,14 @@ where
         Ok(())
     }
 
-    /// Set gyroscope reference value for digital high-pass filter.
+    /// Get gyroscope reference value for digital high-pass filter.
     pub fn read_hipass_ref(&mut self) -> Result<u8, T::Error> {
         let data: u8 = self.read_register(Sensor::Gyro, register::AG::REFERENCE_G.addr())?;
         Ok(data)
     }
 
     /// gyroscope interrupt duration
-    // set in INT_GEN_DUR_G register
+    /// Enable/disable wait function and define for how many samples to wait before exiting interrupt    
     pub fn gyro_int_duration(&mut self, wait: FLAG, duration: u8) -> Result<(), T::Error> {
         // read the current value of the register
         
@@ -186,11 +191,15 @@ where
             FLAG::Disabled => reg_value & !0b1000_0000, // clear bit
         };
 
-        let duration = duration & !0b1000_0000;
+        let duration: u8 = match duration { // clamp duration to 7 bit values
+            0..=127 => duration,
+            _ => 127,
+        };
 
-        reg_value &= !0b0111_1111;
+        reg_value &= !0b0111_1111; // clear the lowest 7 bits
 
-        reg_value |= duration; // need to make sure duration is 7 bit only!
+        reg_value |= duration; 
+
 
         self.interface.write(Sensor::Gyro, register::AG::INT_GEN_DUR_G.addr(), reg_value)?;
 
