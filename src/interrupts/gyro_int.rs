@@ -1,6 +1,6 @@
 // NOTES: 
 // - could add a test of the int_gen_cfg_g function
-// - make a function to read the current configuration
+// - make a function to read the current configurationre
 
 use super::*;
 
