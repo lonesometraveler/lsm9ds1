@@ -1,7 +1,9 @@
-// NOTES: 
-// - could add a test of the int_gen_cfg_g function
-// - make a function to read the current configurationre
-
+/// Functions related to gyroscope-specific interrupts
+/// 
+/// TO DO:
+/// - ACT_THS and ACT_DUR registers - is it related to the Gyroscope only???
+/// - add gyroscope threshold setting for X, Y and Z axis (INT_GEN_THS_X/Y/Z_G)
+/// 
 use super::*;
 
 /// Gyroscope interrupt generator settings
@@ -10,7 +12,7 @@ pub struct IntConfigGyro {
     /// Combination of gyroscope interrupt events
     pub events_combination: COMBINATION,
     /// Latch interrupt request
-    pub latch_interrupts: FLAG,
+    pub latch_interrupts: INT_LATCH,
     /// Enable interrupt generation on X-axis (pitch) high event
     pub interrupt_high_xaxis: FLAG,
     /// Enable interrupt generation on X-axis (pitch) low event
@@ -29,7 +31,7 @@ impl Default for IntConfigGyro {
     fn default() -> Self {
         IntConfigGyro {
             events_combination: COMBINATION::OR,
-            latch_interrupts: FLAG::Disabled,
+            latch_interrupts: INT_LATCH::NotLatched,
             interrupt_high_xaxis: FLAG::Disabled,
             interrupt_high_yaxis: FLAG::Disabled,
             interrupt_high_zaxis: FLAG::Disabled,
@@ -82,14 +84,13 @@ pub struct G_INT_Bitmasks;
 #[allow(dead_code)]
 /// Bitmasks for interrupt-related settings in INT_GEN_SRC_G register
 impl G_INT_Bitmasks {
-    pub(crate) const AOI_G:     u8 = 0b1000_0000;
-    pub(crate) const LIR_G:     u8 = 0b0100_0000;
-    pub(crate) const ZHIE_G:    u8 = 0b0010_0000;
-    pub(crate) const ZLIE_G:    u8 = 0b0001_0000;
-    pub(crate) const YHIE_G:    u8 = 0b0000_1000;
-    pub(crate) const YLIE_G:    u8 = 0b0000_0100;
-    pub(crate) const XHIE_G:    u8 = 0b0000_0010;
-    pub(crate) const XLIE_G:    u8 = 0b0000_0001;
+    pub(crate) const IA_G: u8 = 0b0100_0000;
+    pub(crate) const ZH_G: u8 = 0b0010_0000;
+    pub(crate) const ZL_G: u8 = 0b0001_0000;
+    pub(crate) const YH_G: u8 = 0b0000_1000;
+    pub(crate) const YL_G: u8 = 0b0000_0100;
+    pub(crate) const XH_G: u8 = 0b0000_0010;
+    pub(crate) const XL_G: u8 = 0b0000_0001;
 }
 
 #[derive(Debug)]
@@ -104,12 +105,11 @@ pub struct IntStatusGyro {
     pub zaxis_low_event: bool,
 }
 
+
 impl<T> LSM9DS1<T>
 where
     T: Interface,
-{
-    // --- GYROSCOPE INTERRUPTS FUNCTIONS START HERE ---
-
+    {        
     // Angular rate sensor interrupt generator configuration register.
     //
     // AND/OR combination of gyroscope’s interrupt events.
@@ -118,19 +118,16 @@ where
 
     /// Enable and configure interrupts for gyroscope
     pub fn configure_interrupts_gyro(&mut self, config: IntConfigGyro) -> Result<(), T::Error> {
-        self.interface.write(
-            Sensor::Gyro,
-            register::AG::INT_GEN_CFG_G.addr(),
-            config.int_gen_cfg_g(),
-        )?;
+        self.interface.write(Sensor::Gyro, register::AG::INT_GEN_CFG_G.addr(), config.int_gen_cfg_g())?;                
         Ok(())
     }
 
     /// Get all the flags from the INT_GEN_SRC_G register
-    pub fn gyro_int_status(&mut self) -> Result<IntStatusGyro, T::Error> {
+    pub fn gyro_int_status(&mut self) -> Result<IntStatusGyro, T::Error> {        
+            
         let reg_data: u8 = self.read_register(Sensor::Gyro, register::AG::INT_GEN_SRC_G.addr())?;
 
-        let status = IntStatusGyro {
+        let status = IntStatusGyro {            
             /// This bit signals whether one or more interrupt events occured.
             interrupt_active: match reg_data & G_INT_Bitmasks::IA_G {
                 0 => false,
@@ -165,47 +162,111 @@ where
             zaxis_low_event: match reg_data & G_INT_Bitmasks::ZL_G {
                 0 => false,
                 _ => true,
-            },
+            },                
         };
         Ok(status)
     }
 
     /// Set gyroscope reference value for digital high-pass filter.
     pub fn set_hipass_ref(&mut self, value: u8) -> Result<(), T::Error> {
-        self.interface
-            .write(Sensor::Gyro, register::AG::REFERENCE_G.addr(), value)?;
+        self.interface.write(Sensor::Gyro, register::AG::REFERENCE_G.addr(), value)?;
         Ok(())
     }
 
-    /// Set gyroscope reference value for digital high-pass filter.
+    /// Get gyroscope reference value for digital high-pass filter.
     pub fn read_hipass_ref(&mut self) -> Result<u8, T::Error> {
         let data: u8 = self.read_register(Sensor::Gyro, register::AG::REFERENCE_G.addr())?;
         Ok(data)
     }
 
     /// gyroscope interrupt duration
-    // set in INT_GEN_DUR_G register
+    /// Enable/disable wait function and define for how many samples to wait before exiting interrupt    
     pub fn gyro_int_duration(&mut self, wait: FLAG, duration: u8) -> Result<(), T::Error> {
         // read the current value of the register
-
+        
         let mut reg_value = self.read_register(Sensor::Gyro, register::AG::INT_GEN_DUR_G.addr())?;
 
         match wait {
             FLAG::Enabled => reg_value & !0b1000_0000 | 0b1000_0000, // set bit
-            FLAG::Disabled => reg_value & !0b1000_0000,              // clear bit
+            FLAG::Disabled => reg_value & !0b1000_0000, // clear bit
         };
 
-        let duration = duration & !0b1000_0000;
+        let duration: u8 = match duration { // clamp duration to 7 bit values
+            0..=127 => duration,
+            _ => 127,
+        };
 
-        reg_value &= !0b0111_1111;
+        reg_value &= !0b0111_1111; // clear the lowest 7 bits
 
-        reg_value |= duration; // need to make sure duration is 7 bit only!
+        reg_value |= duration; 
 
-        self.interface
-            .write(Sensor::Gyro, register::AG::INT_GEN_DUR_G.addr(), reg_value)?;
+
+        self.interface.write(Sensor::Gyro, register::AG::INT_GEN_DUR_G.addr(), reg_value)?;
 
         Ok(())
-    }
 
-    // STATUS_REG HAS IG_XL and IG_G BITS - ARE THEY THE SAME AS IA_XL AND IA_G? AWAITING ANSWERS ON ST MICRO FORUM
+    }
+       
+
+    /// Get the current gyroscope interrupts configuration
+    pub fn get_gyro_int_config(&mut self) -> Result<IntConfigGyro, T::Error> {
+        let reg_value = self.read_register(Sensor::Gyro, 
+                                              register::AG::INT_GEN_CFG_G.addr())?;
+        
+        let config = IntConfigGyro {
+                    events_combination: match (reg_value & 0b1000_0000) >> 7 {
+                        1 => COMBINATION::AND,
+                        _ => COMBINATION::OR,
+                    },
+                    latch_interrupts: match (reg_value & 0b0100_0000) >> 6 {
+                        1 => INT_LATCH::Latched,
+                        _ => INT_LATCH::NotLatched,
+                    },
+                    interrupt_high_xaxis: match (reg_value & 0b0010_0000) >> 5 {
+                        1 => FLAG::Enabled,
+                        _ => FLAG::Disabled,
+                    },
+                    interrupt_low_xaxis: match (reg_value & 0b0001_0000) >> 4 {
+                        1 => FLAG::Enabled,
+                        _ => FLAG::Disabled,
+                    },
+                    interrupt_high_yaxis: match (reg_value & 0b0000_1000) >> 3 {
+                        1 => FLAG::Enabled,
+                        _ => FLAG::Disabled,
+                    },
+                    interrupt_low_yaxis: match (reg_value & 0b0000_0100) >> 2 {
+                        1 => FLAG::Enabled,
+                        _ => FLAG::Disabled,
+                    },
+                    interrupt_high_zaxis: match (reg_value & 0b0000_0010) >> 1 {
+                        1 => FLAG::Enabled,
+                        _ => FLAG::Disabled,
+                    },
+                    interrupt_low_zaxis: match reg_value & 0b0000_0001 {
+                        1 => FLAG::Enabled,
+                        _ => FLAG::Disabled,
+                    }
+                };
+            Ok(config)
+        }
+
+}
+
+#[test]
+fn configure_gyro_int() {
+    let config = IntConfigGyro::default();
+    assert_eq!(config.int_gen_cfg_g(), 0b0000_0000);
+
+    let config = IntConfigGyro {
+                events_combination: COMBINATION::AND,
+                latch_interrupts: INT_LATCH::Latched,
+                interrupt_high_xaxis: FLAG::Enabled,
+                interrupt_high_yaxis: FLAG::Enabled,
+                interrupt_high_zaxis: FLAG::Enabled,
+                interrupt_low_xaxis: FLAG::Enabled,
+                interrupt_low_yaxis: FLAG::Enabled,
+                interrupt_low_zaxis: FLAG::Enabled,
+                };
+    assert_eq!(config.int_gen_cfg_g(), 0b1111_1111);
+
 }
