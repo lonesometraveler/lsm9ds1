@@ -243,11 +243,11 @@ where
                                 1 => FLAG::Enabled,
                                 _ => FLAG::Disabled,
                             },
-                            active_high_or_low: match (reg_value & 0b0000_0100) >> 3 {
+                            active_high_or_low: match (reg_value & 0b0000_0100) >> 2 {
                                 1 => INT_ACTIVE::High,
                                 _ => INT_ACTIVE::Low,
                             },
-                            interrupt_latching: match (reg_value & 0b0000_0010) >> 2 {
+                            interrupt_latching: match (reg_value & 0b0000_0010) >> 1 {
                                 1 => INT_LATCH::NotLatched,     
                                 _ => INT_LATCH::Latched,            // NOTE: it's reversed, 0 is latched
                             },

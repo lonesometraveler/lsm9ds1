@@ -1,11 +1,7 @@
 /// Functions related to interrupt pins configuration
 /// 
 /// TO DO: 
-/// - add functions to set these configurations (write to registers)
-/// - add getters as well?
-/// 
-/// NOTE: INT2_CTRL has MSB that MUST NOT be overwritten (inactivity signal)
-/// 
+/// - add getters?
 use super::*;
 
 // --- A/G PINS CONFIGURATION ---
@@ -137,77 +133,16 @@ impl IntConfigAG2 {
     }
 }
 
-
-// CHECK WHAT TO DO WITH THIS - MOVE TO mag_int???
-
-/// Magnetometer interrupt pin (INT_M) settings
-#[derive(Debug)]
-pub struct IntConfigM {
-    /// Enable interrupt generation on X-axis
-    pub interrupt_xaxis: FLAG,
-    /// Enable interrupt generation on Y-axis
-    pub interrupt_yaxis: FLAG,
-    /// Enable interrupt generation on Z-axis
-    pub interrupt_zaxis: FLAG,
-    /// Configure interrupt pin INT_M as active high or active low
-    pub active_high_or_low: INT_ACTIVE,
-    /// Latch interrupt request (Once latched, the INT_M pin remains in the same state until INT_SRC_M is read)
-    pub interrupt_latching: FLAG,
-    /// Interrupt enable on the INT_M pin
-    pub enable_interrupt: FLAG,
-}
-
-impl Default for IntConfigM {
-    fn default() -> Self {
-        IntConfigM {
-            interrupt_xaxis: FLAG::Disabled,
-            interrupt_yaxis: FLAG::Disabled,
-            interrupt_zaxis: FLAG::Disabled,
-            active_high_or_low: INT_ACTIVE::Low,
-            interrupt_latching: FLAG::Enabled,
-            enable_interrupt: FLAG::Disabled,
-        }
-    }
-}
-
-impl IntConfigM {
-    /// Returns values to be written to INT_CFG_M:    
-    fn int_cfg_m(&self) -> u8 {
-        let mut data = 0u8;
-        if self.interrupt_xaxis.status() {
-            data |= 1 << 7;
-        }
-        if self.interrupt_yaxis.status() {
-            data |= 1 << 6;
-        }
-        if self.interrupt_zaxis.status() {
-            data |= 1 << 5;
-        }
-        if self.active_high_or_low.status() {
-            data |= 1 << 2;
-        }
-        if self.interrupt_latching.status() {
-            data |= 1 << 1;
-        }
-        if self.enable_interrupt.status() {
-            data |= 1;
-        }
-        data
-    }
-}
-
-/*
-   // WHICH SENSOR SHOULD I USE HERE? IT'S BOTH ACCEL AND GYRO!
+impl<T> LSM9DS1<T>
+where 
+    T: Interface
+    {
 
     /// Enable interrupts for accelerometer/gyroscope and configure the INT1_A/G interrupt pin
     pub fn configure_interrupts_ag1(&mut self, config: IntConfigAG1) -> Result<(), T::Error> {
         self.interface.write(Sensor::Accelerometer, register::AG::INT1_CTRL.addr(), config.int1_ctrl())?;
         Ok(())
     }
-
-
-
-    // WHICH SENSOR SHOULD I USE HERE? IT'S BOTH ACCEL AND GYRO!
 
     /// Enable interrupts for accelerometer/gyroscope and configure the INT1_A/G interrupt pin
     pub fn configure_interrupts_ag2(&mut self, config: IntConfigAG2) -> Result<(), T::Error> {
@@ -222,8 +157,90 @@ impl IntConfigM {
         Ok(())
     }
 
-*/
 
+    /// Get the current A/G1 pin configuration
+    pub fn get_ag1_config(&mut self) -> Result<IntConfigAG1, T::Error> {
+        
+        let reg_value: u8 = self.read_register(Sensor::Accelerometer, 
+                                              register::AG::INT1_CTRL.addr())?;
+        
+        let config = IntConfigAG1 {
+
+                enable_gyro_int: match (reg_value & 0b1000_0000) >> 7 {
+                    1 => FLAG::Enabled,
+                    _ => FLAG::Disabled,
+                },
+                enable_accel_int: match (reg_value & 0b0100_0000) >> 6 {
+                    1 => FLAG::Enabled,
+                    _ => FLAG::Disabled,
+                },
+                enable_fss5: match (reg_value & 0b0010_0000) >> 5 {
+                    1 => FLAG::Enabled,
+                    _ => FLAG::Disabled,
+                },
+                enable_overrun: match (reg_value & 0b0001_0000) >> 4 {
+                    1 => FLAG::Enabled,
+                    _ => FLAG::Disabled,
+                },
+                enable_fth: match (reg_value & 0b0000_1000) >> 3 {
+                    1 => FLAG::Enabled,
+                    _ => FLAG::Disabled,  
+                },
+                enable_boot_status: match reg_value & 0b0000_0100 >> 2 {
+                    1 => FLAG::Enabled,     
+                    _ => FLAG::Disabled,
+                },
+                enable_gyro_dataready: match reg_value & 0b0000_0010 >> 1 {
+                    1 => FLAG::Enabled,     
+                    _ => FLAG::Disabled,
+                },
+                enable_accel_dataready: match reg_value & 0b0000_0001 {
+                    1 => FLAG::Enabled,     
+                    _ => FLAG::Disabled,
+                }
+            };
+                
+        Ok(config)
+    }
+
+    /// Get the current A/G2 pin configuration
+    pub fn get_ag2_config(&mut self) -> Result<IntConfigAG2, T::Error> {
+        
+        let reg_value: u8 = self.read_register(Sensor::Accelerometer, 
+                                              register::AG::INT2_CTRL.addr())?;
+        
+        let config = IntConfigAG2 {
+
+                enable_fss5: match (reg_value & 0b0010_0000) >> 5 {
+                    1 => FLAG::Enabled,
+                    _ => FLAG::Disabled,
+                },
+                enable_overrun: match (reg_value & 0b0001_0000) >> 4 {
+                    1 => FLAG::Enabled,
+                    _ => FLAG::Disabled,
+                },
+                enable_fth: match (reg_value & 0b0000_1000) >> 3 {
+                    1 => FLAG::Enabled,
+                    _ => FLAG::Disabled,
+                },
+                enable_temp_dataready: match reg_value & 0b0000_0100 >> 2 {
+                    1 => FLAG::Enabled,     
+                    _ => FLAG::Disabled,
+                },
+                enable_gyro_dataready: match reg_value & 0b0000_0010 >> 1 {
+                    1 => FLAG::Enabled,     
+                    _ => FLAG::Disabled,
+                },
+                enable_accel_dataready: match reg_value & 0b0000_0001 {
+                    1 => FLAG::Enabled,     
+                    _ => FLAG::Disabled,
+                }
+            };
+                
+        Ok(config)
+    }
+
+}
 
 #[test]
 fn configure_ag1() {
@@ -245,30 +262,11 @@ fn configure_ag1() {
 
 }
 
-
 #[test]
 fn configure_ag2() {
         
     let config = IntConfigAG2::default();
     assert_eq!(config.int2_ctrl(), 0b0000_0000);
-        
-    let config = IntConfigAG2 {
-                enable_fss5: FLAG::Enabled,
-                enable_overrun: FLAG::Enabled,
-                enable_fth: FLAG::Enabled,
-                enable_temp_dataready: FLAG::Enabled,
-                enable_gyro_dataready: FLAG::Enabled,
-                enable_accel_dataready: FLAG::Enabled,
-            };
-    assert_eq!(config.int2_ctrl(), 0b0011_1111);    
-
-}
-
-#[test]
-fn configure_m() {
-        
-    let config = IntConfigM::default();
-    assert_eq!(config.int_cfg_m(), 0b0000_0000);
         
     let config = IntConfigAG2 {
                 enable_fss5: FLAG::Enabled,
