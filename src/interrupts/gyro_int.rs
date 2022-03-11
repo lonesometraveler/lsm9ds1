@@ -1,8 +1,8 @@
 /// Functions related to gyroscope-specific interrupts
 /// 
 /// TO DO:
-/// - ACT_THS and ACT_DUR registers - is it related to the Gyroscope only???
 /// - add gyroscope threshold setting for X, Y and Z axis (INT_GEN_THS_X/Y/Z_G)
+/// - ORIENT_CFG_G settings (user orientation selection (???)) -> to be done in gyro.rs
 /// 
 use super::*;
 
@@ -178,7 +178,7 @@ where
 
         let reg_value = self.read_register(Sensor::Gyro, register::AG::INT_GEN_CFG_XL.addr())?;
     
-        let mut data: u8  = reg_value &! G_CFG_Bitmasks::AOI_XL; // clear the specific bit
+        let mut data: u8  = reg_value &! G_CFG_Bitmasks::AOI_G; // clear the specific bit
     
         data = match setting {
             COMBINATION::AND => data | (1 << 7),           // if Enabled, set bit
@@ -203,7 +203,7 @@ where
             INT_LATCH::NotLatched => data,                  // if Disabled, bit is cleared
         };
 
-        self.interface.write(Sensor::Gyro, register::AG::INT_GEN_CFG_G.addr()(), data)?;
+        self.interface.write(Sensor::Gyro, register::AG::INT_GEN_CFG_G.addr(), data)?;
     
         Ok(())
     }
@@ -211,7 +211,7 @@ where
     /// Enable interrupt generation on gyroscope’s Z-axis high event
     pub fn set_gyro_interrupt_high_zaxis (&mut self, setting: FLAG) -> Result<(), T::Error> {
 
-        let reg_value = self.read_register(Sensor::Gyro, register::AG::INT_GEN_CFG_G.addr()())?;
+        let reg_value = self.read_register(Sensor::Gyro, register::AG::INT_GEN_CFG_G.addr())?;
     
         let mut data: u8  = reg_value &! G_CFG_Bitmasks::ZHIE_G; // clear the specific bit
     
@@ -220,7 +220,7 @@ where
             FLAG::Disabled => data,                         // if Disabled, bit is cleared
         };
 
-        self.interface.write(Sensor::Gyro, register::AG::INT_GEN_CFG_G.addr()(), data)?;
+        self.interface.write(Sensor::Gyro, register::AG::INT_GEN_CFG_G.addr(), data)?;
     
         Ok(())
     }
@@ -228,7 +228,7 @@ where
     /// Enable interrupt generation on gyroscope’s Z-axis high event
     pub fn set_gyro_interrupt_low_zaxis (&mut self, setting: FLAG) -> Result<(), T::Error> {
 
-        let reg_value = self.read_register(Sensor::Gyro, register::AG::INT_GEN_CFG_G.addr()())?;
+        let reg_value = self.read_register(Sensor::Gyro, register::AG::INT_GEN_CFG_G.addr())?;
     
         let mut data: u8  = reg_value &! G_CFG_Bitmasks::ZLIE_G; // clear the specific bit
     
@@ -237,7 +237,7 @@ where
             FLAG::Disabled => data,                         // if Disabled, bit is cleared
         };
 
-        self.interface.write(Sensor::Gyro, register::AG::INT_GEN_CFG_G.addr()(), data)?;
+        self.interface.write(Sensor::Gyro, register::AG::INT_GEN_CFG_G.addr(), data)?;
     
         Ok(())
     }
@@ -245,7 +245,7 @@ where
     /// Enable interrupt generation on gyroscope’s Y-axis high event
     pub fn set_gyro_interrupt_high_yaxis (&mut self, setting: FLAG) -> Result<(), T::Error> {
 
-        let reg_value = self.read_register(Sensor::Gyro, register::AG::INT_GEN_CFG_G.addr()())?;
+        let reg_value = self.read_register(Sensor::Gyro, register::AG::INT_GEN_CFG_G.addr())?;
     
         let mut data: u8  = reg_value &! G_CFG_Bitmasks::YHIE_G; // clear the specific bit
     
@@ -254,7 +254,7 @@ where
             FLAG::Disabled => data,                         // if Disabled, bit is cleared
         };
 
-        self.interface.write(Sensor::Gyro, register::AG::INT_GEN_CFG_G.addr()(), data)?;
+        self.interface.write(Sensor::Gyro, register::AG::INT_GEN_CFG_G.addr(), data)?;
     
         Ok(())
     }
@@ -262,7 +262,7 @@ where
     /// Enable interrupt generation on gyroscope’s Y-axis high event
     pub fn set_gyro_interrupt_low_yaxis (&mut self, setting: FLAG) -> Result<(), T::Error> {
 
-        let reg_value = self.read_register(Sensor::Gyro, register::AG::INT_GEN_CFG_G.addr()())?;
+        let reg_value = self.read_register(Sensor::Gyro, register::AG::INT_GEN_CFG_G.addr())?;
     
         let mut data: u8  = reg_value &! G_CFG_Bitmasks::YLIE_G; // clear the specific bit
     
@@ -271,7 +271,7 @@ where
             FLAG::Disabled => data,                         // if Disabled, bit is cleared
         };
 
-        self.interface.write(Sensor::Gyro, register::AG::INT_GEN_CFG_G.addr()(), data)?;
+        self.interface.write(Sensor::Gyro, register::AG::INT_GEN_CFG_G.addr(), data)?;
     
         Ok(())
     }
@@ -279,7 +279,7 @@ where
     /// Enable interrupt generation on gyroscope’s X-axis high event
     pub fn set_gyro_interrupt_high_xaxis (&mut self, setting: FLAG) -> Result<(), T::Error> {
 
-        let reg_value = self.read_register(Sensor::Gyro, register::AG::INT_GEN_CFG_G.addr()())?;
+        let reg_value = self.read_register(Sensor::Gyro, register::AG::INT_GEN_CFG_G.addr())?;
     
         let mut data: u8  = reg_value &! G_CFG_Bitmasks::XHIE_G; // clear the specific bit
     
@@ -288,7 +288,7 @@ where
             FLAG::Disabled => data,                         // if Disabled, bit is cleared
         };
 
-        self.interface.write(Sensor::Gyro, register::AG::INT_GEN_CFG_G.addr()(), data)?;
+        self.interface.write(Sensor::Gyro, register::AG::INT_GEN_CFG_G.addr(), data)?;
     
         Ok(())
     }
@@ -296,7 +296,7 @@ where
     /// Enable interrupt generation on gyroscope’s X-axis high event
     pub fn set_gyro_interrupt_low_xaxis (&mut self, setting: FLAG) -> Result<(), T::Error> {
 
-        let reg_value = self.read_register(Sensor::Gyro, register::AG::INT_GEN_CFG_G.addr()())?;
+        let reg_value = self.read_register(Sensor::Gyro, register::AG::INT_GEN_CFG_G.addr())?;
     
         let mut data: u8  = reg_value &! G_CFG_Bitmasks::XLIE_G; // clear the specific bit
     
@@ -305,7 +305,7 @@ where
             FLAG::Disabled => data,                         // if Disabled, bit is cleared
         };
 
-        self.interface.write(Sensor::Gyro, register::AG::INT_GEN_CFG_G.addr()(), data)?;
+        self.interface.write(Sensor::Gyro, register::AG::INT_GEN_CFG_G.addr(), data)?;
     
         Ok(())
     }
@@ -394,6 +394,32 @@ where
         Ok(())
 
     }
+
+    /// Set gyroscope mode during inactivity, activation threshold and inactivity duration
+    pub fn set_gyro_inactivity(&mut self, setting: FLAG, threshold: u8, duration: u8) -> Result<(), T::Error> {
+        let mut data: u8 = 0;
+
+        match setting {
+            FLAG::Enabled => data | (1 << 7),
+            FLAG::Disabled => data,
+        };
+
+        match threshold {
+            0..=127 => data | threshold,
+            _ => data | 127,
+        };
+
+        self.interface.write(Sensor::Gyro, register::AG::ACT_THS.addr(), data)?;
+
+        self.interface.write(Sensor::Gyro, register::AG::ACT_DUR.addr(), duration)?;
+
+        Ok(())
+
+    }
+
+
+    
+
 }
 
 #[test]
