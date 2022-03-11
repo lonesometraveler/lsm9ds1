@@ -73,6 +73,21 @@ impl M_INT_Bitmasks {
     pub (crate) const INT: u8 = 0b0000_0001;
 }
 
+#[allow(non_camel_case_types)]
+pub struct M_CFG_Bitmasks;
+#[allow(dead_code)]
+/// Bitmasks for interrupt-related settings in INT_CFG_M register
+impl M_CFG_Bitmasks {
+    pub(crate) const XIEN: u8 = 0b1000_0000;
+    pub(crate) const YIEN: u8 = 0b0100_0000;
+    pub(crate) const ZIEN: u8 = 0b0010_0000;
+    pub(crate) const IEA: u8 = 0b0001_0000;
+    pub(crate) const IEL: u8 = 0b0000_1000;
+    pub(crate) const IEN: u8 = 0b0000_0100;
+    
+}
+
+
 
 #[derive(Debug)]
 /// Contents of the INT_SRC_M register (interrupt active and threshold excess events flags)
@@ -97,6 +112,171 @@ where
         self.interface.write(Sensor::Magnetometer, register::Mag::INT_CFG_M.addr(), config.int_cfg_m())?;                
         Ok(())
     }
+
+    /// Get the current magnetometer interrupts configuration
+    pub fn get_mag_int_config(&mut self) -> Result<IntConfigMag, T::Error> {
+        
+        let reg_value: u8 = self.read_register(Sensor::Magnetometer, 
+                                              register::Mag::INT_CFG_M.addr())?;
+        
+        let config = IntConfigMag {
+                            interrupt_xaxis: match (reg_value & M_CFG_Bitmasks::XIEN) >> 7 {
+                                1 => FLAG::Enabled,
+                                _ => FLAG::Disabled,
+                            },
+                            interrupt_yaxis: match (reg_value & M_CFG_Bitmasks::YIEN) >> 6 {
+                                1 => FLAG::Enabled,
+                                _ => FLAG::Disabled,
+                            },
+                            interrupt_zaxis: match (reg_value & M_CFG_Bitmasks::ZIEN) >> 5 {
+                                1 => FLAG::Enabled,
+                                _ => FLAG::Disabled,
+                            },
+                            active_high_or_low: match (reg_value & M_CFG_Bitmasks::IEA) >> 2 {
+                                1 => INT_ACTIVE::High,
+                                _ => INT_ACTIVE::Low,
+                            },
+                            interrupt_latching: match (reg_value & M_CFG_Bitmasks::IEL) >> 1 {
+                                1 => INT_LATCH::NotLatched,     
+                                _ => INT_LATCH::Latched,            // NOTE: it's reversed, 0 is latched
+                            },
+                            enable_interrupt: match reg_value & M_CFG_Bitmasks::IEN {
+                                1 => FLAG::Enabled,     
+                                _ => FLAG::Disabled,
+                            },
+                        };
+                        Ok(config)
+            }
+
+    // == SINGLE SETTERS ==
+    
+    /// Enable interrupt generation on magnetometer’s X-axis
+    pub fn mag_int_xaxis (&mut self, setting: FLAG) -> Result<(), T::Error> {
+
+        let reg_value = self.read_register(Sensor::Magnetometer, register::Mag::INT_CFG_M.addr())?;
+    
+        let mut data: u8  = reg_value &! M_CFG_Bitmasks::XIEN; // clear the specific bit
+    
+        data = match setting {
+            FLAG::Enabled => data | (1 << 7),       // if Enabled, set bit
+            FLAG::Disabled => data,                 // if Disabled, bit is cleared
+        };
+    
+        self.interface.write(Sensor::Magnetometer, register::Mag::INT_CFG_M.addr(), data)?;
+    
+        Ok(())
+    
+    }
+
+    /// Enable interrupt generation on magnetometer’s Y-axis
+    pub fn mag_int_yaxis (&mut self, setting: FLAG) -> Result<(), T::Error> {
+
+        let reg_value = self.read_register(Sensor::Magnetometer, register::Mag::INT_CFG_M.addr())?;
+    
+        let mut data: u8  = reg_value &! M_CFG_Bitmasks::YIEN; // clear the specific bit
+    
+        data = match setting {
+            FLAG::Enabled => data | (1 << 6),       // if Enabled, set bit
+            FLAG::Disabled => data,                 // if Disabled, bit is cleared
+        };
+    
+        self.interface.write(Sensor::Magnetometer, register::Mag::INT_CFG_M.addr(), data)?;
+    
+        Ok(())
+    
+    }
+
+    /// Enable interrupt generation on magnetometer’s Z-axis
+    pub fn mag_int_zaxis (&mut self, setting: FLAG) -> Result<(), T::Error> {
+
+        let reg_value = self.read_register(Sensor::Magnetometer, register::Mag::INT_CFG_M.addr())?;
+
+        let mut data: u8  = reg_value &! M_CFG_Bitmasks::ZIEN; // clear the specific bit
+
+        data = match setting {
+            FLAG::Enabled => data | (1 << 5),       // if Enabled, set bit
+            FLAG::Disabled => data,                 // if Disabled, bit is cleared
+        };
+
+        self.interface.write(Sensor::Magnetometer, register::Mag::INT_CFG_M.addr(), data)?;
+
+        Ok(())
+
+    }
+
+
+    /// Interrupt active setting for the INT_MAG pin: active high (default) or active low
+    pub fn mag_int_pin_active (&mut self, setting: INT_ACTIVE) -> Result<(), T::Error> {
+
+        let reg_value = self.read_register(Sensor::Magnetometer, register::Mag::INT_CFG_M.addr())?;
+
+        let mut data: u8  = reg_value &! M_CFG_Bitmasks::IEA; // clear the specific bit
+
+        data = match setting {
+            INT_ACTIVE::High => data | (1 << 2),       // if Enabled, set bit
+            INT_ACTIVE::Low => data,                 // if Disabled, bit is cleared
+        };
+
+        self.interface.write(Sensor::Magnetometer, register::Mag::INT_CFG_M.addr(), data)?;
+
+        Ok(())
+
+    }
+
+    /// Interrupt active setting for the INT_MAG pin: active high (default) or active low
+    pub fn mag_int_pin_active (&mut self, setting: INT_ACTIVE) -> Result<(), T::Error> {
+
+        let reg_value = self.read_register(Sensor::Magnetometer, register::Mag::INT_CFG_M.addr())?;
+
+        let mut data: u8  = reg_value &! M_CFG_Bitmasks::IEA; // clear the specific bit
+
+        data = match setting {
+            INT_ACTIVE::High => data | (1 << 2),       // if Enabled, set bit
+            INT_ACTIVE::Low => data,                 // if Disabled, bit is cleared
+        };
+
+        self.interface.write(Sensor::Magnetometer, register::Mag::INT_CFG_M.addr(), data)?;
+
+        Ok(())
+
+    }
+
+    /// Latch interrupt request. Once latched, the INT_M pin remains in the same state until interrupt status is read.
+    pub fn mag_int_latching (&mut self, setting: INT_LATCH) -> Result<(), T::Error> {
+
+        let reg_value = self.read_register(Sensor::Magnetometer, register::Mag::INT_CFG_M.addr())?;
+
+        let mut data: u8  = reg_value &! M_CFG_Bitmasks::IEL; // clear the specific bit
+
+        data = match setting {
+            INT_LATCH::NotLatched => data | (1 << 1),       // if Enabled, set bit
+            INT_LATCH::Latched => data,                 // if Disabled, bit is cleared
+        };
+
+        self.interface.write(Sensor::Magnetometer, register::Mag::INT_CFG_M.addr(), data)?;
+
+        Ok(())
+
+    }
+
+    /// Interrupt enable on the INT_M pin
+    pub fn mag_int_enable (&mut self, setting: FLAG) -> Result<(), T::Error> {
+
+        let reg_value = self.read_register(Sensor::Magnetometer, register::Mag::INT_CFG_M.addr())?;
+
+        let mut data: u8  = reg_value &! M_CFG_Bitmasks::IEN; // clear the specific bit
+
+        data = match setting {
+            FLAG::Enabled => data | 1,       // if Enabled, set bit
+            FLAG::Disabled => data,                 // if Disabled, bit is cleared
+        };
+
+        self.interface.write(Sensor::Magnetometer, register::Mag::INT_CFG_M.addr(), data)?;
+
+        Ok(())
+
+    }
+
 
     /// Get all the flags from the INT_SRC_M register
     pub fn mag_int_status(&mut self) -> Result<IntStatusMag, T::Error> {        
@@ -224,40 +404,7 @@ where
         
     }     
 
-    /// Get the current magnetometer interrupts configuration
-    pub fn get_mag_int_config(&mut self) -> Result<IntConfigMag, T::Error> {
-        
-        let reg_value: u8 = self.read_register(Sensor::Magnetometer, 
-                                              register::Mag::INT_CFG_M.addr())?;
-        
-        let config = IntConfigMag {
-                            interrupt_xaxis: match (reg_value & 0b1000_0000) >> 7 {
-                                1 => FLAG::Enabled,
-                                _ => FLAG::Disabled,
-                            },
-                            interrupt_yaxis: match (reg_value & 0b0100_0000) >> 6 {
-                                1 => FLAG::Enabled,
-                                _ => FLAG::Disabled,
-                            },
-                            interrupt_zaxis: match (reg_value & 0b0010_0000) >> 5 {
-                                1 => FLAG::Enabled,
-                                _ => FLAG::Disabled,
-                            },
-                            active_high_or_low: match (reg_value & 0b0000_0100) >> 2 {
-                                1 => INT_ACTIVE::High,
-                                _ => INT_ACTIVE::Low,
-                            },
-                            interrupt_latching: match (reg_value & 0b0000_0010) >> 1 {
-                                1 => INT_LATCH::NotLatched,     
-                                _ => INT_LATCH::Latched,            // NOTE: it's reversed, 0 is latched
-                            },
-                            enable_interrupt: match reg_value & 0b0000_0001 {
-                                1 => FLAG::Enabled,     
-                                _ => FLAG::Disabled,
-                            },
-                        };
-                        Ok(config)
-            }
+    
 }
 
 #[test]

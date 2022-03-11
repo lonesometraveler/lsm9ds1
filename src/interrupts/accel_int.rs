@@ -189,8 +189,8 @@ where
         let mut data: u8  = reg_value &! XL_CFG_Bitmasks::AOI_XL; // clear the specific bit
     
         data = match setting {
-            COMBINATION::AND => data | (1 << 7),       // if Enabled, set bit
-            COMBINATION::OR => data,                 // if Disabled, bit is cleared
+            COMBINATION::AND => data | (1 << 7),        // if Enabled, set bit
+            COMBINATION::OR => data,                    // if Disabled, bit is cleared
         };
     
         self.interface.write(Sensor::Accelerometer, register::AG::INT_GEN_CFG_XL.addr(), data)?;
@@ -233,7 +233,7 @@ where
         Ok(())
     }
 
-    /// Enable interrupt generation on accelerometer’s Z-axis high event
+    /// Enable interrupt generation on accelerometer’s Z-axis low event
     pub fn accel_int_interrupt_low_zaxis (&mut self, setting: FLAG) -> Result<(), T::Error> {
 
         let reg_value = self.read_register(Sensor::Accelerometer, register::AG::INT_GEN_CFG_XL.addr())?;
@@ -267,7 +267,7 @@ where
         Ok(())
     }
 
-    /// Enable interrupt generation on accelerometer’s Y-axis high event
+    /// Enable interrupt generation on accelerometer’s Y-axis low event
     pub fn accel_int_interrupt_low_yaxis (&mut self, setting: FLAG) -> Result<(), T::Error> {
 
         let reg_value = self.read_register(Sensor::Accelerometer, register::AG::INT_GEN_CFG_XL.addr())?;
@@ -301,7 +301,7 @@ where
         Ok(())
     }
 
-    /// Enable interrupt generation on accelerometer’s X-axis high event
+    /// Enable interrupt generation on accelerometer’s X-axis low event
     pub fn accel_int_interrupt_low_xaxis (&mut self, setting: FLAG) -> Result<(), T::Error> {
 
         let reg_value = self.read_register(Sensor::Accelerometer, register::AG::INT_GEN_CFG_XL.addr())?;

@@ -1,11 +1,9 @@
-/// Functions related to interrupt pins configuration
+/// Functions related to INT1_AG and INT2_AG interrupt pins configuration
 /// 
 /// TO DO: 
-/// - add getters?
+/// - 
+/// 
 use super::*;
-
-// --- A/G PINS CONFIGURATION ---
-
 
 /// Accelerometer/gyroscope interrupt pins common settings
 #[derive(Debug)]
