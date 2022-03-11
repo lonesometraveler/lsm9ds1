@@ -133,76 +133,6 @@ where
         Ok(())
     }
 
-    /// Get all the flags from the INT_GEN_SRC_XL register
-    pub fn accel_int_status(&mut self) -> Result<IntStatusAccel, T::Error> {
-        let reg_data: u8 =
-            self.read_register(Sensor::Accelerometer, register::AG::INT_GEN_SRC_XL.addr())?;
-
-        let status = IntStatusAccel {
-            /// This bit signals whether one or more interrupt events occured.
-            interrupt_active: match reg_data & XL_INT_Bitmasks::IA_XL {
-                0 => false,
-                _ => true,
-            },
-            /// X-axis high event has occurred
-            xaxis_high_event: match reg_data & XL_INT_Bitmasks::XH_XL {
-                0 => false,
-                _ => true,
-            },
-            /// X-axis low event has occurred
-            xaxis_low_event: match reg_data & XL_INT_Bitmasks::XL_XL {
-                0 => false,
-                _ => true,
-            },
-            /// Y-axis high event has occurred
-            yaxis_high_event: match reg_data & XL_INT_Bitmasks::YH_XL {
-                0 => false,
-                _ => true,
-            },
-            /// Y-axis low event has occurred
-            yaxis_low_event: match reg_data & XL_INT_Bitmasks::YL_XL {
-                0 => false,
-                _ => true,
-            },
-            /// Z-axis high event has occurred
-            zaxis_high_event: match reg_data & XL_INT_Bitmasks::ZH_XL {
-                0 => false,
-                _ => true,
-            },
-            /// X-axis low event has occurred
-            zaxis_low_event: match reg_data & XL_INT_Bitmasks::ZL_XL {
-                0 => false,
-                _ => true,
-            },
-        };
-        Ok(status)
-    }
-
-    /// Accelerometer interrupt duration
-    /// Enable/disable wait function and define for how many samples to wait before exiting interrupt    
-    pub fn accel_int_duration(&mut self, wait: FLAG, duration: u8) -> Result<(), T::Error> {
-                
-        let mut reg_value = self.read_register(Sensor::Accelerometer, register::AG::INT_GEN_DUR_XL.addr())?;
-
-        match wait {
-            FLAG::Enabled => reg_value & !0b1000_0000 | 0b1000_0000, // set bit
-            FLAG::Disabled => reg_value & !0b1000_0000, // clear bit
-        };
-
-        let duration: u8 = match duration { // clamp duration to 7 bit values
-            0..=127 => duration,
-            _ => 127,
-        };
-
-        reg_value &= !0b0111_1111; // clear the lowest 7 bits
-
-        reg_value |= duration; 
-
-        self.interface.write(Sensor::Accelerometer, register::AG::INT_GEN_DUR_XL.addr(), reg_value)?;
-
-        Ok(())
-    }
-
     /// Get the current accelerometer interrupts configuration
     pub fn get_accel_int_config(&mut self) -> Result<IntConfigAccel, T::Error> {
         
@@ -245,6 +175,8 @@ where
                 };
             Ok(config)
         }
+
+    // === SINGLE SETTERS ===
 
     /// Set AND/OR combination of the accelerometer's interrupt events
     pub fn set_accel_events_combination (&mut self, setting: COMBINATION) -> Result<(), T::Error> {
@@ -383,6 +315,75 @@ where
         Ok(())
     }
 
+    /// Get all the flags from the INT_GEN_SRC_XL register
+    pub fn accel_int_status(&mut self) -> Result<IntStatusAccel, T::Error> {
+        let reg_data: u8 =
+            self.read_register(Sensor::Accelerometer, register::AG::INT_GEN_SRC_XL.addr())?;
+
+        let status = IntStatusAccel {
+            /// This bit signals whether one or more interrupt events occured.
+            interrupt_active: match reg_data & XL_INT_Bitmasks::IA_XL {
+                0 => false,
+                _ => true,
+            },
+            /// X-axis high event has occurred
+            xaxis_high_event: match reg_data & XL_INT_Bitmasks::XH_XL {
+                0 => false,
+                _ => true,
+            },
+            /// X-axis low event has occurred
+            xaxis_low_event: match reg_data & XL_INT_Bitmasks::XL_XL {
+                0 => false,
+                _ => true,
+            },
+            /// Y-axis high event has occurred
+            yaxis_high_event: match reg_data & XL_INT_Bitmasks::YH_XL {
+                0 => false,
+                _ => true,
+            },
+            /// Y-axis low event has occurred
+            yaxis_low_event: match reg_data & XL_INT_Bitmasks::YL_XL {
+                0 => false,
+                _ => true,
+            },
+            /// Z-axis high event has occurred
+            zaxis_high_event: match reg_data & XL_INT_Bitmasks::ZH_XL {
+                0 => false,
+                _ => true,
+            },
+            /// X-axis low event has occurred
+            zaxis_low_event: match reg_data & XL_INT_Bitmasks::ZL_XL {
+                0 => false,
+                _ => true,
+            },
+        };
+        Ok(status)
+    }
+
+    /// Accelerometer interrupt duration
+    /// Enable/disable wait function and define for how many samples to wait before exiting interrupt    
+    pub fn accel_int_duration(&mut self, wait: FLAG, duration: u8) -> Result<(), T::Error> {
+                
+        let mut reg_value = self.read_register(Sensor::Accelerometer, register::AG::INT_GEN_DUR_XL.addr())?;
+
+        match wait {
+            FLAG::Enabled => reg_value & !0b1000_0000 | 0b1000_0000, // set bit
+            FLAG::Disabled => reg_value & !0b1000_0000, // clear bit
+        };
+
+        let duration: u8 = match duration { // clamp duration to 7 bit values
+            0..=127 => duration,
+            _ => 127,
+        };
+
+        reg_value &= !0b0111_1111; // clear the lowest 7 bits
+
+        reg_value |= duration; 
+
+        self.interface.write(Sensor::Accelerometer, register::AG::INT_GEN_DUR_XL.addr(), reg_value)?;
+
+        Ok(())
+    }
 
 }
 
