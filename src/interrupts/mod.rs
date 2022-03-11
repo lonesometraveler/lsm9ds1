@@ -88,3 +88,23 @@ impl POS_RECOG {
         status
     }
 }
+
+/// Decrement or reset counter mode selection.
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy)]
+pub enum COUNTER {
+    /// Decrement counter (see pages 58-61)
+    Decrement,
+    /// Reset counter
+    Reset,
+}
+
+impl COUNTER {
+    pub fn status(self) -> bool {
+        let status = match self {
+            COUNTER::Decrement => true,
+            COUNTER::Reset => false,
+        };
+        status
+    }
+}

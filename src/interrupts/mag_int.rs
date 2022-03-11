@@ -329,6 +329,8 @@ where
     }
 
 
+    // == MAKE SURE THE ORDER IS CORRECT!!! == 
+
     /// Set threshold in miligauss
     pub fn set_mag_threshold(&mut self, threshold: f32) -> Result<(), T::Error> {
         let sensitivity = self.mag.scale.sensitivity();
