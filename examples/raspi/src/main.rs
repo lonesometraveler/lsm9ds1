@@ -37,6 +37,27 @@ fn main() {
     lsm9ds1.begin_gyro().unwrap();
     lsm9ds1.begin_mag().unwrap();
     
+
+    println!("current CTRL_REG4: {:08b}", 
+            lsm9ds1.read_register(Sensor::Accelerometer,register::AG::CTRL_REG4.addr()).unwrap());
+
+    lsm9ds1.accel_int_latching(INT_LATCH::Latched).unwrap();
+
+    println!("current CTRL_REG4: {:08b}", 
+            lsm9ds1.read_register(Sensor::Accelerometer,register::AG::CTRL_REG4.addr()).unwrap());
+
+    lsm9ds1.accel_int_latching(INT_LATCH::NotLatched).unwrap();
+
+    println!("current CTRL_REG4: {:08b}", 
+            lsm9ds1.read_register(Sensor::Accelerometer,register::AG::CTRL_REG4.addr()).unwrap());
+
+    lsm9ds1.accel_int_pos_recog(POS_RECOG::_4D).unwrap();
+
+    println!("current CTRL_REG4: {:08b}", 
+            lsm9ds1.read_register(Sensor::Accelerometer,register::AG::CTRL_REG4.addr()).unwrap());
+
+    lsm9ds1.accel_int_pos_recog(POS_RECOG::_6D).unwrap();
+
     // let whoami = lsm9ds1.whoami_ag().unwrap();
 
     // let (a_x,a_y,a_z) = lsm9ds1.read_accel().unwrap();
@@ -183,10 +204,11 @@ fn main() {
 
  */        
 
+    /*
 
     println!("\nsetting thresholds:...");
 
-    lsm9ds1.set_accel_int_thresholds(0, 254, 253).unwrap();
+    lsm9ds1.set_accel_int_thresholds(255, 255, 255).unwrap();
 
     println!("register INT_GEN_THS_X_XL: {:08b}",
                 lsm9ds1.read_register(Sensor::Accelerometer, register::AG::INT_GEN_THS_X_XL.addr()).unwrap());
@@ -196,6 +218,14 @@ fn main() {
     println!("thresholds: x {}, y {}, z {}", x, y, z);
 
 
+    println!("\nsetting duration:...");
+
+    lsm9ds1.accel_int_duration(FLAG::Enabled, 0).unwrap();
+
+    println!("register INT_GEN_DUR_XL: {:08b}",
+                lsm9ds1.read_register(Sensor::Accelerometer, register::AG::INT_GEN_DUR_XL.addr()).unwrap());
+
+ */
     /*
 
     lsm9ds1.set_accel_enable_6d(FLAG::Enabled).unwrap();
