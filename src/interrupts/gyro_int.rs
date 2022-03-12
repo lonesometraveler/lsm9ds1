@@ -423,12 +423,12 @@ where
     /// Set threshold in ?
     pub fn set_gyro_threshold(&mut self, 
                                 //threshold: f32
-                                x_ths: u16, y_ths, z_ths: u16) -> Result<(), T::Error> {
+                                x_ths: u16, y_ths: u16, z_ths: u16) -> Result<(), T::Error> {
         
         // let sensitivity = self.mag.scale.sensitivity();
         // let mut data = threshold / sensitivity;
         
-        let x_data = x_ths;
+        let mut x_data = x_ths;
 
         // get the current content of the INT_GEN_THS_XH_G (to keep the DCRM_G bit value)
         let reg_x_high = self.read_register(Sensor::Accelerometer, register::AG::INT_GEN_THS_XH_G.addr())?;
@@ -441,19 +441,23 @@ where
         }
 
         // THIS SHOULD BE DONE IN TWO STEPS MAYBE? FIRST ZERO THE UPPER BITS
-        let x_data_low: u8 = x_data as u8; 
         
-        let mut x_data_high = x_reg_high & !0b1000_0000; // keep the highest bit
+        let x_data_low = x_data & 255; 
 
-        x_data_high: u8 |= ((x_data as u16) >> 8) as u8; 
+        let x_data_low = x_data_low as u8; 
+        
+        let mut x_data_high = reg_x_high & !0b1000_0000; // keep the highest bit
 
-        self.interface.write(Sensor::Gyro, register::AG::INT_GEN_THS_XH_G.addr(), data_high)?;
-        self.interface.write(Sensor::Gyro, register::AG::INT_GEN_THS_XL_G.addr(), data_low)?;
+        x_data_high |= ((x_data as u16) >> 8) as u8; 
+
+        self.interface.write(Sensor::Gyro, register::AG::INT_GEN_THS_XH_G.addr(), x_data_high)?;
+        self.interface.write(Sensor::Gyro, register::AG::INT_GEN_THS_XL_G.addr(), x_data_low)?;
 
 
 
-        let y_data = y_ths;
+        let mut y_data = y_ths;
 
+        
         // make sure it's not more than 15 bits, and it must be a positive value
         if y_data >= 32767 {
             y_data = 32767;
@@ -461,31 +465,62 @@ where
             y_data = 0;
         }
 
-        let y_data_low: u8 = y_data as u8;
+        // THIS SHOULD BE DONE IN TWO STEPS MAYBE? FIRST ZERO THE UPPER BITS
         
-        let mut x_data_high = x_reg_high & !0b1000_0000; // keep the highest bit
+        let y_data_low = y_data & 255; 
 
-        x_data_high: u8 |= ((x_data as u16) >> 8) as u8; 
+        let y_data_low = y_data_low as u8; 
+        
+        // let mut y_data_high = y_reg_high & !0b1000_0000; // keep the highest bit
 
-        self.interface.write(Sensor::Gyro, register::AG::INT_GEN_THS_XH_G.addr(), data_high)?;
-        self.interface.write(Sensor::Gyro, register::AG::INT_GEN_THS_XL_G.addr(), data_low)?;
+        let y_data_high = (y_data >> 8) as u8; 
+
+        self.interface.write(Sensor::Gyro, register::AG::INT_GEN_THS_YH_G.addr(), y_data_high)?;
+        self.interface.write(Sensor::Gyro, register::AG::INT_GEN_THS_YL_G.addr(), y_data_low)?;
+
+        let mut z_data = z_ths;
+        
+        // make sure it's not more than 15 bits, and it must be a positive value
+        if z_data >= 32767 {
+            z_data = 32767;
+        } else if z_data < 0 {
+            z_data = 0;
+        }
+
+        // THIS SHOULD BE DONE IN TWO STEPS MAYBE? FIRST ZERO THE UPPER BITS
+        
+        let z_data_low = z_data & 255; 
+
+        let z_data_low = z_data_low as u8; 
+        
+        // let mut y_data_high = y_reg_high & !0b1000_0000; // keep the highest bit
+
+        let z_data_high = (z_data >> 8) as u8; 
+
+        self.interface.write(Sensor::Gyro, register::AG::INT_GEN_THS_ZH_G.addr(), z_data_high)?;
+        self.interface.write(Sensor::Gyro, register::AG::INT_GEN_THS_ZL_G.addr(), z_data_low)?;
 
         Ok(())
     }
 
-    /// Read the magnetometer threshold setting (value in miligauss)
-    pub fn get_mag_threshold(&mut self) -> Result<f32, T::Error> {
-        let sensitivity = self.mag.scale.sensitivity();
-        
-        let mut buffer = [0u8;2];
-        self.interface.read(Sensor::Magnetometer, register::Mag::INT_THS_L_M.addr(), &mut buffer)?;
-        
-        let t: u16 = (buffer[1] as u16) << 8 | buffer[0] as u16; // threshold is a 15bit unsigned value
-        
-        Ok(t as f32 * sensitivity)
-        
-    }
     
+
+
+    pub fn get_gyro_threshold(&mut self) -> Result<(u16, u16, u16), T::Error> {
+        
+        // let sensitivity = self.mag.scale.sensitivity();
+        
+        let mut data = [0u8; 6];
+
+        self.interface.read(Sensor::Gyro, register::AG::INT_GEN_THS_XH_G.addr(), &mut data)?;
+
+        let x: u16 = ((data[0] & !0b0111_1111) as u16) << 8 | data[1] as u16;
+        let y: u16 = ((data[2] & !0b0111_1111) as u16) << 8 | data[3] as u16;
+        let z: u16 = ((data[4] & !0b0111_1111) as u16) << 8 | data[5] as u16;
+
+        Ok((x,y,z))
+
+    }
 
 }
 

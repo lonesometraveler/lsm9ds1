@@ -223,24 +223,6 @@ where
 
     }
 
-    /// Interrupt active setting for the INT_MAG pin: active high (default) or active low
-    pub fn mag_int_pin_active (&mut self, setting: INT_ACTIVE) -> Result<(), T::Error> {
-
-        let reg_value = self.read_register(Sensor::Magnetometer, register::Mag::INT_CFG_M.addr())?;
-
-        let mut data: u8  = reg_value &! M_CFG_Bitmasks::IEA; // clear the specific bit
-
-        data = match setting {
-            INT_ACTIVE::High => data | (1 << 2),       // if Enabled, set bit
-            INT_ACTIVE::Low => data,                 // if Disabled, bit is cleared
-        };
-
-        self.interface.write(Sensor::Magnetometer, register::Mag::INT_CFG_M.addr(), data)?;
-
-        Ok(())
-
-    }
-
     /// Latch interrupt request. Once latched, the INT_M pin remains in the same state until interrupt status is read.
     pub fn mag_int_latching (&mut self, setting: INT_LATCH) -> Result<(), T::Error> {
 
