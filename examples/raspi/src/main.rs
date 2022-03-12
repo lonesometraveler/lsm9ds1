@@ -41,7 +41,7 @@ fn main() {
 
     // let (a_x,a_y,a_z) = lsm9ds1.read_accel().unwrap();
 
-        
+    /*
 
     let config_xl = IntConfigAccel {                    
                     ..Default::default()
@@ -55,11 +55,152 @@ fn main() {
 
     let cfg_xl = lsm9ds1.get_accel_int_config().unwrap();
 
-    println!("current configuration:\n{:?}", cfg_xl);
+    println!("default configuration:\n{:?}", cfg_xl);
 
-    lsm9ds1.set_accel_events_combination(COMBINATION::AND).unwrap();
+    thread::sleep(Duration::from_millis(500));
+
+    println!("testing single settings:...\n");
+
+
+    println!("events combination:...");
+
+    lsm9ds1.accel_int_events_combination(COMBINATION::AND).unwrap();
+
+    println!("current setting: {:?}", lsm9ds1.get_accel_int_config().unwrap().events_combination);                
+
+    thread::sleep(Duration::from_millis(250));
+
+    lsm9ds1.accel_int_events_combination(COMBINATION::OR).unwrap();
+
+    println!("current setting: {:?}", lsm9ds1.get_accel_int_config().unwrap().events_combination);                
+
+    thread::sleep(Duration::from_millis(250));
+
+    
+    println!("enable 6D:...");
+
+    lsm9ds1.accel_int_enable_6d(FLAG::Enabled).unwrap();
+
+    println!("current setting: {:?}", lsm9ds1.get_accel_int_config().unwrap().enable_6d);                
+
+    thread::sleep(Duration::from_millis(250));
+
+    lsm9ds1.accel_int_enable_6d(FLAG::Disabled).unwrap();
+
+    println!("current setting: {:?}", lsm9ds1.get_accel_int_config().unwrap().enable_6d);                
+
+    thread::sleep(Duration::from_millis(250));
+
+
+    println!("Z axis high:...");
+
+    lsm9ds1.accel_int_zaxis_high(FLAG::Enabled).unwrap();
+
+    println!("current setting: {:?}", lsm9ds1.get_accel_int_config().unwrap().interrupt_zaxis_high);                
+
+    thread::sleep(Duration::from_millis(250));
+
+    lsm9ds1.accel_int_zaxis_high(FLAG::Disabled).unwrap();
+
+    println!("current setting: {:?}", lsm9ds1.get_accel_int_config().unwrap().interrupt_zaxis_high);                
+
+    thread::sleep(Duration::from_millis(250));
+
+
+    println!("Z axis low:...");
+
+    lsm9ds1.accel_int_zaxis_low(FLAG::Enabled).unwrap();
+
+    println!("current setting: {:?}", lsm9ds1.get_accel_int_config().unwrap().interrupt_zaxis_low);                
+
+    thread::sleep(Duration::from_millis(250));
+
+    lsm9ds1.accel_int_zaxis_low(FLAG::Disabled).unwrap();
+
+    println!("current setting: {:?}", lsm9ds1.get_accel_int_config().unwrap().interrupt_zaxis_low);                
+
+    thread::sleep(Duration::from_millis(250));
+
+
+    println!("Y axis high:...");
+
+    lsm9ds1.accel_int_yaxis_high(FLAG::Enabled).unwrap();
+
+    println!("current setting: {:?}", lsm9ds1.get_accel_int_config().unwrap().interrupt_yaxis_high);                
+
+    thread::sleep(Duration::from_millis(250));
+
+    lsm9ds1.accel_int_yaxis_high(FLAG::Disabled).unwrap();
+
+    println!("current setting: {:?}", lsm9ds1.get_accel_int_config().unwrap().interrupt_yaxis_high);                
+
+    thread::sleep(Duration::from_millis(250));
+
+
+    println!("Y axis low:...");
+
+    lsm9ds1.accel_int_yaxis_low(FLAG::Enabled).unwrap();
+
+    println!("current setting: {:?}", lsm9ds1.get_accel_int_config().unwrap().interrupt_yaxis_low);                
+
+    thread::sleep(Duration::from_millis(250));
+
+    lsm9ds1.accel_int_yaxis_low(FLAG::Disabled).unwrap();
+
+    println!("current setting: {:?}", lsm9ds1.get_accel_int_config().unwrap().interrupt_yaxis_low);                
+
+    thread::sleep(Duration::from_millis(250));
+
+
+    println!("X axis high:...");
+
+    lsm9ds1.accel_int_xaxis_high(FLAG::Enabled).unwrap();
+
+    println!("current setting: {:?}", lsm9ds1.get_accel_int_config().unwrap().interrupt_xaxis_high);                
+
+    thread::sleep(Duration::from_millis(250));
+
+    lsm9ds1.accel_int_xaxis_high(FLAG::Disabled).unwrap();
+
+    println!("current setting: {:?}", lsm9ds1.get_accel_int_config().unwrap().interrupt_xaxis_high);                
+
+    thread::sleep(Duration::from_millis(250));
+
+
+    println!("X axis low:...");
+
+    lsm9ds1.accel_int_xaxis_low(FLAG::Enabled).unwrap();
+
+    println!("current setting: {:?}", lsm9ds1.get_accel_int_config().unwrap().interrupt_xaxis_low);                
+
+    thread::sleep(Duration::from_millis(250));
+
+    lsm9ds1.accel_int_xaxis_low(FLAG::Disabled).unwrap();
+
+    println!("current setting: {:?}", lsm9ds1.get_accel_int_config().unwrap().interrupt_xaxis_low);                
+
+    thread::sleep(Duration::from_millis(1000));
+
+ */        
+
+
+    println!("\nsetting thresholds:...");
+
+    lsm9ds1.set_accel_int_thresholds(0, 254, 253).unwrap();
+
+    println!("register INT_GEN_THS_X_XL: {:08b}",
+                lsm9ds1.read_register(Sensor::Accelerometer, register::AG::INT_GEN_THS_X_XL.addr()).unwrap());
+
+    let (x,y,z) = lsm9ds1.get_accel_int_thresholds().unwrap();
+
+    println!("thresholds: x {}, y {}, z {}", x, y, z);
+
+
+    /*
 
     lsm9ds1.set_accel_enable_6d(FLAG::Enabled).unwrap();
+
+        
 
     println!("register INT_GEN_CFG_XL {:08b}", 
             lsm9ds1.read_register(Sensor::Accelerometer, 
@@ -68,9 +209,9 @@ fn main() {
 
     let cfg_xl = lsm9ds1.get_accel_int_config().unwrap();
 
-
-
     println!("current configuration:\n{:?}", cfg_xl);
+ */
+
  /*
     let config_xl = IntConfigAccel {                    
         events_combination: COMBINATION::AND,

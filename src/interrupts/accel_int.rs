@@ -18,17 +18,17 @@ pub struct IntConfigAccel {
     /// Enable 6-direction detection
     pub enable_6d: FLAG,
     /// Enable interrupt generation on Z-axis high event
-    pub interrupt_high_zaxis: FLAG,
+    pub interrupt_zaxis_high: FLAG,
     /// Enable interrupt generation on Z-axis low event
-    pub interrupt_low_zaxis: FLAG,
+    pub interrupt_zaxis_low: FLAG,
     /// Enable interrupt generation on Y-axis high event
-    pub interrupt_high_yaxis: FLAG,    
+    pub interrupt_yaxis_high: FLAG,    
     /// Enable interrupt generation on Y-axis low event
-    pub interrupt_low_yaxis: FLAG,
+    pub interrupt_yaxis_low: FLAG,
     /// Enable interrupt generation on X-axis high event
-    pub interrupt_high_xaxis: FLAG,
+    pub interrupt_xaxis_high: FLAG,
     /// Enable interrupt generation on X-axis low event
-    pub interrupt_low_xaxis: FLAG,    
+    pub interrupt_xaxis_low: FLAG,    
     
 }
 impl Default for IntConfigAccel {
@@ -36,12 +36,12 @@ impl Default for IntConfigAccel {
         IntConfigAccel {
             events_combination: COMBINATION::OR,
             enable_6d: FLAG::Disabled,
-            interrupt_high_zaxis: FLAG::Disabled,
-            interrupt_low_zaxis: FLAG::Disabled,                        
-            interrupt_high_yaxis: FLAG::Disabled,
-            interrupt_low_yaxis: FLAG::Disabled,
-            interrupt_high_xaxis: FLAG::Disabled,
-            interrupt_low_xaxis: FLAG::Disabled,
+            interrupt_zaxis_high: FLAG::Disabled,
+            interrupt_zaxis_low: FLAG::Disabled,                        
+            interrupt_yaxis_high: FLAG::Disabled,
+            interrupt_yaxis_low: FLAG::Disabled,
+            interrupt_xaxis_high: FLAG::Disabled,
+            interrupt_xaxis_low: FLAG::Disabled,
         }
     }
 }
@@ -56,22 +56,22 @@ impl IntConfigAccel {
         if self.enable_6d.status() {
             data |= 1 << 6;
         }
-        if self.interrupt_high_zaxis.status() {
+        if self.interrupt_zaxis_high.status() {
             data |= 1 << 5;
         }
-        if self.interrupt_low_zaxis.status() {
+        if self.interrupt_zaxis_low.status() {
             data |= 1 << 4;
         }
-        if self.interrupt_high_yaxis.status() {
+        if self.interrupt_yaxis_high.status() {
             data |= 1 << 3;
         }
-        if self.interrupt_low_yaxis.status() {
+        if self.interrupt_yaxis_low.status() {
             data |= 1 << 2;
         }
-        if self.interrupt_high_xaxis.status() {
+        if self.interrupt_xaxis_high.status() {
             data |= 1 << 1;
         }
-        if self.interrupt_low_xaxis.status() {
+        if self.interrupt_xaxis_low.status() {
             data |= 1;
         }
         data
@@ -151,27 +151,27 @@ where
                         1 => FLAG::Enabled,
                         _ => FLAG::Disabled,
                     },
-                    interrupt_high_zaxis: match (reg_value & XL_CFG_Bitmasks::ZHIE_XL) >> 5 {
+                    interrupt_zaxis_high: match (reg_value & XL_CFG_Bitmasks::ZHIE_XL) >> 5 {
                         1 => FLAG::Enabled,
                         _ => FLAG::Disabled,
                     },
-                    interrupt_low_zaxis: match (reg_value & XL_CFG_Bitmasks::ZLIE_XL) >> 4 {
+                    interrupt_zaxis_low: match (reg_value & XL_CFG_Bitmasks::ZLIE_XL) >> 4 {
                         1 => FLAG::Enabled,
                         _ => FLAG::Disabled,
                     },
-                    interrupt_high_yaxis: match (reg_value & XL_CFG_Bitmasks::YHIE_XL) >> 3 {
+                    interrupt_yaxis_high: match (reg_value & XL_CFG_Bitmasks::YHIE_XL) >> 3 {
                         1 => FLAG::Enabled,
                         _ => FLAG::Disabled,
                     },
-                    interrupt_low_yaxis: match (reg_value & XL_CFG_Bitmasks::XLIE_XL) >> 2 {
+                    interrupt_yaxis_low: match (reg_value & XL_CFG_Bitmasks::XLIE_XL) >> 2 {
                         1 => FLAG::Enabled,
                         _ => FLAG::Disabled,
                     },                 
-                    interrupt_high_xaxis: match (reg_value & XL_CFG_Bitmasks::XHIE_XL) >> 1 {
+                    interrupt_xaxis_high: match (reg_value & XL_CFG_Bitmasks::XHIE_XL) >> 1 {
                         1 => FLAG::Enabled,
                         _ => FLAG::Disabled,
                     },
-                    interrupt_low_xaxis: match reg_value & XL_CFG_Bitmasks::XLIE_XL {
+                    interrupt_xaxis_low: match reg_value & XL_CFG_Bitmasks::XLIE_XL {
                         1 => FLAG::Enabled,
                         _ => FLAG::Disabled,
                     },                   
@@ -217,7 +217,7 @@ where
     }
 
     /// Enable interrupt generation on accelerometer’s Z-axis high event
-    pub fn accel_int_interrupt_high_zaxis (&mut self, setting: FLAG) -> Result<(), T::Error> {
+    pub fn accel_int_zaxis_high (&mut self, setting: FLAG) -> Result<(), T::Error> {
 
         let reg_value = self.read_register(Sensor::Accelerometer, register::AG::INT_GEN_CFG_XL.addr())?;
     
@@ -234,7 +234,7 @@ where
     }
 
     /// Enable interrupt generation on accelerometer’s Z-axis low event
-    pub fn accel_int_interrupt_low_zaxis (&mut self, setting: FLAG) -> Result<(), T::Error> {
+    pub fn accel_int_zaxis_low (&mut self, setting: FLAG) -> Result<(), T::Error> {
 
         let reg_value = self.read_register(Sensor::Accelerometer, register::AG::INT_GEN_CFG_XL.addr())?;
     
@@ -251,7 +251,7 @@ where
     }
 
     /// Enable interrupt generation on accelerometer’s Y-axis high event
-    pub fn accel_int_interrupt_high_yaxis (&mut self, setting: FLAG) -> Result<(), T::Error> {
+    pub fn accel_int_yaxis_high (&mut self, setting: FLAG) -> Result<(), T::Error> {
 
         let reg_value = self.read_register(Sensor::Accelerometer, register::AG::INT_GEN_CFG_XL.addr())?;
     
@@ -268,7 +268,7 @@ where
     }
 
     /// Enable interrupt generation on accelerometer’s Y-axis low event
-    pub fn accel_int_interrupt_low_yaxis (&mut self, setting: FLAG) -> Result<(), T::Error> {
+    pub fn accel_int_yaxis_low (&mut self, setting: FLAG) -> Result<(), T::Error> {
 
         let reg_value = self.read_register(Sensor::Accelerometer, register::AG::INT_GEN_CFG_XL.addr())?;
     
@@ -285,7 +285,7 @@ where
     }
 
     /// Enable interrupt generation on accelerometer’s X-axis high event
-    pub fn accel_int_interrupt_high_xaxis (&mut self, setting: FLAG) -> Result<(), T::Error> {
+    pub fn accel_int_xaxis_high (&mut self, setting: FLAG) -> Result<(), T::Error> {
 
         let reg_value = self.read_register(Sensor::Accelerometer, register::AG::INT_GEN_CFG_XL.addr())?;
     
@@ -302,7 +302,7 @@ where
     }
 
     /// Enable interrupt generation on accelerometer’s X-axis low event
-    pub fn accel_int_interrupt_low_xaxis (&mut self, setting: FLAG) -> Result<(), T::Error> {
+    pub fn accel_int_xaxis_low (&mut self, setting: FLAG) -> Result<(), T::Error> {
 
         let reg_value = self.read_register(Sensor::Accelerometer, register::AG::INT_GEN_CFG_XL.addr())?;
     
@@ -427,10 +427,9 @@ where
 
     /// Set accelerometer interrupt threshold for X, Y and Z axes
     /// 
-    /// TO DO: use actual values as input (mG)?
+    /// TO DO: use actual values as input (mG)?    
     /// 
-    /// 
-    pub fn accel_int_int_thresholds(&mut self, x_ths: u8, y_ths: u8, z_ths: u8) -> Result<(), T::Error> {
+    pub fn set_accel_int_thresholds(&mut self, x_ths: u8, y_ths: u8, z_ths: u8) -> Result<(), T::Error> {
         
         self.interface.write(Sensor::Accelerometer, register::AG::INT_GEN_THS_X_XL.addr(), x_ths)?;
         self.interface.write(Sensor::Accelerometer, register::AG::INT_GEN_THS_Y_XL.addr(), y_ths)?;
@@ -469,18 +468,18 @@ fn configure_accel_int() {
     let config = IntConfigAccel {
                     events_combination: COMBINATION::AND,
                     enable_6d: FLAG::Enabled,
-                    interrupt_high_zaxis: FLAG::Enabled,
-                    interrupt_low_zaxis: FLAG::Enabled,
-                    interrupt_high_yaxis: FLAG::Enabled,
-                    interrupt_low_yaxis: FLAG::Enabled,
-                    interrupt_high_xaxis: FLAG::Enabled,
-                    interrupt_low_xaxis: FLAG::Enabled,
+                    interrupt_zaxis_high: FLAG::Enabled,
+                    interrupt_zaxis_low: FLAG::Enabled,
+                    interrupt_yaxis_high: FLAG::Enabled,
+                    interrupt_yaxis_low: FLAG::Enabled,
+                    interrupt_xaxis_high: FLAG::Enabled,
+                    interrupt_xaxis_low: FLAG::Enabled,
                 };
     assert_eq!(config.int_gen_cfg_xl(), 0b1111_1111);
 
     let config = IntConfigAccel {
-        interrupt_high_zaxis: FLAG::Enabled,
-        interrupt_low_xaxis: FLAG::Enabled,
+        interrupt_zaxis_high: FLAG::Enabled,
+        interrupt_xaxis_low: FLAG::Enabled,
         ..Default::default()
     };
     assert_eq!(config.int_gen_cfg_xl(), 0b0010_0001);
