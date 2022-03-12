@@ -14,7 +14,7 @@ use lsm9ds1::*;
 
 use lsm9ds1::interrupts::accel_int::IntConfigAccel;
 use lsm9ds1::interrupts::gyro_int::IntConfigGyro;
-//use lsm9ds1::interrupts::mag_int::IntConfigMag;
+use lsm9ds1::interrupts::mag_int::IntConfigMag;
 use lsm9ds1::interrupts::*;
 
 fn main() {
@@ -37,172 +37,149 @@ fn main() {
     lsm9ds1.begin_gyro().unwrap();
     lsm9ds1.begin_mag().unwrap();
     
-
+    /*
     println!("current CTRL_REG4: {:08b}", 
             lsm9ds1.read_register(Sensor::Accelerometer,register::AG::CTRL_REG4.addr()).unwrap());
 
     lsm9ds1.accel_int_latching(INT_LATCH::Latched).unwrap();
+ */
+   
 
-    println!("current CTRL_REG4: {:08b}", 
-            lsm9ds1.read_register(Sensor::Accelerometer,register::AG::CTRL_REG4.addr()).unwrap());
-
-    lsm9ds1.accel_int_latching(INT_LATCH::NotLatched).unwrap();
-
-    println!("current CTRL_REG4: {:08b}", 
-            lsm9ds1.read_register(Sensor::Accelerometer,register::AG::CTRL_REG4.addr()).unwrap());
-
-    lsm9ds1.accel_int_pos_recog(POS_RECOG::_4D).unwrap();
-
-    println!("current CTRL_REG4: {:08b}", 
-            lsm9ds1.read_register(Sensor::Accelerometer,register::AG::CTRL_REG4.addr()).unwrap());
-
-    lsm9ds1.accel_int_pos_recog(POS_RECOG::_6D).unwrap();
-
-    // let whoami = lsm9ds1.whoami_ag().unwrap();
-
-    // let (a_x,a_y,a_z) = lsm9ds1.read_accel().unwrap();
-
-    /*
-
-    let config_xl = IntConfigAccel {                    
+    let config_m = IntConfigMag {                    
                     ..Default::default()
                         };
 
-    lsm9ds1.configure_interrupts_accel(config_xl).unwrap();
+    lsm9ds1.configure_interrupts_mag(config_m).unwrap();
     
-    println!("register INT_GEN_CFG_XL {:08b}", 
-            lsm9ds1.read_register(Sensor::Accelerometer, 
-                                register::AG::INT_GEN_CFG_XL.addr()).unwrap());
+    println!("register INT_CFG_M {:08b}", 
+            lsm9ds1.read_register(Sensor::Magnetometer, 
+                                register::Mag::INT_CFG_M.addr()).unwrap());
 
-    let cfg_xl = lsm9ds1.get_accel_int_config().unwrap();
+    let cfg_m = lsm9ds1.get_mag_int_config().unwrap();
 
-    println!("default configuration:\n{:?}", cfg_xl);
+    println!("default configuration:\n{:?}", cfg_m);
 
+    
     thread::sleep(Duration::from_millis(500));
+
+
+    let config_m = IntConfigMag {                    
+            interrupt_xaxis: FLAG::Enabled,
+            interrupt_yaxis: FLAG::Enabled,
+            interrupt_zaxis: FLAG::Enabled,
+            active_high_or_low: INT_ACTIVE::High,
+            interrupt_latching: INT_LATCH::NotLatched,
+            enable_interrupt: FLAG::Enabled,
+            };
+
+    lsm9ds1.configure_interrupts_mag(config_m).unwrap();
+
+    println!("register INT_CFG_M {:08b}", 
+    lsm9ds1.read_register(Sensor::Magnetometer, 
+                        register::Mag::INT_CFG_M.addr()).unwrap());
+
+    let cfg_m = lsm9ds1.get_mag_int_config().unwrap();
+
+    println!("current configuration:\n{:?}", cfg_m);
+
+
+
+
 
     println!("testing single settings:...\n");
 
 
-    println!("events combination:...");
+    println!("X axis:...");
 
-    lsm9ds1.accel_int_events_combination(COMBINATION::AND).unwrap();
+    lsm9ds1.mag_int_xaxis(FLAG::Enabled).unwrap();
 
-    println!("current setting: {:?}", lsm9ds1.get_accel_int_config().unwrap().events_combination);                
-
-    thread::sleep(Duration::from_millis(250));
-
-    lsm9ds1.accel_int_events_combination(COMBINATION::OR).unwrap();
-
-    println!("current setting: {:?}", lsm9ds1.get_accel_int_config().unwrap().events_combination);                
+    println!("current setting: {:?}", lsm9ds1.get_mag_int_config().unwrap().interrupt_xaxis);                
 
     thread::sleep(Duration::from_millis(250));
 
+    lsm9ds1.mag_int_xaxis(FLAG::Disabled).unwrap();
+
+    println!("current setting: {:?}", lsm9ds1.get_mag_int_config().unwrap().interrupt_xaxis);                
+
+    thread::sleep(Duration::from_millis(250));
+
+
+    println!("Y axis:...");
+
+    lsm9ds1.mag_int_yaxis(FLAG::Enabled).unwrap();
+
+    println!("current setting: {:?}", lsm9ds1.get_mag_int_config().unwrap().interrupt_yaxis);                
+
+    thread::sleep(Duration::from_millis(250));
+
+    lsm9ds1.mag_int_yaxis(FLAG::Disabled).unwrap();
+
+    println!("current setting: {:?}", lsm9ds1.get_mag_int_config().unwrap().interrupt_yaxis);                
+
+    thread::sleep(Duration::from_millis(250));
+
+
+    println!("Z axis:...");
+
+    lsm9ds1.mag_int_zaxis(FLAG::Enabled).unwrap();
+
+    println!("current setting: {:?}", lsm9ds1.get_mag_int_config().unwrap().interrupt_zaxis);                
+
+    thread::sleep(Duration::from_millis(250));
+
+    lsm9ds1.mag_int_zaxis(FLAG::Disabled).unwrap();
+
+    println!("current setting: {:?}", lsm9ds1.get_mag_int_config().unwrap().interrupt_zaxis);                
+
+    thread::sleep(Duration::from_millis(250));
+
+
+    println!("active high/low:...");
+
+    lsm9ds1.mag_int_pin_active(INT_ACTIVE::High).unwrap();
+
+    println!("current setting: {:?}", lsm9ds1.get_mag_int_config().unwrap().active_high_or_low);                
+
+    thread::sleep(Duration::from_millis(250));
+
+    lsm9ds1.mag_int_pin_active(INT_ACTIVE::Low).unwrap();
+
+    println!("current setting: {:?}", lsm9ds1.get_mag_int_config().unwrap().active_high_or_low);                
+
+    thread::sleep(Duration::from_millis(250));
     
-    println!("enable 6D:...");
 
-    lsm9ds1.accel_int_enable_6d(FLAG::Enabled).unwrap();
+    println!("interupt latching:...");
 
-    println!("current setting: {:?}", lsm9ds1.get_accel_int_config().unwrap().enable_6d);                
+    lsm9ds1.mag_int_latching(INT_LATCH::Latched).unwrap();
 
-    thread::sleep(Duration::from_millis(250));
-
-    lsm9ds1.accel_int_enable_6d(FLAG::Disabled).unwrap();
-
-    println!("current setting: {:?}", lsm9ds1.get_accel_int_config().unwrap().enable_6d);                
+    println!("current setting: {:?}", lsm9ds1.get_mag_int_config().unwrap().interrupt_latching);                
 
     thread::sleep(Duration::from_millis(250));
 
+    lsm9ds1.mag_int_latching(INT_LATCH::NotLatched).unwrap();
 
-    println!("Z axis high:...");
-
-    lsm9ds1.accel_int_zaxis_high(FLAG::Enabled).unwrap();
-
-    println!("current setting: {:?}", lsm9ds1.get_accel_int_config().unwrap().interrupt_zaxis_high);                
-
-    thread::sleep(Duration::from_millis(250));
-
-    lsm9ds1.accel_int_zaxis_high(FLAG::Disabled).unwrap();
-
-    println!("current setting: {:?}", lsm9ds1.get_accel_int_config().unwrap().interrupt_zaxis_high);                
+    println!("current setting: {:?}", lsm9ds1.get_mag_int_config().unwrap().interrupt_latching);                
 
     thread::sleep(Duration::from_millis(250));
 
 
-    println!("Z axis low:...");
+    println!("interrupt enabling:...");
 
-    lsm9ds1.accel_int_zaxis_low(FLAG::Enabled).unwrap();
+    lsm9ds1.mag_int_enable(FLAG::Enabled).unwrap();
 
-    println!("current setting: {:?}", lsm9ds1.get_accel_int_config().unwrap().interrupt_zaxis_low);                
-
-    thread::sleep(Duration::from_millis(250));
-
-    lsm9ds1.accel_int_zaxis_low(FLAG::Disabled).unwrap();
-
-    println!("current setting: {:?}", lsm9ds1.get_accel_int_config().unwrap().interrupt_zaxis_low);                
+    println!("current setting: {:?}", lsm9ds1.get_mag_int_config().unwrap().enable_interrupt);                
 
     thread::sleep(Duration::from_millis(250));
 
+    lsm9ds1.mag_int_enable(FLAG::Disabled).unwrap();
 
-    println!("Y axis high:...");
-
-    lsm9ds1.accel_int_yaxis_high(FLAG::Enabled).unwrap();
-
-    println!("current setting: {:?}", lsm9ds1.get_accel_int_config().unwrap().interrupt_yaxis_high);                
+    println!("current setting: {:?}", lsm9ds1.get_mag_int_config().unwrap().enable_interrupt);                
 
     thread::sleep(Duration::from_millis(250));
-
-    lsm9ds1.accel_int_yaxis_high(FLAG::Disabled).unwrap();
-
-    println!("current setting: {:?}", lsm9ds1.get_accel_int_config().unwrap().interrupt_yaxis_high);                
-
-    thread::sleep(Duration::from_millis(250));
-
-
-    println!("Y axis low:...");
-
-    lsm9ds1.accel_int_yaxis_low(FLAG::Enabled).unwrap();
-
-    println!("current setting: {:?}", lsm9ds1.get_accel_int_config().unwrap().interrupt_yaxis_low);                
-
-    thread::sleep(Duration::from_millis(250));
-
-    lsm9ds1.accel_int_yaxis_low(FLAG::Disabled).unwrap();
-
-    println!("current setting: {:?}", lsm9ds1.get_accel_int_config().unwrap().interrupt_yaxis_low);                
-
-    thread::sleep(Duration::from_millis(250));
-
-
-    println!("X axis high:...");
-
-    lsm9ds1.accel_int_xaxis_high(FLAG::Enabled).unwrap();
-
-    println!("current setting: {:?}", lsm9ds1.get_accel_int_config().unwrap().interrupt_xaxis_high);                
-
-    thread::sleep(Duration::from_millis(250));
-
-    lsm9ds1.accel_int_xaxis_high(FLAG::Disabled).unwrap();
-
-    println!("current setting: {:?}", lsm9ds1.get_accel_int_config().unwrap().interrupt_xaxis_high);                
-
-    thread::sleep(Duration::from_millis(250));
-
-
-    println!("X axis low:...");
-
-    lsm9ds1.accel_int_xaxis_low(FLAG::Enabled).unwrap();
-
-    println!("current setting: {:?}", lsm9ds1.get_accel_int_config().unwrap().interrupt_xaxis_low);                
-
-    thread::sleep(Duration::from_millis(250));
-
-    lsm9ds1.accel_int_xaxis_low(FLAG::Disabled).unwrap();
-
-    println!("current setting: {:?}", lsm9ds1.get_accel_int_config().unwrap().interrupt_xaxis_low);                
 
     thread::sleep(Duration::from_millis(1000));
 
- */        
 
     /*
 

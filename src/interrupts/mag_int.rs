@@ -1,5 +1,4 @@
 /// Functions related to magnetometer-specific interrupts
-
 use super::*;
 
 pub struct M_INT_Bitmasks;
@@ -81,9 +80,9 @@ impl M_CFG_Bitmasks {
     pub(crate) const XIEN: u8 = 0b1000_0000;
     pub(crate) const YIEN: u8 = 0b0100_0000;
     pub(crate) const ZIEN: u8 = 0b0010_0000;
-    pub(crate) const IEA: u8 = 0b0001_0000;
-    pub(crate) const IEL: u8 = 0b0000_1000;
-    pub(crate) const IEN: u8 = 0b0000_0100;
+    pub(crate) const IEA: u8 = 0b0000_0100;
+    pub(crate) const IEL: u8 = 0b0000_0010;
+    pub(crate) const IEN: u8 = 0b0000_0001;
     
 }
 
