@@ -19,11 +19,10 @@ pub enum INT_ACTIVE {
 
 impl INT_ACTIVE {
     pub fn status(self) -> bool {
-        let status = match self {
+        match self {
             INT_ACTIVE::High => false,
             INT_ACTIVE::Low => true,
-        };
-        status
+        }
     }
 }
 
