@@ -58,11 +58,10 @@ pub enum INT_LATCH {
 
 impl INT_LATCH {
     pub fn status(self) -> bool {
-        let status = match self {
+        match self {
             INT_LATCH::Latched => true,
             INT_LATCH::NotLatched => false,
-        };
-        status
+        }
     }
 }
 
