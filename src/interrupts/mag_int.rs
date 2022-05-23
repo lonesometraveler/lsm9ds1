@@ -46,12 +46,14 @@ impl IntConfigMag {
         if self.interrupt_zaxis.status() {
             data |= 1 << 5;
         }        
-        if !self.active_high_or_low.status() {
-            data |= 1 << 2;
-        }
-        if !self.interrupt_latching.status() {                  // NOTE: it's reversed, 0 is latched
-            data |= 1 << 1;
-        }
+        data |= match self.active_high_or_low {
+            INT_ACTIVE::High => 1,
+            INT_ACTIVE::Low => 0,
+        } << 2;
+        data |= match self.interrupt_latching {
+            INT_LATCH::Latched => 0,
+            INT_LATCH::NotLatched => 1,
+        } << 1;
         if self.enable_interrupt.status() {
             data |= 1;
         }
