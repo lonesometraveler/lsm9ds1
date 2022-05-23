@@ -97,10 +97,9 @@ pub enum COUNTER {
 
 impl COUNTER {
     pub fn status(self) -> bool {
-        let status = match self {
+        match self {
             COUNTER::Decrement => true,
             COUNTER::Reset => false,
-        };
-        status
+        }
     }
 }
