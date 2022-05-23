@@ -78,11 +78,10 @@ pub enum POS_RECOG {
 
 impl POS_RECOG {
     pub fn status(self) -> bool {
-        let status = match self {
+        match self {
             POS_RECOG::_4D => true,
             POS_RECOG::_6D => false,
-        };
-        status
+        }
     }
 }
 
