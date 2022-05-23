@@ -38,11 +38,10 @@ pub enum INT_PIN {
 
 impl INT_PIN {
     pub fn status(self) -> bool {
-        let status = match self {
+        match self {
             INT_PIN::PushPull => false,
             INT_PIN::OpenDrain => true,
-        };
-        status
+        }
     }
 }
 
