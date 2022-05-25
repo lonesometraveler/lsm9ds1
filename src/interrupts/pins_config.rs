@@ -200,7 +200,9 @@ where
 
         let mut data: u8 = reg_data & !0b0011_0000;
 
-        //data |= config.int2_ctrl();
+        data |= (config.active_level.status()) << 5;
+
+        data |= (config.pin_mode.status()) << 4;
 
         self.interface
             .write(Sensor::Accelerometer, register::AG::CTRL_REG8.addr(), data)?;
