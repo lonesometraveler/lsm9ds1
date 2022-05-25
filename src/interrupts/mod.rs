@@ -18,10 +18,10 @@ pub enum INT_ACTIVE {
 }
 
 impl INT_ACTIVE {
-    pub fn status(self) -> bool {
+    pub fn status(self) -> u8 {
         match self {
-            INT_ACTIVE::High => false,
-            INT_ACTIVE::Low => true,
+            INT_ACTIVE::High => 0,
+            INT_ACTIVE::Low => 1,
         }
     }
 }
@@ -37,10 +37,10 @@ pub enum INT_PIN {
 }
 
 impl INT_PIN {
-    pub fn status(self) -> bool {
+    pub fn status(self) -> u8 {
         match self {
-            INT_PIN::PushPull => false,
-            INT_PIN::OpenDrain => true,
+            INT_PIN::PushPull => 0,
+            INT_PIN::OpenDrain => 1,
         }
     }
 }

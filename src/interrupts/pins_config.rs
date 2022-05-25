@@ -29,12 +29,8 @@ impl PinConfig {
     fn ctrl_reg8(&self) -> u8 {
         let mut data: u8 = 0;
 
-        if self.active_level.status() {
-            data |= 1 << 5;
-        }
-        if self.pin_mode.status() {
-            data |= 1 << 4;
-        }
+        data |= self.active_level.status() << 5;
+        data |= self.pin_mode.status() << 4;
 
         data
     }
