@@ -6,11 +6,11 @@
 #![no_std]
 // #![deny(warnings, missing_docs)]
 pub mod accel;
+pub mod fifo;
 pub mod gyro;
+pub mod interrupts;
 pub mod mag;
 pub mod register;
-pub mod fifo;
-pub mod interrupts;
 
 use accel::AccelSettings;
 use gyro::GyroSettings;
@@ -95,7 +95,7 @@ where
         //let mut bytes = [0u8; 1];
 
         let mut id = self.read_register(Sensor::Accelerometer, register::AG::WHO_AM_I.addr())?;
-        
+
         Ok(id)
     }
 
@@ -282,22 +282,25 @@ where
     }
 
     // --- ADDED GROUP OF FUNCTIONS ---
-    
+
     /// Read a byte from the given register.
     // fn read_register(&mut self, sensor: Sensor, address: u8) -> Result<u8, T::Error> {
     pub fn read_register(&mut self, sensor: Sensor, address: u8) -> Result<u8, T::Error> {
-        let mut reg_data = [0u8];        
+        let mut reg_data = [0u8];
         self.interface.read(sensor, address, &mut reg_data)?;
         Ok(reg_data[0])
     }
 
-    
     /// Check if specific bits are set.
-    fn is_register_bit_flag_high(&mut self, sensor: Sensor, address: u8, bitmask: u8,) -> Result<bool, T::Error> {
+    fn is_register_bit_flag_high(
+        &mut self,
+        sensor: Sensor,
+        address: u8,
+        bitmask: u8,
+    ) -> Result<bool, T::Error> {
         let data = self.read_register(sensor, address)?;
         Ok((data & bitmask) != 0)
     }
-    
 }
 
 /// Settings for various FIFO- and interrupt-related flags, Enabled or Disabled
@@ -319,7 +322,6 @@ impl FLAG {
         status
     }
 }
-
 
 /// Possible combinations of interrupt events for the accelerometer
 #[allow(non_camel_case_types)]

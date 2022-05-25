@@ -1,13 +1,11 @@
 /// Functions related to accelerometer-specific interrupts
-/// 
+///
 /// TO DO:
 /// - set acceleration threshold for X, Y and Z axis (INT_GEN_THS_X/Y/Z_XL) in mg instead?
 /// - LIR_XL1 and 4D_XL1 bits of CTRL_REG4 => should they be incorporated in the Config struct? what's the relation between 4D_XL1 and _6D?
-/// 
-
+///
 
 #[allow(non_camel_case_types)]
-
 use super::*;
 
 /// Accelerometer interrupt generation settings
@@ -22,14 +20,13 @@ pub struct IntConfigAccel {
     /// Enable interrupt generation on Z-axis low event
     pub interrupt_zaxis_low: FLAG,
     /// Enable interrupt generation on Y-axis high event
-    pub interrupt_yaxis_high: FLAG,    
+    pub interrupt_yaxis_high: FLAG,
     /// Enable interrupt generation on Y-axis low event
     pub interrupt_yaxis_low: FLAG,
     /// Enable interrupt generation on X-axis high event
     pub interrupt_xaxis_high: FLAG,
     /// Enable interrupt generation on X-axis low event
-    pub interrupt_xaxis_low: FLAG,    
-    
+    pub interrupt_xaxis_low: FLAG,
 }
 impl Default for IntConfigAccel {
     fn default() -> Self {
@@ -37,7 +34,7 @@ impl Default for IntConfigAccel {
             events_combination: COMBINATION::OR,
             enable_6d: FLAG::Disabled,
             interrupt_zaxis_high: FLAG::Disabled,
-            interrupt_zaxis_low: FLAG::Disabled,                        
+            interrupt_zaxis_low: FLAG::Disabled,
             interrupt_yaxis_high: FLAG::Disabled,
             interrupt_yaxis_low: FLAG::Disabled,
             interrupt_xaxis_high: FLAG::Disabled,
@@ -138,220 +135,251 @@ where
 
     /// Get the current accelerometer interrupts configuration
     pub fn get_accel_int_config(&mut self) -> Result<IntConfigAccel, T::Error> {
-        
-        let reg_value: u8 = self.read_register(Sensor::Accelerometer, 
-                                              register::AG::INT_GEN_CFG_XL.addr())?;
-        
+        let reg_value: u8 =
+            self.read_register(Sensor::Accelerometer, register::AG::INT_GEN_CFG_XL.addr())?;
+
         let config = IntConfigAccel {
-                    events_combination: match (reg_value & XL_CFG_Bitmasks::AOI_XL) >> 7 {
-                        1 => COMBINATION::AND,
-                        _ => COMBINATION::OR,
-                    },
-                    enable_6d: match (reg_value & XL_CFG_Bitmasks::_6D) >> 6 {
-                        1 => FLAG::Enabled,
-                        _ => FLAG::Disabled,
-                    },
-                    interrupt_zaxis_high: match (reg_value & XL_CFG_Bitmasks::ZHIE_XL) >> 5 {
-                        1 => FLAG::Enabled,
-                        _ => FLAG::Disabled,
-                    },
-                    interrupt_zaxis_low: match (reg_value & XL_CFG_Bitmasks::ZLIE_XL) >> 4 {
-                        1 => FLAG::Enabled,
-                        _ => FLAG::Disabled,
-                    },
-                    interrupt_yaxis_high: match (reg_value & XL_CFG_Bitmasks::YHIE_XL) >> 3 {
-                        1 => FLAG::Enabled,
-                        _ => FLAG::Disabled,
-                    },
-                    interrupt_yaxis_low: match (reg_value & XL_CFG_Bitmasks::XLIE_XL) >> 2 {
-                        1 => FLAG::Enabled,
-                        _ => FLAG::Disabled,
-                    },                 
-                    interrupt_xaxis_high: match (reg_value & XL_CFG_Bitmasks::XHIE_XL) >> 1 {
-                        1 => FLAG::Enabled,
-                        _ => FLAG::Disabled,
-                    },
-                    interrupt_xaxis_low: match reg_value & XL_CFG_Bitmasks::XLIE_XL {
-                        1 => FLAG::Enabled,
-                        _ => FLAG::Disabled,
-                    },                   
-                };
-            Ok(config)
-        }
+            events_combination: match (reg_value & XL_CFG_Bitmasks::AOI_XL) >> 7 {
+                1 => COMBINATION::AND,
+                _ => COMBINATION::OR,
+            },
+            enable_6d: match (reg_value & XL_CFG_Bitmasks::_6D) >> 6 {
+                1 => FLAG::Enabled,
+                _ => FLAG::Disabled,
+            },
+            interrupt_zaxis_high: match (reg_value & XL_CFG_Bitmasks::ZHIE_XL) >> 5 {
+                1 => FLAG::Enabled,
+                _ => FLAG::Disabled,
+            },
+            interrupt_zaxis_low: match (reg_value & XL_CFG_Bitmasks::ZLIE_XL) >> 4 {
+                1 => FLAG::Enabled,
+                _ => FLAG::Disabled,
+            },
+            interrupt_yaxis_high: match (reg_value & XL_CFG_Bitmasks::YHIE_XL) >> 3 {
+                1 => FLAG::Enabled,
+                _ => FLAG::Disabled,
+            },
+            interrupt_yaxis_low: match (reg_value & XL_CFG_Bitmasks::XLIE_XL) >> 2 {
+                1 => FLAG::Enabled,
+                _ => FLAG::Disabled,
+            },
+            interrupt_xaxis_high: match (reg_value & XL_CFG_Bitmasks::XHIE_XL) >> 1 {
+                1 => FLAG::Enabled,
+                _ => FLAG::Disabled,
+            },
+            interrupt_xaxis_low: match reg_value & XL_CFG_Bitmasks::XLIE_XL {
+                1 => FLAG::Enabled,
+                _ => FLAG::Disabled,
+            },
+        };
+        Ok(config)
+    }
 
     // === SINGLE SETTERS ===
 
     /// Set AND/OR combination of the accelerometer's interrupt events
-    pub fn accel_int_events_combination (&mut self, setting: COMBINATION) -> Result<(), T::Error> {
+    pub fn accel_int_events_combination(&mut self, setting: COMBINATION) -> Result<(), T::Error> {
+        let reg_value =
+            self.read_register(Sensor::Accelerometer, register::AG::INT_GEN_CFG_XL.addr())?;
 
-        let reg_value = self.read_register(Sensor::Accelerometer, register::AG::INT_GEN_CFG_XL.addr())?;
-    
-        let mut data: u8  = reg_value &! XL_CFG_Bitmasks::AOI_XL; // clear the specific bit
-    
+        let mut data: u8 = reg_value & !XL_CFG_Bitmasks::AOI_XL; // clear the specific bit
+
         data = match setting {
-            COMBINATION::AND => data | (1 << 7),        // if Enabled, set bit
-            COMBINATION::OR => data,                    // if Disabled, bit is cleared
+            COMBINATION::AND => data | (1 << 7), // if Enabled, set bit
+            COMBINATION::OR => data,             // if Disabled, bit is cleared
         };
-    
-        self.interface.write(Sensor::Accelerometer, register::AG::INT_GEN_CFG_XL.addr(), data)?;
-    
+
+        self.interface.write(
+            Sensor::Accelerometer,
+            register::AG::INT_GEN_CFG_XL.addr(),
+            data,
+        )?;
+
         Ok(())
-    
     }
 
     /// Enable/disable 6-direction detection for interrupt
-    pub fn accel_int_enable_6d (&mut self, setting: FLAG) -> Result<(), T::Error> {
+    pub fn accel_int_enable_6d(&mut self, setting: FLAG) -> Result<(), T::Error> {
+        let reg_value =
+            self.read_register(Sensor::Accelerometer, register::AG::INT_GEN_CFG_XL.addr())?;
 
-        let reg_value = self.read_register(Sensor::Accelerometer, register::AG::INT_GEN_CFG_XL.addr())?;
-    
-        let mut data: u8  = reg_value &! XL_CFG_Bitmasks::_6D; // clear the specific bit
-    
+        let mut data: u8 = reg_value & !XL_CFG_Bitmasks::_6D; // clear the specific bit
+
         data = match setting {
-            FLAG::Enabled => data | (1 << 6),       // if Enabled, set bit
-            FLAG::Disabled => data,                 // if Disabled, bit is cleared
+            FLAG::Enabled => data | (1 << 6), // if Enabled, set bit
+            FLAG::Disabled => data,           // if Disabled, bit is cleared
         };
 
-        self.interface.write(Sensor::Accelerometer, register::AG::INT_GEN_CFG_XL.addr(), data)?;
-    
+        self.interface.write(
+            Sensor::Accelerometer,
+            register::AG::INT_GEN_CFG_XL.addr(),
+            data,
+        )?;
+
         Ok(())
     }
 
     /// Enable interrupt generation on accelerometer’s Z-axis high event
-    pub fn accel_int_zaxis_high (&mut self, setting: FLAG) -> Result<(), T::Error> {
+    pub fn accel_int_zaxis_high(&mut self, setting: FLAG) -> Result<(), T::Error> {
+        let reg_value =
+            self.read_register(Sensor::Accelerometer, register::AG::INT_GEN_CFG_XL.addr())?;
 
-        let reg_value = self.read_register(Sensor::Accelerometer, register::AG::INT_GEN_CFG_XL.addr())?;
-    
-        let mut data: u8  = reg_value &! XL_CFG_Bitmasks::ZHIE_XL; // clear the specific bit
-    
+        let mut data: u8 = reg_value & !XL_CFG_Bitmasks::ZHIE_XL; // clear the specific bit
+
         data = match setting {
-            FLAG::Enabled => data | (1 << 5),       // if Enabled, set bit
-            FLAG::Disabled => data,                 // if Disabled, bit is cleared
+            FLAG::Enabled => data | (1 << 5), // if Enabled, set bit
+            FLAG::Disabled => data,           // if Disabled, bit is cleared
         };
 
-        self.interface.write(Sensor::Accelerometer, register::AG::INT_GEN_CFG_XL.addr(), data)?;
-    
+        self.interface.write(
+            Sensor::Accelerometer,
+            register::AG::INT_GEN_CFG_XL.addr(),
+            data,
+        )?;
+
         Ok(())
     }
 
     /// Enable interrupt generation on accelerometer’s Z-axis low event
-    pub fn accel_int_zaxis_low (&mut self, setting: FLAG) -> Result<(), T::Error> {
+    pub fn accel_int_zaxis_low(&mut self, setting: FLAG) -> Result<(), T::Error> {
+        let reg_value =
+            self.read_register(Sensor::Accelerometer, register::AG::INT_GEN_CFG_XL.addr())?;
 
-        let reg_value = self.read_register(Sensor::Accelerometer, register::AG::INT_GEN_CFG_XL.addr())?;
-    
-        let mut data: u8  = reg_value &! XL_CFG_Bitmasks::ZLIE_XL; // clear the specific bit
-    
+        let mut data: u8 = reg_value & !XL_CFG_Bitmasks::ZLIE_XL; // clear the specific bit
+
         data = match setting {
-            FLAG::Enabled => data | (1 << 4),       // if Enabled, set bit
-            FLAG::Disabled => data,                 // if Disabled, bit is cleared
+            FLAG::Enabled => data | (1 << 4), // if Enabled, set bit
+            FLAG::Disabled => data,           // if Disabled, bit is cleared
         };
 
-        self.interface.write(Sensor::Accelerometer, register::AG::INT_GEN_CFG_XL.addr(), data)?;
-    
+        self.interface.write(
+            Sensor::Accelerometer,
+            register::AG::INT_GEN_CFG_XL.addr(),
+            data,
+        )?;
+
         Ok(())
     }
 
     /// Enable interrupt generation on accelerometer’s Y-axis high event
-    pub fn accel_int_yaxis_high (&mut self, setting: FLAG) -> Result<(), T::Error> {
+    pub fn accel_int_yaxis_high(&mut self, setting: FLAG) -> Result<(), T::Error> {
+        let reg_value =
+            self.read_register(Sensor::Accelerometer, register::AG::INT_GEN_CFG_XL.addr())?;
 
-        let reg_value = self.read_register(Sensor::Accelerometer, register::AG::INT_GEN_CFG_XL.addr())?;
-    
-        let mut data: u8  = reg_value &! XL_CFG_Bitmasks::YHIE_XL; // clear the specific bit
-    
+        let mut data: u8 = reg_value & !XL_CFG_Bitmasks::YHIE_XL; // clear the specific bit
+
         data = match setting {
-            FLAG::Enabled => data | (1 << 3),       // if Enabled, set bit
-            FLAG::Disabled => data,                 // if Disabled, bit is cleared
+            FLAG::Enabled => data | (1 << 3), // if Enabled, set bit
+            FLAG::Disabled => data,           // if Disabled, bit is cleared
         };
 
-        self.interface.write(Sensor::Accelerometer, register::AG::INT_GEN_CFG_XL.addr(), data)?;
-    
+        self.interface.write(
+            Sensor::Accelerometer,
+            register::AG::INT_GEN_CFG_XL.addr(),
+            data,
+        )?;
+
         Ok(())
     }
 
     /// Enable interrupt generation on accelerometer’s Y-axis low event
-    pub fn accel_int_yaxis_low (&mut self, setting: FLAG) -> Result<(), T::Error> {
+    pub fn accel_int_yaxis_low(&mut self, setting: FLAG) -> Result<(), T::Error> {
+        let reg_value =
+            self.read_register(Sensor::Accelerometer, register::AG::INT_GEN_CFG_XL.addr())?;
 
-        let reg_value = self.read_register(Sensor::Accelerometer, register::AG::INT_GEN_CFG_XL.addr())?;
-    
-        let mut data: u8  = reg_value &! XL_CFG_Bitmasks::YLIE_XL; // clear the specific bit
-    
+        let mut data: u8 = reg_value & !XL_CFG_Bitmasks::YLIE_XL; // clear the specific bit
+
         data = match setting {
-            FLAG::Enabled => data | (1 << 2),       // if Enabled, set bit
-            FLAG::Disabled => data,                 // if Disabled, bit is cleared
+            FLAG::Enabled => data | (1 << 2), // if Enabled, set bit
+            FLAG::Disabled => data,           // if Disabled, bit is cleared
         };
 
-        self.interface.write(Sensor::Accelerometer, register::AG::INT_GEN_CFG_XL.addr(), data)?;
-    
+        self.interface.write(
+            Sensor::Accelerometer,
+            register::AG::INT_GEN_CFG_XL.addr(),
+            data,
+        )?;
+
         Ok(())
     }
 
     /// Enable interrupt generation on accelerometer’s X-axis high event
-    pub fn accel_int_xaxis_high (&mut self, setting: FLAG) -> Result<(), T::Error> {
+    pub fn accel_int_xaxis_high(&mut self, setting: FLAG) -> Result<(), T::Error> {
+        let reg_value =
+            self.read_register(Sensor::Accelerometer, register::AG::INT_GEN_CFG_XL.addr())?;
 
-        let reg_value = self.read_register(Sensor::Accelerometer, register::AG::INT_GEN_CFG_XL.addr())?;
-    
-        let mut data: u8  = reg_value &! XL_CFG_Bitmasks::XHIE_XL; // clear the specific bit
-    
+        let mut data: u8 = reg_value & !XL_CFG_Bitmasks::XHIE_XL; // clear the specific bit
+
         data = match setting {
-            FLAG::Enabled => data | (1 << 1),       // if Enabled, set bit
-            FLAG::Disabled => data,                 // if Disabled, bit is cleared
+            FLAG::Enabled => data | (1 << 1), // if Enabled, set bit
+            FLAG::Disabled => data,           // if Disabled, bit is cleared
         };
 
-        self.interface.write(Sensor::Accelerometer, register::AG::INT_GEN_CFG_XL.addr(), data)?;
-    
+        self.interface.write(
+            Sensor::Accelerometer,
+            register::AG::INT_GEN_CFG_XL.addr(),
+            data,
+        )?;
+
         Ok(())
     }
 
     /// Enable interrupt generation on accelerometer’s X-axis low event
-    pub fn accel_int_xaxis_low (&mut self, setting: FLAG) -> Result<(), T::Error> {
+    pub fn accel_int_xaxis_low(&mut self, setting: FLAG) -> Result<(), T::Error> {
+        let reg_value =
+            self.read_register(Sensor::Accelerometer, register::AG::INT_GEN_CFG_XL.addr())?;
 
-        let reg_value = self.read_register(Sensor::Accelerometer, register::AG::INT_GEN_CFG_XL.addr())?;
-    
-        let mut data: u8  = reg_value &! XL_CFG_Bitmasks::XLIE_XL; // clear the specific bit
-    
+        let mut data: u8 = reg_value & !XL_CFG_Bitmasks::XLIE_XL; // clear the specific bit
+
         data = match setting {
-            FLAG::Enabled => data | 1,       // if Enabled, set bit
-            FLAG::Disabled => data,                 // if Disabled, bit is cleared
+            FLAG::Enabled => data | 1, // if Enabled, set bit
+            FLAG::Disabled => data,    // if Disabled, bit is cleared
         };
 
-        self.interface.write(Sensor::Accelerometer, register::AG::INT_GEN_CFG_XL.addr(), data)?;
-    
+        self.interface.write(
+            Sensor::Accelerometer,
+            register::AG::INT_GEN_CFG_XL.addr(),
+            data,
+        )?;
+
         Ok(())
     }
 
     /// Latch accelerometer interrupt request
-    pub fn accel_int_latching (&mut self, setting: INT_LATCH) -> Result<(), T::Error> {
+    pub fn accel_int_latching(&mut self, setting: INT_LATCH) -> Result<(), T::Error> {
+        let reg_value =
+            self.read_register(Sensor::Accelerometer, register::AG::CTRL_REG4.addr())?;
 
-        let reg_value = self.read_register(Sensor::Accelerometer, register::AG::CTRL_REG4.addr())?;
-    
-        let mut data: u8  = reg_value &! XL_CFG_Bitmasks::LIR_XL1; // clear the specific bit
-    
+        let mut data: u8 = reg_value & !XL_CFG_Bitmasks::LIR_XL1; // clear the specific bit
+
         data = match setting {
-            INT_LATCH::Latched => data | (1 << 1),          // if Enabled, set bit
-            INT_LATCH::NotLatched => data,                  // if Disabled, bit is cleared
+            INT_LATCH::Latched => data | (1 << 1), // if Enabled, set bit
+            INT_LATCH::NotLatched => data,         // if Disabled, bit is cleared
         };
 
-        self.interface.write(Sensor::Gyro, register::AG::CTRL_REG4.addr(), data)?;
-    
+        self.interface
+            .write(Sensor::Gyro, register::AG::CTRL_REG4.addr(), data)?;
+
         Ok(())
     }
 
     /// Position recognition setting for the interrupt generator (use 4D or 6D)
-    pub fn accel_int_pos_recog (&mut self, setting: POS_RECOG) -> Result<(), T::Error> {
+    pub fn accel_int_pos_recog(&mut self, setting: POS_RECOG) -> Result<(), T::Error> {
+        let reg_value =
+            self.read_register(Sensor::Accelerometer, register::AG::CTRL_REG4.addr())?;
 
-        let reg_value = self.read_register(Sensor::Accelerometer, register::AG::CTRL_REG4.addr())?;
-    
-        let mut data: u8  = reg_value &! XL_CFG_Bitmasks::_4D_XL1; // clear the specific bit
-    
+        let mut data: u8 = reg_value & !XL_CFG_Bitmasks::_4D_XL1; // clear the specific bit
+
         data = match setting {
-            POS_RECOG::_4D => data | 1,                 // set bit if 4D used
-            POS_RECOG::_6D => data,                     // leave bit cleared if 6D used (default setting)
+            POS_RECOG::_4D => data | 1, // set bit if 4D used
+            POS_RECOG::_6D => data,     // leave bit cleared if 6D used (default setting)
         };
 
-        self.interface.write(Sensor::Gyro, register::AG::CTRL_REG4.addr(), data)?;
-    
+        self.interface
+            .write(Sensor::Gyro, register::AG::CTRL_REG4.addr(), data)?;
+
         Ok(())
     }
-    
 
     /// Get all the flags from the INT_GEN_SRC_XL register
     pub fn accel_int_status(&mut self) -> Result<IntStatusAccel, T::Error> {
@@ -401,80 +429,95 @@ where
     /// Accelerometer interrupt duration
     /// Enable/disable wait function and define for how many samples to wait before exiting interrupt    
     pub fn accel_int_duration(&mut self, wait: FLAG, duration: u8) -> Result<(), T::Error> {
-                
         // let mut reg_value = self.read_register(Sensor::Accelerometer, register::AG::INT_GEN_DUR_XL.addr())?;
 
         let mut data: u8 = 0;
 
         data = match wait {
             FLAG::Enabled => data | 0b1000_0000, // set bit
-            FLAG::Disabled => data, // clear bit
+            FLAG::Disabled => data,              // clear bit
         };
 
-        let duration: u8 = match duration { // clamp duration to 7 bit values
+        let duration: u8 = match duration {
+            // clamp duration to 7 bit values
             0..=127 => duration,
             _ => 127,
         };
 
         //data &= !0b0111_1111; // clear the lowest 7 bits
 
-        data |= duration; 
+        data |= duration;
 
-        self.interface.write(Sensor::Accelerometer, register::AG::INT_GEN_DUR_XL.addr(), data)?;
+        self.interface.write(
+            Sensor::Accelerometer,
+            register::AG::INT_GEN_DUR_XL.addr(),
+            data,
+        )?;
 
         Ok(())
     }
 
     /// Set accelerometer interrupt threshold for X, Y and Z axes
-    /// 
+    ///
     /// TO DO: use actual values as input (mG)?    
-    /// 
-    pub fn set_accel_int_thresholds(&mut self, x_ths: u8, y_ths: u8, z_ths: u8) -> Result<(), T::Error> {
-        
-        self.interface.write(Sensor::Accelerometer, register::AG::INT_GEN_THS_X_XL.addr(), x_ths)?;
-        self.interface.write(Sensor::Accelerometer, register::AG::INT_GEN_THS_Y_XL.addr(), y_ths)?;
-        self.interface.write(Sensor::Accelerometer, register::AG::INT_GEN_THS_Z_XL.addr(), z_ths)?;
+    ///
+    pub fn set_accel_int_thresholds(
+        &mut self,
+        x_ths: u8,
+        y_ths: u8,
+        z_ths: u8,
+    ) -> Result<(), T::Error> {
+        self.interface.write(
+            Sensor::Accelerometer,
+            register::AG::INT_GEN_THS_X_XL.addr(),
+            x_ths,
+        )?;
+        self.interface.write(
+            Sensor::Accelerometer,
+            register::AG::INT_GEN_THS_Y_XL.addr(),
+            y_ths,
+        )?;
+        self.interface.write(
+            Sensor::Accelerometer,
+            register::AG::INT_GEN_THS_Z_XL.addr(),
+            z_ths,
+        )?;
 
         Ok(())
-
     }
 
     /// Get accelerometer interrupt thresholds for X, Y and Z axes as a tuple
-    /// 
+    ///
     /// TO DO: get these as actual values? (mG)
-    /// 
+    ///
     pub fn get_accel_int_thresholds(&mut self) -> Result<(u8, u8, u8), T::Error> {
-        
-        let mut data = [0u8;3];
+        let mut data = [0u8; 3];
 
-        self.interface.read(Sensor::Accelerometer, register::AG::INT_GEN_THS_X_XL.addr(), &mut data)?;
-        
+        self.interface.read(
+            Sensor::Accelerometer,
+            register::AG::INT_GEN_THS_X_XL.addr(),
+            &mut data,
+        )?;
+
         Ok((data[0], data[1], data[2]))
-
     }
-
-
-    
-
-
-
 }
 
 #[test]
 fn configure_accel_int() {
-    let config = IntConfigAccel::default();//IntConfigAccel {..Default::default()};
+    let config = IntConfigAccel::default(); //IntConfigAccel {..Default::default()};
     assert_eq!(config.int_gen_cfg_xl(), 0b0000_0000);
 
     let config = IntConfigAccel {
-                    events_combination: COMBINATION::AND,
-                    enable_6d: FLAG::Enabled,
-                    interrupt_zaxis_high: FLAG::Enabled,
-                    interrupt_zaxis_low: FLAG::Enabled,
-                    interrupt_yaxis_high: FLAG::Enabled,
-                    interrupt_yaxis_low: FLAG::Enabled,
-                    interrupt_xaxis_high: FLAG::Enabled,
-                    interrupt_xaxis_low: FLAG::Enabled,
-                };
+        events_combination: COMBINATION::AND,
+        enable_6d: FLAG::Enabled,
+        interrupt_zaxis_high: FLAG::Enabled,
+        interrupt_zaxis_low: FLAG::Enabled,
+        interrupt_yaxis_high: FLAG::Enabled,
+        interrupt_yaxis_low: FLAG::Enabled,
+        interrupt_xaxis_high: FLAG::Enabled,
+        interrupt_xaxis_low: FLAG::Enabled,
+    };
     assert_eq!(config.int_gen_cfg_xl(), 0b1111_1111);
 
     let config = IntConfigAccel {
@@ -483,10 +526,4 @@ fn configure_accel_int() {
         ..Default::default()
     };
     assert_eq!(config.int_gen_cfg_xl(), 0b0010_0001);
-
 }
-
-
-
-
-

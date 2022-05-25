@@ -45,7 +45,6 @@ impl INT_PIN {
     }
 }
 
-
 /// Interrupt latching setting (interrupt request latched or not latched)
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, Copy)]
@@ -64,7 +63,6 @@ impl INT_LATCH {
         }
     }
 }
-
 
 /// 6D or 4D used by interrupt generator for for position recognition
 #[allow(non_camel_case_types)]

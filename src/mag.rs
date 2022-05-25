@@ -1,13 +1,13 @@
 //! Magnetometer settings, types
-//! 
+//!
 //! TO DO:
 //! - add missing functions:
-//!     - self-test 
+//!     - self-test
 //!     - reboot
 //!     - soft reset
 //!     - endianness
 //!     - block data update
-//! 
+//!
 #![allow(dead_code, non_camel_case_types)]
 
 /// Magnetometer settings. Use this struct to configure the sensor.
