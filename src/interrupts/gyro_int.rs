@@ -553,10 +553,3 @@ fn configure_gyro_int() {
 }
 
 
-#[test]
-fn set_inactivity() {
-    let setting = FLAG::Enabled;
-    let thresh: u8 = 11;
-
-    assert!()
-}

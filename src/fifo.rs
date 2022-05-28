@@ -102,7 +102,6 @@ where
         // write values to specific bits of the CTRL_REG9 register
         let ctrl_reg9: u8 =
             self.read_register(Sensor::Accelerometer, register::AG::CTRL_REG9.addr())?;
-        //let mask: u8 = 0b00010011;
         let data: u8 = config.f_ctrl_reg9();
         let mut payload: u8 = ctrl_reg9 & !FIFO_Bitmasks::CTRL_REG9_FIFO;
         payload |= data;
