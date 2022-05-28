@@ -359,9 +359,9 @@ where
     pub fn set_mag_offset(&mut self, offset: (f32, f32, f32)) -> Result<(), T::Error> {
         let (mut x, mut y, mut z) = offset;
         let sensitivity = self.mag.scale.sensitivity();
-        x = x / sensitivity;
-        y = y / sensitivity;
-        z = z / sensitivity;
+        x /= sensitivity;
+        y /= sensitivity;
+        z /= sensitivity;
 
         let x_low: u8 = x as u8;
         let x_high: u8 = ((x as i16) >> 8) as u8;
