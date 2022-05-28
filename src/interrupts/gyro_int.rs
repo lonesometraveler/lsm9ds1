@@ -403,12 +403,12 @@ where
     ) -> Result<(), T::Error> {
         let mut data: u8 = 0;
 
-        match setting {
+        data = match setting {
             FLAG::Enabled => data | (1 << 7),
             FLAG::Disabled => data,
         };
 
-        match threshold {
+        data = match threshold {
             0..=127 => data | threshold,
             _ => data | 127,
         };
@@ -550,4 +550,13 @@ fn configure_gyro_int() {
         interrupt_low_zaxis: FLAG::Enabled,
     };
     assert_eq!(config.int_gen_cfg_g(), 0b1111_1111);
+}
+
+
+#[test]
+fn set_inactivity() {
+    let setting = FLAG::Enabled;
+    let thresh: u8 = 11;
+
+    assert!()
 }
