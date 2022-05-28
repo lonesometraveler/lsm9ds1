@@ -92,9 +92,8 @@ where
     }
 
     pub fn whoami_ag(&mut self) -> Result<u8, T::Error> {
-        //let mut bytes = [0u8; 1];
-
-        let mut id = self.read_register(Sensor::Accelerometer, register::AG::WHO_AM_I.addr())?;
+        
+        let id = self.read_register(Sensor::Accelerometer, register::AG::WHO_AM_I.addr())?;
 
         Ok(id)
     }
