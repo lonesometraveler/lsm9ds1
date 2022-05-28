@@ -320,8 +320,7 @@ where
         } else if data < 0.0 {
             data = 0.0;
         }
-        //data = data as u16;
-
+        
         let data_low: u8 = data as u8;
         let data_high: u8 = ((data as u16) >> 8) as u8;
 
