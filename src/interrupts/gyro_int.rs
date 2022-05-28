@@ -441,14 +441,10 @@ where
         let reg_x_high =
             self.read_register(Sensor::Accelerometer, register::AG::INT_GEN_THS_XH_G.addr())?;
 
-        // make sure it's not more than 15 bits, and it must be a positive value
-        if x_data >= 32767 {
+        // make sure it's not more than 15 bits
+        if x_data > 32767 {
             x_data = 32767;
-        } else if x_data < 0 {
-            x_data = 0;
-        }
-
-        // THIS SHOULD BE DONE IN TWO STEPS MAYBE? FIRST ZERO THE UPPER BITS
+        } 
 
         let x_data_low = x_data & 255;
 
@@ -471,21 +467,15 @@ where
 
         let mut y_data = y_ths;
 
-        // make sure it's not more than 15 bits, and it must be a positive value
-        if y_data >= 32767 {
+        // make sure it's not more than 15 bits
+        if y_data > 32767 {
             y_data = 32767;
-        } else if y_data < 0 {
-            y_data = 0;
-        }
-
-        // THIS SHOULD BE DONE IN TWO STEPS MAYBE? FIRST ZERO THE UPPER BITS
-
+        } 
+        
         let y_data_low = y_data & 255;
 
         let y_data_low = y_data_low as u8;
-
-        // let mut y_data_high = y_reg_high & !0b1000_0000; // keep the highest bit
-
+               
         let y_data_high = (y_data >> 8) as u8;
 
         self.interface.write(
@@ -501,20 +491,14 @@ where
 
         let mut z_data = z_ths;
 
-        // make sure it's not more than 15 bits, and it must be a positive value
-        if z_data >= 32767 {
+        // make sure it's not more than 15 bits
+        if z_data > 32767 {
             z_data = 32767;
-        } else if z_data < 0 {
-            z_data = 0;
         }
-
-        // THIS SHOULD BE DONE IN TWO STEPS MAYBE? FIRST ZERO THE UPPER BITS
-
+        
         let z_data_low = z_data & 255;
 
         let z_data_low = z_data_low as u8;
-
-        // let mut y_data_high = y_reg_high & !0b1000_0000; // keep the highest bit
 
         let z_data_high = (z_data >> 8) as u8;
 
@@ -533,8 +517,7 @@ where
     }
 
     pub fn get_gyro_threshold(&mut self) -> Result<(u16, u16, u16), T::Error> {
-        // let sensitivity = self.mag.scale.sensitivity();
-
+        
         let mut data = [0u8; 6];
 
         self.interface.read(
