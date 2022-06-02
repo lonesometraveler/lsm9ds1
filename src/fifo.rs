@@ -7,11 +7,11 @@
 use super::*;
 
 #[allow(non_camel_case_types)]
-pub struct FIFO_Bitmasks;
+pub struct FIFOBitmasks;
 
 #[allow(dead_code)]
 /// Bitmasks for FIFO-related settings in CTRL_REG9 and CTRL_REG5_XL registers
-impl FIFO_Bitmasks {
+impl FIFOBitmasks {
     pub(crate) const FTH: u8 = 0b1000_0000;
     /// FIFO_SRC bit 6 OVRN
     pub(crate) const OVRN: u8 = 0b0100_0000;
@@ -29,20 +29,20 @@ pub struct FIFOConfig {
     /// FIFO memory enable
     pub fifo_enable: bool,
     /// Select FIFO operation mode (see Table 84 for details)        
-    pub fifo_mode: FIFO_MODE, // default Bypass
+    pub fifo_mode: FIFOMode, // default Bypass
     /// Enable threshold level use
     pub fifo_use_threshold: bool,
     /// Set the threshold level
     pub fifo_threshold: u8, // default 32
     /// Store temperature data in FIFO
-    fifo_temperature_enable: bool,
+    pub fifo_temperature_enable: bool,
 }
 
 impl Default for FIFOConfig {
     fn default() -> Self {
         FIFOConfig {
             fifo_enable: false,             // disabled
-            fifo_mode: FIFO_MODE::Bypass,   // Bypass mode
+            fifo_mode: FIFOMode::Bypass,   // Bypass mode
             fifo_use_threshold: false,      // FIFO depth not limited
             fifo_threshold: 32u8,           // set the threshold level
             fifo_temperature_enable: false, // temperature data not stored in FIFO
@@ -75,7 +75,7 @@ impl FIFOConfig {
 
 #[derive(Debug)]
 /// Contents of the FIFO_STATUS register (threshold reached, overrun, empty, stored data level)
-pub struct FifoStatus {
+pub struct FIFOStatus {
     /// FIFO threshold status. True if FIFO filling is equal or higher than    threshold level
     pub fifo_thresh_reached: bool,
     /// True is FIFO is completely filled and at least one samples has been overwritten
@@ -103,7 +103,7 @@ where
         let ctrl_reg9: u8 =
             self.read_register(Sensor::Accelerometer, register::AG::CTRL_REG9.addr())?;
         let data: u8 = config.f_ctrl_reg9();
-        let mut payload: u8 = ctrl_reg9 & !FIFO_Bitmasks::CTRL_REG9_FIFO;
+        let mut payload: u8 = ctrl_reg9 & !FIFOBitmasks::CTRL_REG9_FIFO;
         payload |= data;
         self.interface.write(
             Sensor::Accelerometer,
@@ -115,17 +115,17 @@ where
     }
 
     /// Get flags and FIFO level from the FIFO_STATUS register
-    pub fn get_fifo_status(&mut self) -> Result<FifoStatus, T::Error> {
+    pub fn get_fifo_status(&mut self) -> Result<FIFOStatus, T::Error> {
         let fifo_src = self.read_register(Sensor::Accelerometer, register::AG::FIFO_SRC.addr())?;
-        let fifo_level_value = fifo_src & FIFO_Bitmasks::FSS;
+        let fifo_level_value = fifo_src & FIFOBitmasks::FSS;
         let status = FifoStatus {
             /// Is FIFO filling equal or higher than the threshold?
-            fifo_thresh_reached: match fifo_src & FIFO_Bitmasks::FTH {
+            fifo_thresh_reached: match fifo_src & FIFOBitmasks::FTH {
                 0 => false,
                 _ => true,
             },
             /// Is FIFO full and at least one sample has been overwritten?
-            fifo_overrun: match fifo_src & FIFO_Bitmasks::OVRN {
+            fifo_overrun: match fifo_src & FIFOBitmasks::OVRN {
                 0 => false,
                 _ => true,
             },
@@ -140,10 +140,10 @@ where
         Ok(status)
     }
 
-    pub fn set_decimation(&mut self, decimation: DECIMATE) -> Result<(), T::Error> {
+    pub fn set_decimation(&mut self, decimation: Decimate) -> Result<(), T::Error> {
         let data: u8 =
             self.read_register(Sensor::Accelerometer, register::AG::CTRL_REG5_XL.addr())?; // read current content of the register
-        let mut payload: u8 = data & !FIFO_Bitmasks::DEC; // use bitmask to affect only bits [7:6]
+        let mut payload: u8 = data & !FIFOBitmasks::DEC; // use bitmask to affect only bits [7:6]
         payload |= decimation.value(); // set the selected decimation value
         self.interface.write(
             Sensor::Accelerometer,
@@ -157,20 +157,20 @@ where
 /// FIFO mode selection. (Refer to datasheets)
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, Copy)]
-pub enum FIFO_MODE {
+pub enum FIFOMode {
     /// Bypass mode (he FIFO is not operational and it remains empty).
     Bypass = 0b000,
     /// FIFO mode (data from the output channels are stored in the FIFO until it is overwritten).
     FIFO = 0b001,
     /// Continuous-to-FIFO mode (continuous mode until trigger is deasserted, then FIFO mode).
-    Continuous_to_FIFO = 0b011,
+    ContinuousToFIFO = 0b011,
     /// Bypass-to-Continuous mode (Bypass mode until trigger is deasserted, then Continuous mode).
-    Bypass_to_continuous = 0b100,
+    BypassToContinuous = 0b100,
     /// Continuous mode. If the FIFO is full, the new sample overwrites the older sample.
     Continuous = 0b110,
 }
 
-impl FIFO_MODE {
+impl FIFOMode {
     pub fn value(self) -> u8 {
         (self as u8) << 5 // shifted into the right position, can be used directly
     }
@@ -179,7 +179,7 @@ impl FIFO_MODE {
 /// Decimation of acceleration data on OUT REG and FIFO (Refer to table 65)
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, Copy)]
-pub enum DECIMATE {
+pub enum Decimate {
     /// No decimation
     NoDecimation = 0b00,
     /// update every 2 samples;
@@ -190,7 +190,7 @@ pub enum DECIMATE {
     _8samples = 0b11,
 }
 
-impl DECIMATE {
+impl Decimate {
     pub fn value(self) -> u8 {
         (self as u8) << 6 // shifted to bits [7:6], can be used directly
     }
