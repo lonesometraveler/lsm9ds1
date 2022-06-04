@@ -1,10 +1,4 @@
-//! Various functions related to FIFO
-//!
-//! TO DO:
-//! - CHECK IF ALL FUNCTIONS ARE IMPLEMENTED
-//! - MAKE SURE REGISTERS ARE NOT OVERWRITTEN BY MISTAKE
-
-use super::*;
+//! Various settings related to FIFO functionality of the sensors
 
 #[allow(non_camel_case_types)]
 pub struct FIFOBitmasks;
@@ -41,11 +35,11 @@ pub struct FIFOConfig {
 impl Default for FIFOConfig {
     fn default() -> Self {
         FIFOConfig {
-            fifo_enable: false,             // disabled
-            fifo_mode: FIFOMode::Bypass,   // Bypass mode
-            fifo_use_threshold: false,      // FIFO depth not limited
+            fifo_mode: FIFOMode::Bypass,    // Bypass mode
             fifo_threshold: 32u8,           // set the threshold level
+            fifo_enable: false,             // disabled
             fifo_temperature_enable: false, // temperature data not stored in FIFO
+            fifo_use_threshold: false,      // FIFO depth not limited
         }
     }
 }
@@ -84,74 +78,6 @@ pub struct FIFOStatus {
     pub fifo_empty: bool,
     /// Number of unread samples stored into FIFO
     pub fifo_level: u8,
-}
-
-impl<T> LSM9DS1<T>
-where
-    T: Interface,
-{
-    /// Enable and configure FIFO
-    pub fn configure_fifo(&mut self, config: FIFOConfig) -> Result<(), T::Error> {
-        // write values to the FIFO_CTRL register
-        self.interface.write(
-            Sensor::Accelerometer,
-            register::AG::FIFO_CTRL.addr(),
-            config.f_fifo_ctrl(),
-        )?;
-
-        // write values to specific bits of the CTRL_REG9 register
-        let ctrl_reg9: u8 =
-            self.read_register(Sensor::Accelerometer, register::AG::CTRL_REG9.addr())?;
-        let data: u8 = config.f_ctrl_reg9();
-        let mut payload: u8 = ctrl_reg9 & !FIFOBitmasks::CTRL_REG9_FIFO;
-        payload |= data;
-        self.interface.write(
-            Sensor::Accelerometer,
-            register::AG::CTRL_REG9.addr(),
-            payload,
-        )?;
-
-        Ok(())
-    }
-
-    /// Get flags and FIFO level from the FIFO_STATUS register
-    pub fn get_fifo_status(&mut self) -> Result<FIFOStatus, T::Error> {
-        let fifo_src = self.read_register(Sensor::Accelerometer, register::AG::FIFO_SRC.addr())?;
-        let fifo_level_value = fifo_src & FIFOBitmasks::FSS;
-        let status = FifoStatus {
-            /// Is FIFO filling equal or higher than the threshold?
-            fifo_thresh_reached: match fifo_src & FIFOBitmasks::FTH {
-                0 => false,
-                _ => true,
-            },
-            /// Is FIFO full and at least one sample has been overwritten?
-            fifo_overrun: match fifo_src & FIFOBitmasks::OVRN {
-                0 => false,
-                _ => true,
-            },
-            /// Is FIFO empty (no unread samples)?
-            fifo_empty: match fifo_level_value {
-                0 => true,
-                _ => false,
-            },
-            /// Read FIFO stored data level
-            fifo_level: fifo_level_value,
-        };
-        Ok(status)
-    }
-
-    pub fn set_decimation(&mut self, decimation: Decimate) -> Result<(), T::Error> {
-        let data: u8 =
-            self.read_register(Sensor::Accelerometer, register::AG::CTRL_REG5_XL.addr())?; // read current content of the register
-        let mut payload: u8 = data & !FIFOBitmasks::DEC; // use bitmask to affect only bits [7:6]
-        payload |= decimation.value(); // set the selected decimation value
-        self.interface.write(
-            Sensor::Accelerometer,
-            register::AG::CTRL_REG5_XL.addr(),
-            payload,
-        )?;
-        Ok(())
-    }
 }
 
 /// FIFO mode selection. (Refer to datasheets)
