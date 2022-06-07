@@ -9,6 +9,7 @@ pub mod accel;
 pub mod gyro;
 pub mod mag;
 pub mod register;
+pub mod fifo;
 
 use accel::AccelSettings;
 use gyro::GyroSettings;
@@ -270,4 +271,69 @@ where
         let result: i16 = (bytes[1] as i16) << 8 | bytes[0] as i16;
         Ok((result as f32) / TEMP_SCALE + TEMP_BIAS)
     }
+
+    /// Enable and configure FIFO
+    pub fn configure_fifo(&mut self, config: FIFOConfig) -> Result<(), T::Error> {
+        // write values to the FIFO_CTRL register
+        self.interface.write(
+            Sensor::Accelerometer,
+            register::AG::FIFO_CTRL.addr(),
+            config.f_fifo_ctrl(),
+        )?;
+
+        // write values to specific bits of the CTRL_REG9 register
+        let ctrl_reg9: u8 =
+            self.read_register(Sensor::Accelerometer, register::AG::CTRL_REG9.addr())?;
+        let data: u8 = config.f_ctrl_reg9();
+        let mut payload: u8 = ctrl_reg9 & !FIFO_Bitmasks::CTRL_REG9_FIFO;
+        payload |= data;
+        self.interface.write(
+            Sensor::Accelerometer,
+            register::AG::CTRL_REG9.addr(),
+            payload,
+        )?;
+
+        Ok(())
+    }
+
+    /// Get flags and FIFO level from the FIFO_STATUS register
+    pub fn get_fifo_status(&mut self) -> Result<FifoStatus, T::Error> {
+        let fifo_src = self.read_register(Sensor::Accelerometer, register::AG::FIFO_SRC.addr())?;
+        let fifo_level_value = fifo_src & FIFO_Bitmasks::FSS;
+        let status = FifoStatus {
+            /// Is FIFO filling equal or higher than the threshold?
+            fifo_thresh_reached: match fifo_src & FIFO_Bitmasks::FTH {
+                0 => false,
+                _ => true,
+            },
+            /// Is FIFO full and at least one sample has been overwritten?
+            fifo_overrun: match fifo_src & FIFO_Bitmasks::OVRN {
+                0 => false,
+                _ => true,
+            },
+            /// Is FIFO empty (no unread samples)?
+            fifo_empty: match fifo_level_value {
+                0 => true,
+                _ => false,
+            },
+            /// Read FIFO stored data level
+            fifo_level: fifo_level_value,
+        };
+        Ok(status)
+    }
+
+    /// Set decimation of acceleration data on OUT REG and FIFO
+    pub fn set_decimation(&mut self, decimation: DECIMATE) -> Result<(), T::Error> {
+        let data: u8 =
+            self.read_register(Sensor::Accelerometer, register::AG::CTRL_REG5_XL.addr())?; // read current content of the register
+        let mut payload: u8 = data & !FIFO_Bitmasks::DEC; // use bitmask to affect only bits [7:6]
+        payload |= decimation.value(); // set the selected decimation value
+        self.interface.write(
+            Sensor::Accelerometer,
+            register::AG::CTRL_REG5_XL.addr(),
+            payload,
+        )?;
+        Ok(())
+    }
+
 }
