@@ -46,13 +46,13 @@ impl Default for FIFOConfig {
 
 impl FIFOConfig {
     /// Returns values to be written to CTRL_REG9 and FIFO_CTRL:   
-    fn f_fifo_ctrl(&self) -> u8 {
+    pub fn f_fifo_ctrl(&self) -> u8 {
         let mut data = 0u8;
         data |= self.fifo_mode.value();
         data |= self.fifo_threshold;
         data
     }
-    fn f_ctrl_reg9(&self) -> u8 {
+    pub fn f_ctrl_reg9(&self) -> u8 {
         let mut data = 0u8;
         if self.fifo_temperature_enable {
             data |= 1 << 4;
