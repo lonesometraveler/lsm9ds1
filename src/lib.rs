@@ -303,20 +303,11 @@ where
         let fifo_level_value = fifo_src & FIFOBitmasks::FSS;
         let status = FIFOStatus {
             /// Is FIFO filling equal or higher than the threshold?
-            fifo_thresh_reached: match fifo_src & FIFOBitmasks::FTH {
-                0 => false,
-                _ => true,
-            },
+            fifo_thresh_reached: fifo_src & FIFOBitmasks::FTH != 0,
             /// Is FIFO full and at least one sample has been overwritten?
-            fifo_overrun: match fifo_src & FIFOBitmasks::OVRN {
-                0 => false,
-                _ => true,
-            },
+            fifo_overrun: fifo_src & FIFOBitmasks::OVRN != 0,
             /// Is FIFO empty (no unread samples)?
-            fifo_empty: match fifo_level_value {
-                0 => true,
-                _ => false,
-            },
+            fifo_empty: fifo_level_value == 0,
             /// Read FIFO stored data level
             fifo_level: fifo_level_value,
         };
