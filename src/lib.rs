@@ -6,16 +6,15 @@
 #![no_std]
 // #![deny(warnings, missing_docs)]
 pub mod accel;
+pub mod fifo;
 pub mod gyro;
 pub mod mag;
 pub mod register;
-pub mod fifo;
 
 use accel::AccelSettings;
-use fifo::{FIFOBitmasks, FIFOConfig, FIFOStatus, Decimate};
+use fifo::{Decimate, FIFOBitmasks, FIFOConfig, FIFOStatus};
 use gyro::GyroSettings;
 use mag::MagSettings;
-
 
 pub mod interface;
 use interface::{Interface, Sensor};
@@ -324,6 +323,7 @@ where
         Ok(status)
     }
 
+    /// Sets decimation of acceleration data on OUT REG and FIFO
     pub fn set_decimation(&mut self, decimation: Decimate) -> Result<(), T::Error> {
         let data: u8 =
             self.read_register(Sensor::Accelerometer, register::AG::CTRL_REG5_XL.addr())?; // read current content of the register
@@ -337,12 +337,10 @@ where
         Ok(())
     }
 
-       /// Read a byte from the given register.
-    
-        fn read_register(&mut self, sensor: Sensor, address: u8) -> Result<u8, T::Error> {
-            let mut reg_data = [0u8];
-            self.interface.read(sensor, address, &mut reg_data)?;
-            Ok(reg_data[0])
-        }
-
+    /// Read a byte from the given register.
+    fn read_register(&mut self, sensor: Sensor, address: u8) -> Result<u8, T::Error> {
+        let mut reg_data = [0u8];
+        self.interface.read(sensor, address, &mut reg_data)?;
+        Ok(reg_data[0])
+    }
 }
