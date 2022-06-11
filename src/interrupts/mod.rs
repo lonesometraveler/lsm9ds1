@@ -9,7 +9,7 @@ pub enum IntActive {
 }
 
 impl IntActive {
-    pub fn status(self) -> u8 {
+    pub fn value(self) -> u8 {
         match self {
             IntActive::High => 0,
             IntActive::Low => 1,
@@ -28,7 +28,7 @@ pub enum IntPin {
 }
 
 impl IntPin {
-    pub fn status(self) -> u8 {
+    pub fn value(self) -> u8 {
         match self {
             IntPin::PushPull => 0,
             IntPin::OpenDrain => 1,
@@ -47,7 +47,7 @@ pub enum IntLatch {
 }
 
 impl IntLatch {
-    pub fn status(self) -> u8 {
+    pub fn value(self) -> u8 {
         match self {
             IntLatch::Latched => 1,
             IntLatch::NotLatched => 0,
@@ -66,7 +66,7 @@ pub enum PosRecog {
 }
 
 impl PosRecog {
-    pub fn status(self) -> u8 {
+    pub fn value(self) -> u8 {
         match self {
             PosRecog::_4D => 1,
             PosRecog::_6D => 0,
@@ -85,7 +85,7 @@ pub enum Counter {
 }
 
 impl Counter {
-    pub fn status(self) -> u8 {
+    pub fn value(self) -> u8 {
         match self {
             Counter::Decrement => 1,
             Counter::Reset => 0,
