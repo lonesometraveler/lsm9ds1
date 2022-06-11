@@ -8,6 +8,7 @@
 pub mod accel;
 pub mod fifo;
 pub mod gyro;
+pub mod interrupts;
 pub mod mag;
 pub mod register;
 
