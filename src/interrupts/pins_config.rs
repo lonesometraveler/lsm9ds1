@@ -77,30 +77,16 @@ impl IntConfigAG1 {
     /// Returns values to be written to INT1_CTRL register
     fn int1_ctrl(&self) -> u8 {
         let mut data: u8 = 0;
-        if self.enable_gyro_int.status() {
-            data |= 1 << 7;
-        }
-        if self.enable_accel_int.status() {
-            data |= 1 << 6;
-        }
-        if self.enable_fss5.status() {
-            data |= 1 << 5;
-        }
-        if self.enable_overrun.status() {
-            data |= 1 << 4;
-        }
-        if self.enable_fth.status() {
-            data |= 1 << 3;
-        }
-        if self.enable_boot_status.status() {
-            data |= 1 << 2;
-        }
-        if self.enable_gyro_dataready.status() {
-            data |= 1 << 1;
-        }
-        if self.enable_accel_dataready.status() {
-            data |= 1;
-        }
+
+        data |= self.enable_gyro_int.value() << 7;
+        data |= self.enable_accel_int.value() << 6;
+        data |= self.enable_fss5.value() << 5;
+        data |= self.enable_overrun.value() << 4;
+        data |= self.enable_fth.value() << 3;
+        data |= self.enable_boot_status.value() << 2;
+        data |= self.enable_gyro_dataready.value() << 1;
+        data |= self.enable_accel_dataready.value();
+
         data
     }
 }
@@ -141,24 +127,13 @@ impl IntConfigAG2 {
     fn int2_ctrl(&self) -> u8 {
         let mut data: u8 = 0;
 
-        if self.enable_fss5.status() {
-            data |= 1 << 5;
-        }
-        if self.enable_overrun.status() {
-            data |= 1 << 4;
-        }
-        if self.enable_fth.status() {
-            data |= 1 << 3;
-        }
-        if self.enable_temp_dataready.status() {
-            data |= 1 << 2;
-        }
-        if self.enable_gyro_dataready.status() {
-            data |= 1 << 1;
-        }
-        if self.enable_accel_dataready.status() {
-            data |= 1;
-        }
+        data |= self.enable_fss5.value() << 5;
+        data |= self.enable_overrun.value() << 4;
+        data |= self.enable_fth.value() << 3;
+        data |= self.enable_temp_dataready.value() << 2;
+        data |= self.enable_gyro_dataready.value() << 1;
+        data |= self.enable_accel_dataready.value();
+
         data
     }
 }
@@ -196,9 +171,7 @@ where
 
         let mut data: u8 = reg_data & !0b0011_0000;
 
-        data |= config.active_level.value() << 5;
-
-        data |= config.pin_mode.value() << 4;
+        data |= config.ctrl_reg8();
 
         self.interface
             .write(Sensor::Accelerometer, register::AG::CTRL_REG8.addr(), data)?;

@@ -107,12 +107,12 @@ pub enum Flag {
 }
 
 impl Flag {
-    pub fn status(self) -> bool {
-        let status = match self {
-            Flag::Disabled => false,
-            Flag::Enabled => true,
+    pub fn value(self) -> u8 {
+        let value = match self {
+            Flag::Disabled => 0,
+            Flag::Enabled => 1,
         };
-        status
+        value
     }
 }
 
@@ -127,11 +127,11 @@ pub enum Combination {
 }
 
 impl Combination {
-    pub fn status(self) -> bool {
-        let status = match self {
-            Combination::Or => false,
-            Combination::And => true,
+    pub fn value(self) -> u8 {
+        let value = match self {
+            Combination::Or => 0,
+            Combination::And => 1,
         };
-        status
+        value
     }
 }
