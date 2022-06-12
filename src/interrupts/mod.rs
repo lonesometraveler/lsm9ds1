@@ -1,3 +1,6 @@
+use super::*;
+pub mod pins_config;
+
 /// Interrupt active setting for the INT_DRDY pin: active high (default) or active low
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, Copy)]
@@ -90,5 +93,45 @@ impl Counter {
             Counter::Decrement => 1,
             Counter::Reset => 0,
         }
+    }
+}
+
+/// Settings for various interrupt-related flags, Enabled or Disabled
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy)]
+pub enum Flag {
+    /// Enabled (bit set)
+    Enabled,
+    /// Disabled (bit cleared)
+    Disabled,
+}
+
+impl Flag {
+    pub fn status(self) -> bool {
+        let status = match self {
+            Flag::Disabled => false,
+            Flag::Enabled => true,
+        };
+        status
+    }
+}
+
+/// Possible combinations of interrupt events for the accelerometer
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy)]
+pub enum Combination {
+    /// AND combination (bit set)
+    And,
+    /// OR (bit cleared)
+    Or,
+}
+
+impl Combination {
+    pub fn status(self) -> bool {
+        let status = match self {
+            Combination::Or => false,
+            Combination::And => true,
+        };
+        status
     }
 }
