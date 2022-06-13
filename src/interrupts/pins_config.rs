@@ -1,6 +1,4 @@
-/// Functions related to INT1_AG and INT2_AG interrupt pins configuration
-///
-use super::*;
+//! Functions related to INT1_AG and INT2_AG interrupt pins configuration
 
 /// Accelerometer/gyroscope interrupt pins common settings
 #[derive(Debug)]

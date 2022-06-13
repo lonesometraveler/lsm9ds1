@@ -1,3 +1,5 @@
+//! Enums used by various interrupt-related functions
+
 use super::*;
 pub mod pins_config;
 
@@ -127,10 +129,9 @@ pub enum Combination {
 
 impl Combination {
     pub fn value(self) -> u8 {
-        let value = match self {
+        match self {
             Combination::Or => 0,
             Combination::And => 1,
-        };
-        value
+        }
     }
 }
