@@ -108,11 +108,10 @@ pub enum Flag {
 
 impl Flag {
     pub fn value(self) -> u8 {
-        let value = match self {
+        match self {
             Flag::Disabled => 0,
             Flag::Enabled => 1,
-        };
-        value
+        }
     }
 }
 
