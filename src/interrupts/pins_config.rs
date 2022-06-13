@@ -1,5 +1,7 @@
 //! Functions related to INT1_AG and INT2_AG interrupt pins configuration
 
+use super::*;
+
 /// Accelerometer/gyroscope interrupt pins common settings
 #[derive(Debug)]
 pub struct PinConfig {
