@@ -1,6 +1,5 @@
 //! Enums used by various interrupt-related functions
 
-use super::*;
 pub mod pins_config;
 
 /// Interrupt active setting for the INT_DRDY pin: active high (default) or active low
