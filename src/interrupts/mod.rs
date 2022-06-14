@@ -1,3 +1,7 @@
+//! Enums used by various interrupt-related functions
+
+pub mod pins_config;
+
 /// Interrupt active setting for the INT_DRDY pin: active high (default) or active low
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, Copy)]
@@ -89,6 +93,44 @@ impl Counter {
         match self {
             Counter::Decrement => 1,
             Counter::Reset => 0,
+        }
+    }
+}
+
+/// Settings for various interrupt-related flags, Enabled or Disabled
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy)]
+pub enum Flag {
+    /// Enabled (bit set)
+    Enabled,
+    /// Disabled (bit cleared)
+    Disabled,
+}
+
+impl Flag {
+    pub fn value(self) -> u8 {
+        match self {
+            Flag::Disabled => 0,
+            Flag::Enabled => 1,
+        }
+    }
+}
+
+/// Possible combinations of interrupt events for the accelerometer
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy)]
+pub enum Combination {
+    /// AND combination (bit set)
+    And,
+    /// OR (bit cleared)
+    Or,
+}
+
+impl Combination {
+    pub fn value(self) -> u8 {
+        match self {
+            Combination::Or => 0,
+            Combination::And => 1,
         }
     }
 }
