@@ -23,6 +23,7 @@ pub trait Interface {
 }
 
 /// Available Sensors to talk to
+#[derive(Copy, Clone)]
 pub enum Sensor {
     Accelerometer,
     Gyro,

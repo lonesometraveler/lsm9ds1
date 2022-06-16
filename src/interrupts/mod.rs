@@ -2,6 +2,10 @@
 
 pub mod pins_config;
 
+pub(crate) trait Switch {
+    fn value(self) -> u8;
+}
+
 /// Interrupt active setting for the INT_DRDY pin: active high (default) or active low
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, Copy)]
@@ -12,8 +16,8 @@ pub enum IntActive {
     Low,
 }
 
-impl IntActive {
-    pub fn value(self) -> u8 {
+impl Switch for IntActive {
+    fn value(self) -> u8 {
         match self {
             IntActive::High => 0,
             IntActive::Low => 1,
@@ -31,8 +35,8 @@ pub enum IntPin {
     OpenDrain,
 }
 
-impl IntPin {
-    pub fn value(self) -> u8 {
+impl Switch for IntPin {
+    fn value(self) -> u8 {
         match self {
             IntPin::PushPull => 0,
             IntPin::OpenDrain => 1,
@@ -50,8 +54,8 @@ pub enum IntLatch {
     NotLatched,
 }
 
-impl IntLatch {
-    pub fn value(self) -> u8 {
+impl Switch for IntLatch {
+    fn value(self) -> u8 {
         match self {
             IntLatch::Latched => 1,
             IntLatch::NotLatched => 0,
@@ -69,8 +73,8 @@ pub enum PosRecog {
     _6D,
 }
 
-impl PosRecog {
-    pub fn value(self) -> u8 {
+impl Switch for PosRecog {
+    fn value(self) -> u8 {
         match self {
             PosRecog::_4D => 1,
             PosRecog::_6D => 0,
@@ -88,8 +92,8 @@ pub enum Counter {
     Reset,
 }
 
-impl Counter {
-    pub fn value(self) -> u8 {
+impl Switch for Counter {
+    fn value(self) -> u8 {
         match self {
             Counter::Decrement => 1,
             Counter::Reset => 0,
@@ -107,8 +111,8 @@ pub enum Flag {
     Disabled,
 }
 
-impl Flag {
-    pub fn value(self) -> u8 {
+impl Switch for Flag {
+    fn value(self) -> u8 {
         match self {
             Flag::Disabled => 0,
             Flag::Enabled => 1,
@@ -126,8 +130,8 @@ pub enum Combination {
     Or,
 }
 
-impl Combination {
-    pub fn value(self) -> u8 {
+impl Switch for Combination {
+    fn value(self) -> u8 {
         match self {
             Combination::Or => 0,
             Combination::And => 1,
