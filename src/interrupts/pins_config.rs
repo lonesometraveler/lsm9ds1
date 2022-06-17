@@ -21,6 +21,21 @@ impl Default for PinConfig {
     }
 }
 
+impl From<u8> for PinConfig {
+    fn from(value: u8) -> Self {
+        PinConfig {
+            active_level: match (value & 0b0100_0000) >> 5 {
+                1 => IntActive::Low,
+                _ => IntActive::High,
+            },
+            pin_mode: match (value & 0b0010_0000) >> 4 {
+                1 => IntPin::OpenDrain,
+                _ => IntPin::PushPull,
+            },
+        }
+    }
+}
+
 impl PinConfig {
     /// Returns values to be written to CTRL_REG8 register
     pub(crate) fn ctrl_reg8(&self) -> u8 {
@@ -70,6 +85,45 @@ impl Default for IntConfigAG1 {
     }
 }
 
+impl From<u8> for IntConfigAG1 {
+    fn from(value: u8) -> Self {
+        IntConfigAG1 {
+            enable_gyro_int: match (value & 0b1000_0000) >> 7 {
+                1 => Flag::Enabled,
+                _ => Flag::Disabled,
+            },
+            enable_accel_int: match (value & 0b0100_0000) >> 6 {
+                1 => Flag::Enabled,
+                _ => Flag::Disabled,
+            },
+            enable_fss5: match (value & 0b0010_0000) >> 5 {
+                1 => Flag::Enabled,
+                _ => Flag::Disabled,
+            },
+            enable_overrun: match (value & 0b0001_0000) >> 4 {
+                1 => Flag::Enabled,
+                _ => Flag::Disabled,
+            },
+            enable_fth: match (value & 0b0000_1000) >> 3 {
+                1 => Flag::Enabled,
+                _ => Flag::Disabled,
+            },
+            enable_boot_status: match value & 0b0000_0100 >> 2 {
+                1 => Flag::Enabled,
+                _ => Flag::Disabled,
+            },
+            enable_gyro_dataready: match value & 0b0000_0010 >> 1 {
+                1 => Flag::Enabled,
+                _ => Flag::Disabled,
+            },
+            enable_accel_dataready: match value & 0b0000_0001 {
+                1 => Flag::Enabled,
+                _ => Flag::Disabled,
+            },
+        }
+    }
+}
+
 impl IntConfigAG1 {
     /// Returns values to be written to INT1_CTRL register
     pub(crate) fn int1_ctrl(&self) -> u8 {
@@ -115,6 +169,37 @@ impl Default for IntConfigAG2 {
             enable_temp_dataready: Flag::Disabled,
             enable_gyro_dataready: Flag::Disabled,
             enable_accel_dataready: Flag::Disabled,
+        }
+    }
+}
+
+impl From<u8> for IntConfigAG2 {
+    fn from(value: u8) -> Self {
+        IntConfigAG2 {
+            enable_fss5: match (value & 0b0010_0000) >> 5 {
+                1 => Flag::Enabled,
+                _ => Flag::Disabled,
+            },
+            enable_overrun: match (value & 0b0001_0000) >> 4 {
+                1 => Flag::Enabled,
+                _ => Flag::Disabled,
+            },
+            enable_fth: match (value & 0b0000_1000) >> 3 {
+                1 => Flag::Enabled,
+                _ => Flag::Disabled,
+            },
+            enable_temp_dataready: match value & 0b0000_0100 >> 2 {
+                1 => Flag::Enabled,
+                _ => Flag::Disabled,
+            },
+            enable_gyro_dataready: match value & 0b0000_0010 >> 1 {
+                1 => Flag::Enabled,
+                _ => Flag::Disabled,
+            },
+            enable_accel_dataready: match value & 0b0000_0001 {
+                1 => Flag::Enabled,
+                _ => Flag::Disabled,
+            },
         }
     }
 }

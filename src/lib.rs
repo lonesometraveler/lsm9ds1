@@ -15,10 +15,7 @@ pub mod register;
 use accel::AccelSettings;
 use fifo::{Decimate, FIFOBitmasks, FIFOConfig, FIFOStatus};
 use gyro::GyroSettings;
-use interrupts::{
-    pins_config::{IntConfigAG1, IntConfigAG2, PinConfig},
-    Combination, Counter, Flag, IntActive, IntLatch, IntPin,
-};
+use interrupts::pins_config::{IntConfigAG1, IntConfigAG2, PinConfig};
 use mag::MagSettings;
 
 pub mod interface;
@@ -371,99 +368,26 @@ where
 
     /// Get the current A/G1 pin configuration
     pub fn get_ag1_config(&mut self) -> Result<IntConfigAG1, T::Error> {
-        let reg_value: u8 =
-            self.read_register(Sensor::Accelerometer, register::AG::INT1_CTRL.addr())?;
-
-        let config = IntConfigAG1 {
-            enable_gyro_int: match (reg_value & 0b1000_0000) >> 7 {
-                1 => Flag::Enabled,
-                _ => Flag::Disabled,
-            },
-            enable_accel_int: match (reg_value & 0b0100_0000) >> 6 {
-                1 => Flag::Enabled,
-                _ => Flag::Disabled,
-            },
-            enable_fss5: match (reg_value & 0b0010_0000) >> 5 {
-                1 => Flag::Enabled,
-                _ => Flag::Disabled,
-            },
-            enable_overrun: match (reg_value & 0b0001_0000) >> 4 {
-                1 => Flag::Enabled,
-                _ => Flag::Disabled,
-            },
-            enable_fth: match (reg_value & 0b0000_1000) >> 3 {
-                1 => Flag::Enabled,
-                _ => Flag::Disabled,
-            },
-            enable_boot_status: match reg_value & 0b0000_0100 >> 2 {
-                1 => Flag::Enabled,
-                _ => Flag::Disabled,
-            },
-            enable_gyro_dataready: match reg_value & 0b0000_0010 >> 1 {
-                1 => Flag::Enabled,
-                _ => Flag::Disabled,
-            },
-            enable_accel_dataready: match reg_value & 0b0000_0001 {
-                1 => Flag::Enabled,
-                _ => Flag::Disabled,
-            },
-        };
-
-        Ok(config)
+        Ok(IntConfigAG1::from(self.read_register(
+            Sensor::Accelerometer,
+            register::AG::INT1_CTRL.addr(),
+        )?))
     }
 
     /// Get the current A/G2 pin configuration
     pub fn get_ag2_config(&mut self) -> Result<IntConfigAG2, T::Error> {
-        let reg_value: u8 =
-            self.read_register(Sensor::Accelerometer, register::AG::INT2_CTRL.addr())?;
-
-        let config = IntConfigAG2 {
-            enable_fss5: match (reg_value & 0b0010_0000) >> 5 {
-                1 => Flag::Enabled,
-                _ => Flag::Disabled,
-            },
-            enable_overrun: match (reg_value & 0b0001_0000) >> 4 {
-                1 => Flag::Enabled,
-                _ => Flag::Disabled,
-            },
-            enable_fth: match (reg_value & 0b0000_1000) >> 3 {
-                1 => Flag::Enabled,
-                _ => Flag::Disabled,
-            },
-            enable_temp_dataready: match reg_value & 0b0000_0100 >> 2 {
-                1 => Flag::Enabled,
-                _ => Flag::Disabled,
-            },
-            enable_gyro_dataready: match reg_value & 0b0000_0010 >> 1 {
-                1 => Flag::Enabled,
-                _ => Flag::Disabled,
-            },
-            enable_accel_dataready: match reg_value & 0b0000_0001 {
-                1 => Flag::Enabled,
-                _ => Flag::Disabled,
-            },
-        };
-
-        Ok(config)
+        Ok(IntConfigAG2::from(self.read_register(
+            Sensor::Accelerometer,
+            register::AG::INT2_CTRL.addr(),
+        )?))
     }
 
     /// Get the current common pins configuration
     pub fn get_pins_config(&mut self) -> Result<PinConfig, T::Error> {
-        let reg_value: u8 =
-            self.read_register(Sensor::Accelerometer, register::AG::CTRL_REG8.addr())?;
-
-        let config = PinConfig {
-            active_level: match (reg_value & 0b0100_0000) >> 5 {
-                1 => IntActive::Low,
-                _ => IntActive::High,
-            },
-            pin_mode: match (reg_value & 0b0010_0000) >> 4 {
-                1 => IntPin::OpenDrain,
-                _ => IntPin::PushPull,
-            },
-        };
-
-        Ok(config)
+        Ok(PinConfig::from(self.read_register(
+            Sensor::Accelerometer,
+            register::AG::CTRL_REG8.addr(),
+        )?))
     }
 
     /// Read a byte from the given register.
