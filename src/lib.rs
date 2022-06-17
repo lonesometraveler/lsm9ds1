@@ -325,11 +325,7 @@ where
     /// Enable interrupts for accelerometer/gyroscope and configure the INT2_A/G interrupt pin
     pub fn configure_interrupts_ag2(&mut self, config: IntConfigAG2) -> Result<(), T::Error> {
         let reg_data = self.read_register(Sensor::Accelerometer, register::AG::INT2_CTRL.addr())?;
-
-        let mut data: u8 = reg_data & !0b1100_0000;
-
-        data |= config.int2_ctrl();
-
+        let data: u8 = reg_data & 0b0011_1111 | config.int2_ctrl();
         self.interface
             .write(Sensor::Accelerometer, register::AG::INT2_CTRL.addr(), data)?;
         Ok(())
@@ -338,11 +334,7 @@ where
     /// Interrupt pins electrical configuration
     pub fn configure_interrupts_pins(&mut self, config: PinConfig) -> Result<(), T::Error> {
         let reg_data = self.read_register(Sensor::Accelerometer, register::AG::CTRL_REG8.addr())?;
-
-        let mut data: u8 = reg_data & !0b0011_0000;
-
-        data |= config.ctrl_reg8();
-
+        let data: u8 = reg_data & 0b1100_1111 | config.ctrl_reg8();
         self.interface
             .write(Sensor::Accelerometer, register::AG::CTRL_REG8.addr(), data)?;
         Ok(())
