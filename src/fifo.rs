@@ -80,6 +80,22 @@ pub struct FIFOStatus {
     pub fifo_level: u8,
 }
 
+impl From<u8> for FIFOStatus {
+    fn from(value: u8) -> Self {
+        let fifo_level_value = value & FIFOBitmasks::FSS;
+        FIFOStatus {
+            /// Is FIFO filling equal or higher than the threshold?
+            fifo_thresh_reached: value & FIFOBitmasks::FTH != 0,
+            /// Is FIFO full and at least one sample has been overwritten?
+            fifo_overrun: value & FIFOBitmasks::OVRN != 0,
+            /// Is FIFO empty (no unread samples)?
+            fifo_empty: fifo_level_value == 0,
+            /// Read FIFO stored data level
+            fifo_level: fifo_level_value,
+        }
+    }
+}
+
 /// FIFO mode selection. (Refer to datasheets)
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, Copy)]

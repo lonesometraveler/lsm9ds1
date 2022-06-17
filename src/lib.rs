@@ -292,19 +292,10 @@ where
 
     /// Get flags and FIFO level from the FIFO_STATUS register
     pub fn get_fifo_status(&mut self) -> Result<FIFOStatus, T::Error> {
-        let fifo_src = self.read_register(Sensor::Accelerometer, register::AG::FIFO_SRC.addr())?;
-        let fifo_level_value = fifo_src & FIFOBitmasks::FSS;
-        let status = FIFOStatus {
-            /// Is FIFO filling equal or higher than the threshold?
-            fifo_thresh_reached: fifo_src & FIFOBitmasks::FTH != 0,
-            /// Is FIFO full and at least one sample has been overwritten?
-            fifo_overrun: fifo_src & FIFOBitmasks::OVRN != 0,
-            /// Is FIFO empty (no unread samples)?
-            fifo_empty: fifo_level_value == 0,
-            /// Read FIFO stored data level
-            fifo_level: fifo_level_value,
-        };
-        Ok(status)
+        Ok(FIFOStatus::from(self.read_register(
+            Sensor::Accelerometer,
+            register::AG::FIFO_SRC.addr(),
+        )?))
     }
 
     /// Sets decimation of acceleration data on OUT REG and FIFO
