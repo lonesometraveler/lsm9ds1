@@ -278,15 +278,12 @@ where
         // write values to specific bits of the CTRL_REG9 register
         let ctrl_reg9: u8 =
             self.read_register(Sensor::Accelerometer, register::AG::CTRL_REG9.addr())?;
-        let data: u8 = config.f_ctrl_reg9();
-        let mut payload: u8 = ctrl_reg9 & !FIFOBitmasks::CTRL_REG9_FIFO;
-        payload |= data;
+        let payload = ctrl_reg9 & !FIFOBitmasks::CTRL_REG9_FIFO | config.f_ctrl_reg9();
         self.interface.write(
             Sensor::Accelerometer,
             register::AG::CTRL_REG9.addr(),
             payload,
         )?;
-
         Ok(())
     }
 
@@ -300,10 +297,9 @@ where
 
     /// Sets decimation of acceleration data on OUT REG and FIFO
     pub fn set_decimation(&mut self, decimation: Decimate) -> Result<(), T::Error> {
-        let data: u8 =
-            self.read_register(Sensor::Accelerometer, register::AG::CTRL_REG5_XL.addr())?; // read current content of the register
-        let mut payload: u8 = data & !FIFOBitmasks::DEC; // use bitmask to affect only bits [7:6]
-        payload |= decimation.value(); // set the selected decimation value
+        let ctrl_reg5 =
+            self.read_register(Sensor::Accelerometer, register::AG::CTRL_REG5_XL.addr())?;
+        let payload = ctrl_reg5 & !FIFOBitmasks::DEC | decimation.value();
         self.interface.write(
             Sensor::Accelerometer,
             register::AG::CTRL_REG5_XL.addr(),
