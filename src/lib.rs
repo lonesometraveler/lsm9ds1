@@ -322,7 +322,7 @@ where
         Ok(())
     }
 
-    /// Enable interrupts for accelerometer/gyroscope and configure the INT1_A/G interrupt pin
+    /// Enable interrupts for accelerometer/gyroscope and configure the INT2_A/G interrupt pin
     pub fn configure_interrupts_ag2(&mut self, config: IntConfigAG2) -> Result<(), T::Error> {
         let reg_data = self.read_register(Sensor::Accelerometer, register::AG::INT2_CTRL.addr())?;
 
