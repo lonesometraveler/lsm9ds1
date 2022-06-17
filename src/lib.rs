@@ -32,20 +32,11 @@ const TEMP_BIAS: f32 = 25.0;
 
 /// LSM9DS1 init struct.
 /// Use this struct to configure sensors and init LSM9DS1 with an interface of your choice.
+#[derive(Default)]
 pub struct LSM9DS1Init {
     pub accel: AccelSettings,
     pub gyro: GyroSettings,
     pub mag: MagSettings,
-}
-
-impl Default for LSM9DS1Init {
-    fn default() -> Self {
-        Self {
-            accel: AccelSettings::default(),
-            gyro: GyroSettings::default(),
-            mag: MagSettings::default(),
-        }
-    }
 }
 
 impl LSM9DS1Init {
