@@ -108,11 +108,11 @@ impl From<u8> for IntConfigAG1 {
                 1 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
-            enable_boot_status: match value & 0b0000_0100 >> 2 {
+            enable_boot_status: match (value & 0b0000_0100) >> 2 {
                 1 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
-            enable_gyro_dataready: match value & 0b0000_0010 >> 1 {
+            enable_gyro_dataready: match (value & 0b0000_0010) >> 1 {
                 1 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
@@ -188,11 +188,11 @@ impl From<u8> for IntConfigAG2 {
                 1 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
-            enable_temp_dataready: match value & 0b0000_0100 >> 2 {
+            enable_temp_dataready: match (value & 0b0000_0100) >> 2 {
                 1 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
-            enable_gyro_dataready: match value & 0b0000_0010 >> 1 {
+            enable_gyro_dataready: match (value & 0b0000_0010) >> 1 {
                 1 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
