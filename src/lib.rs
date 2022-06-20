@@ -15,6 +15,7 @@ pub mod register;
 use accel::AccelSettings;
 use fifo::{Decimate, FIFOBitmasks, FIFOConfig, FIFOStatus};
 use gyro::GyroSettings;
+use interrupts::config::Configuration;
 use interrupts::pins_config::{IntConfigAG1, IntConfigAG2, PinConfig};
 use mag::MagSettings;
 
@@ -310,30 +311,17 @@ where
 
     /// Enable interrupts for accelerometer/gyroscope and configure the INT1_A/G interrupt pin
     pub fn configure_interrupts_ag1(&mut self, config: IntConfigAG1) -> Result<(), T::Error> {
-        self.interface.write(
-            Sensor::Accelerometer,
-            register::AG::INT1_CTRL.addr(),
-            config.int1_ctrl(),
-        )?;
-        Ok(())
+        self.write_register_with(config)
     }
 
     /// Enable interrupts for accelerometer/gyroscope and configure the INT2_A/G interrupt pin
     pub fn configure_interrupts_ag2(&mut self, config: IntConfigAG2) -> Result<(), T::Error> {
-        let reg_data = self.read_register(Sensor::Accelerometer, register::AG::INT2_CTRL.addr())?;
-        let data: u8 = reg_data & 0b0011_1111 | config.int2_ctrl();
-        self.interface
-            .write(Sensor::Accelerometer, register::AG::INT2_CTRL.addr(), data)?;
-        Ok(())
+        self.write_register_with(config)
     }
 
     /// Interrupt pins electrical configuration
     pub fn configure_interrupts_pins(&mut self, config: PinConfig) -> Result<(), T::Error> {
-        let reg_data = self.read_register(Sensor::Accelerometer, register::AG::CTRL_REG8.addr())?;
-        let data: u8 = reg_data & 0b1100_1111 | config.ctrl_reg8();
-        self.interface
-            .write(Sensor::Accelerometer, register::AG::CTRL_REG8.addr(), data)?;
-        Ok(())
+        self.write_register_with(config)
     }
 
     /// Get the current A/G1 pin configuration
@@ -358,6 +346,12 @@ where
             Sensor::Accelerometer,
             register::AG::CTRL_REG8.addr(),
         )?))
+    }
+
+    fn write_register_with<C: Configuration>(&mut self, config: C) -> Result<(), T::Error> {
+        self.interface
+            .write(config.sensor(), config.addr(), config.value())?;
+        Ok(())
     }
 
     /// Read a byte from the given register.
