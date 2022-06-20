@@ -1,5 +1,7 @@
 //! Enums used by various interrupt-related functions
 
+pub mod accel_int;
+pub mod config;
 pub mod pins_config;
 
 /// Interrupt active setting for the INT_DRDY pin: active high (default) or active low
