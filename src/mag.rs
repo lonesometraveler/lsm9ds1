@@ -1,6 +1,8 @@
 //! Magnetometer settings, types
 #![allow(dead_code, non_camel_case_types)]
 
+use crate::{configuration::CustomConfiguration, interface::Sensor, register};
+
 /// Magnetometer settings. Use this struct to configure the sensor.
 #[derive(Debug)]
 pub struct MagSettings {
@@ -55,6 +57,14 @@ impl MagSettings {
         self.temp_compensation.value() | self.x_y_performance.value() | self.sample_rate.value()
     }
 
+    pub fn ctrl_reg1_m_config(&self) -> CustomConfiguration {
+        CustomConfiguration {
+            value: self.ctrl_reg1_m(),
+            sensor: Sensor::Magnetometer,
+            register: register::Mag::CTRL_REG1_M.addr(),
+        }
+    }
+
     /// Returns `u8` to write to CTRL_REG2_M. See page 64.
     /// # CTRL_REG2_M: [0][FS1][FS0][0][REBOOT][SOFT_RST][0][0]
     /// - FS[1:0] - Full-scale configuration
@@ -62,6 +72,14 @@ impl MagSettings {
     /// - SOFT_RST - Reset config and user registers (0:default, 1:reset) // TODO
     pub fn ctrl_reg2_m(&self) -> u8 {
         self.scale.value()
+    }
+
+    pub fn ctrl_reg2_m_config(&self) -> CustomConfiguration {
+        CustomConfiguration {
+            value: self.ctrl_reg2_m(),
+            sensor: Sensor::Magnetometer,
+            register: register::Mag::CTRL_REG2_M.addr(),
+        }
     }
 
     /// Returns `u8` to write to CTRL_REG3_M. See page 64.
@@ -80,6 +98,14 @@ impl MagSettings {
             | self.system_op.value()
     }
 
+    pub fn ctrl_reg3_m_config(&self) -> CustomConfiguration {
+        CustomConfiguration {
+            value: self.ctrl_reg3_m(),
+            sensor: Sensor::Magnetometer,
+            register: register::Mag::CTRL_REG3_M.addr(),
+        }
+    }
+
     /// Returns `u8` to write to CTRL_REG4_M. See page 65.
     /// # CTRL_REG4_M: [0][0][0][0][OMZ1][OMZ0][BLE][0]
     /// - OMZ[1:0] - Z-axis operative mode selection
@@ -92,6 +118,14 @@ impl MagSettings {
         self.z_performance.value()
     }
 
+    pub fn ctrl_reg4_m_config(&self) -> CustomConfiguration {
+        CustomConfiguration {
+            value: self.ctrl_reg4_m(),
+            sensor: Sensor::Magnetometer,
+            register: register::Mag::CTRL_REG4_M.addr(),
+        }
+    }
+
     /// Returns `u8` to write to CTRL_REG5_M. See page 65.
     /// # CTRL_REG5_M: [0][BDU][0][0][0][0][0][0]
     /// - BDU - Block data update for magnetic data // TODO
@@ -99,6 +133,14 @@ impl MagSettings {
     ///     - 1:not updated until MSB/LSB are read
     pub fn ctrl_reg5_m(&self) -> u8 {
         0x00 // TODO
+    }
+
+    pub fn ctrl_reg5_m_config(&self) -> CustomConfiguration {
+        CustomConfiguration {
+            value: self.ctrl_reg5_m(),
+            sensor: Sensor::Magnetometer,
+            register: register::Mag::CTRL_REG5_M.addr(),
+        }
     }
 }
 

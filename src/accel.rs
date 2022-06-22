@@ -1,6 +1,8 @@
 //! Accelerometer settings, types
 #![allow(dead_code, non_camel_case_types)]
 
+use crate::{configuration::CustomConfiguration, interface::Sensor, register};
+
 /// Accelerometer settings. Use this struct to configure the sensor.
 #[derive(Debug)]
 pub struct AccelSettings {
@@ -61,6 +63,14 @@ impl AccelSettings {
         }
         result
     }
+    /// Returns `Configuration` to write to CTRL_REG5_XL (0x1F)
+    pub fn ctrl_reg5_xl_config(&self) -> CustomConfiguration {
+        CustomConfiguration {
+            value: self.ctrl_reg5_xl(),
+            sensor: Sensor::Accelerometer,
+            register: register::AG::CTRL_REG5_XL.addr(),
+        }
+    }
 
     /// Returns `u8` to write to CTRL_REG6_XL (0x20)
     /// # CTRL_REG6_XL: [ODR_XL2][ODR_XL1][ODR_XL0][FS1_XL][FS0_XL][BW_SCAL_ODR][BW_XL1][BW_XL0]
@@ -74,6 +84,14 @@ impl AccelSettings {
             | self.bandwidth_selection.value()
             | self.bandwidth.value()
     }
+    /// Returns `Configuration` to write to CTRL_REG6_XL (0x20)
+    pub fn ctrl_reg6_xl_config(&self) -> CustomConfiguration {
+        CustomConfiguration {
+            value: self.ctrl_reg6_xl(),
+            sensor: Sensor::Accelerometer,
+            register: register::AG::CTRL_REG6_XL.addr(),
+        }
+    }
 
     /// Returns `u8` to write to CTRL_REG7_XL (0x21)
     /// # CTRL_REG7_XL: [HR][DCF1][DCF0][0][0][FDS][0][HPIS1]
@@ -83,6 +101,14 @@ impl AccelSettings {
     /// - HPIS1 - HPF enabled for interrupt function
     pub fn ctrl_reg7_xl(&self) -> u8 {
         self.high_res_bandwidth.value()
+    }
+    /// Returns `Configuration` to write to CTRL_REG7_XL (0x21)
+    pub fn ctrl_reg7_xl_config(&self) -> CustomConfiguration {
+        CustomConfiguration {
+            value: self.ctrl_reg7_xl(),
+            sensor: Sensor::Accelerometer,
+            register: register::AG::CTRL_REG7_XL.addr(),
+        }
     }
 }
 

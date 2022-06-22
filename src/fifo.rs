@@ -1,5 +1,9 @@
 //! Various settings related to FIFO functionality of the sensors
+
+use crate::{configuration::CustomConfiguration, interface::Sensor, register};
+
 #[allow(non_camel_case_types)]
+
 pub struct FIFOBitmasks;
 
 #[allow(dead_code)]
@@ -51,6 +55,15 @@ impl FIFOConfig {
         data |= self.fifo_threshold;
         data
     }
+    /// Returns `Config` to be written to FIFO_CTRL.
+    pub fn f_fifo_ctrl_config(&self) -> CustomConfiguration {
+        CustomConfiguration {
+            value: self.f_fifo_ctrl(),
+            sensor: Sensor::Accelerometer,
+            register: register::AG::FIFO_CTRL.addr(),
+        }
+    }
+
     /// Returns `u8` to be written to CTRL_REG9.
     pub(crate) fn f_ctrl_reg9(&self) -> u8 {
         let mut data = 0u8;
