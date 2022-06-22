@@ -9,6 +9,7 @@ pub mod accel;
 pub mod configuration;
 pub mod fifo;
 pub mod gyro;
+pub mod interface;
 pub mod interrupts;
 pub mod mag;
 pub mod register;
@@ -17,14 +18,12 @@ use accel::AccelSettings;
 use configuration::Configuration;
 use fifo::{Decimate, FIFOBitmasks, FIFOConfig, FIFOStatus};
 use gyro::GyroSettings;
+use interface::{Interface, Sensor};
 use interrupts::accel_int::IntConfigAccel;
 use interrupts::gyro_int::IntConfigGyro;
 use interrupts::mag_int::IntConfigMag;
 use interrupts::pins_config::{IntConfigAG1, IntConfigAG2, PinConfig};
 use mag::MagSettings;
-
-pub mod interface;
-use interface::{Interface, Sensor};
 
 /// Accelerometer/Gyroscope's ID
 const WHO_AM_I_AG: u8 = 0x68;
@@ -93,14 +92,11 @@ where
 
     fn reachable(&mut self, sensor: Sensor) -> Result<bool, T::Error> {
         use Sensor::*;
-        let mut bytes = [0u8; 1];
         let (who_am_i, register) = match sensor {
             Accelerometer | Gyro | Temperature => (WHO_AM_I_AG, register::AG::WHO_AM_I.addr()),
             Magnetometer => (WHO_AM_I_M, register::Mag::WHO_AM_I.addr()),
         };
-
-        self.interface.read(sensor, register, &mut bytes)?;
-        Ok(bytes[0] == who_am_i)
+        Ok(self.read_register(sensor, register)? == who_am_i)
     }
 
     /// Verifies communication with WHO_AM_I register
@@ -142,9 +138,7 @@ where
             Accelerometer | Gyro | Temperature => register::AG::STATUS_REG_1.addr(),
             Magnetometer => register::Mag::STATUS_REG_M.addr(),
         };
-        let mut bytes = [0u8; 1];
-        self.interface.read(sensor, register, &mut bytes)?;
-        Ok(bytes[0])
+        self.read_register(sensor, register)
     }
     /// Sees if new Accelerometer data is available
     pub fn accel_data_available(&mut self) -> Result<bool, T::Error> {
