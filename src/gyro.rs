@@ -1,8 +1,6 @@
 //! Gyroscope settings, types
 #![allow(dead_code, non_camel_case_types)]
 
-use crate::{configuration::CustomConfiguration, interface::Sensor, register};
-
 /// Gyro settings. Use this struct to configure the sensor.
 #[derive(Debug)]
 pub struct GyroSettings {
@@ -69,14 +67,6 @@ impl GyroSettings {
     pub fn ctrl_reg1_g(&self) -> u8 {
         self.sample_rate.value() | self.scale.value() | self.bandwidth.value()
     }
-    /// Returns `Configuration` to write to CTRL_REG1_G. See page 45
-    pub fn ctrl_reg1_g_config(&self) -> CustomConfiguration {
-        CustomConfiguration {
-            value: self.ctrl_reg1_g(),
-            sensor: Sensor::Gyro,
-            register: register::AG::CTRL_REG1_G.addr(),
-        }
-    }
 
     /// Returns `u8` to write to CTRL_REG2_G. See page 47
     /// # CTRL_REG2_G: [0][0][0][0][INT_SEL1][INT_SEL0][OUT_SEL1][OUT_SEL0]
@@ -84,14 +74,6 @@ impl GyroSettings {
     /// - OUT_SEL[1:0] - Out selection configuration
     pub fn ctrl_reg2_g(&self) -> u8 {
         self.int_selection.value() | self.out_selection.value()
-    }
-    /// Returns `Configuration` to write to CTRL_REG2_G. See page 47
-    pub fn ctrl_reg2_g_config(&self) -> CustomConfiguration {
-        CustomConfiguration {
-            value: self.ctrl_reg2_g(),
-            sensor: Sensor::Gyro,
-            register: register::AG::CTRL_REG2_G.addr(),
-        }
     }
 
     /// Returns `u8` to write to CTRL_REG3_G. See page 47
@@ -101,14 +83,6 @@ impl GyroSettings {
     /// - HPCF_G[3:0] - HPF cutoff frequency
     pub fn ctrl_reg3_g(&self) -> u8 {
         self.low_power_mode.value() | self.hpf_mode.value() | self.hpf_cutoff.value()
-    }
-    /// Returns `Configuration` to write to CTRL_REG3_G. See page 47
-    pub fn ctrl_reg3_g_config(&self) -> CustomConfiguration {
-        CustomConfiguration {
-            value: self.ctrl_reg3_g(),
-            sensor: Sensor::Gyro,
-            register: register::AG::CTRL_REG3_G.addr(),
-        }
     }
 
     /// Returns `u8` to write to CTRL_REG4. See page 50
@@ -130,14 +104,6 @@ impl GyroSettings {
             result |= 1 << 3;
         }
         result | self.latch_interrupt.value()
-    }
-    /// Returns `Configuration` to write to CTRL_REG4. See page 50
-    pub fn ctrl_reg4_config(&self) -> CustomConfiguration {
-        CustomConfiguration {
-            value: self.ctrl_reg4(),
-            sensor: Sensor::Gyro,
-            register: register::AG::CTRL_REG4.addr(),
-        }
     }
 
     /// Returns `u8` to write to ORIENT_CFG_G

@@ -1,5 +1,8 @@
 //! Configuration trait, trait implementations
 use crate::{
+    accel::AccelSettings,
+    fifo::FIFOConfig,
+    gyro::GyroSettings,
     interface::Sensor,
     interrupts::{
         accel_int::IntConfigAccel,
@@ -7,6 +10,7 @@ use crate::{
         mag_int::IntConfigMag,
         pins_config::{IntConfigAG1, IntConfigAG2, PinConfig},
     },
+    mag::MagSettings,
     register,
 };
 
@@ -104,5 +108,123 @@ impl Configuration for IntConfigMag {
     }
     fn sensor(&self) -> Sensor {
         Sensor::Magnetometer
+    }
+}
+
+impl AccelSettings {
+    /// Returns `Configuration` to write to CTRL_REG5_XL (0x1F)
+    pub fn ctrl_reg5_xl_config(&self) -> CustomConfiguration {
+        CustomConfiguration {
+            value: self.ctrl_reg5_xl(),
+            sensor: Sensor::Accelerometer,
+            register: register::AG::CTRL_REG5_XL.addr(),
+        }
+    }
+
+    /// Returns `Configuration` to write to CTRL_REG6_XL (0x20)
+    pub fn ctrl_reg6_xl_config(&self) -> CustomConfiguration {
+        CustomConfiguration {
+            value: self.ctrl_reg6_xl(),
+            sensor: Sensor::Accelerometer,
+            register: register::AG::CTRL_REG6_XL.addr(),
+        }
+    }
+
+    /// Returns `Configuration` to write to CTRL_REG7_XL (0x21)
+    pub fn ctrl_reg7_xl_config(&self) -> CustomConfiguration {
+        CustomConfiguration {
+            value: self.ctrl_reg7_xl(),
+            sensor: Sensor::Accelerometer,
+            register: register::AG::CTRL_REG7_XL.addr(),
+        }
+    }
+}
+
+impl GyroSettings {
+    /// Returns `Configuration` to write to CTRL_REG1_G. See page 45
+    pub fn ctrl_reg1_g_config(&self) -> CustomConfiguration {
+        CustomConfiguration {
+            value: self.ctrl_reg1_g(),
+            sensor: Sensor::Gyro,
+            register: register::AG::CTRL_REG1_G.addr(),
+        }
+    }
+    /// Returns `Configuration` to write to CTRL_REG2_G. See page 47
+    pub fn ctrl_reg2_g_config(&self) -> CustomConfiguration {
+        CustomConfiguration {
+            value: self.ctrl_reg2_g(),
+            sensor: Sensor::Gyro,
+            register: register::AG::CTRL_REG2_G.addr(),
+        }
+    }
+    /// Returns `Configuration` to write to CTRL_REG3_G. See page 47
+    pub fn ctrl_reg3_g_config(&self) -> CustomConfiguration {
+        CustomConfiguration {
+            value: self.ctrl_reg3_g(),
+            sensor: Sensor::Gyro,
+            register: register::AG::CTRL_REG3_G.addr(),
+        }
+    }
+    /// Returns `Configuration` to write to CTRL_REG4. See page 50
+    pub fn ctrl_reg4_config(&self) -> CustomConfiguration {
+        CustomConfiguration {
+            value: self.ctrl_reg4(),
+            sensor: Sensor::Gyro,
+            register: register::AG::CTRL_REG4.addr(),
+        }
+    }
+}
+
+impl MagSettings {
+    /// Returns `Configuration` to write to CTRL_REG1_M. See page 63.
+    pub fn ctrl_reg1_m_config(&self) -> CustomConfiguration {
+        CustomConfiguration {
+            value: self.ctrl_reg1_m(),
+            sensor: Sensor::Magnetometer,
+            register: register::Mag::CTRL_REG1_M.addr(),
+        }
+    }
+    /// Returns `Configuration` to write to CTRL_REG2_M.
+    pub fn ctrl_reg2_m_config(&self) -> CustomConfiguration {
+        CustomConfiguration {
+            value: self.ctrl_reg2_m(),
+            sensor: Sensor::Magnetometer,
+            register: register::Mag::CTRL_REG2_M.addr(),
+        }
+    }
+    /// Returns `Configuration` to write to CTRL_REG3_M.
+    pub fn ctrl_reg3_m_config(&self) -> CustomConfiguration {
+        CustomConfiguration {
+            value: self.ctrl_reg3_m(),
+            sensor: Sensor::Magnetometer,
+            register: register::Mag::CTRL_REG3_M.addr(),
+        }
+    }
+    /// Returns `Configuration` to write to CTRL_REG4_M.
+    pub fn ctrl_reg4_m_config(&self) -> CustomConfiguration {
+        CustomConfiguration {
+            value: self.ctrl_reg4_m(),
+            sensor: Sensor::Magnetometer,
+            register: register::Mag::CTRL_REG4_M.addr(),
+        }
+    }
+    /// Returns `Configuration` to write to CTRL_REG5_M.
+    pub fn ctrl_reg5_m_config(&self) -> CustomConfiguration {
+        CustomConfiguration {
+            value: self.ctrl_reg5_m(),
+            sensor: Sensor::Magnetometer,
+            register: register::Mag::CTRL_REG5_M.addr(),
+        }
+    }
+}
+
+impl FIFOConfig {
+    /// Returns `Configuration` to be written to FIFO_CTRL.
+    pub fn f_fifo_ctrl_config(&self) -> CustomConfiguration {
+        CustomConfiguration {
+            value: self.f_fifo_ctrl(),
+            sensor: Sensor::Accelerometer,
+            register: register::AG::FIFO_CTRL.addr(),
+        }
     }
 }
