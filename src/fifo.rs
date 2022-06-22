@@ -55,7 +55,7 @@ impl FIFOConfig {
         data |= self.fifo_threshold;
         data
     }
-    /// Returns `Config` to be written to FIFO_CTRL.
+    /// Returns `Configuration` to be written to FIFO_CTRL.
     pub fn f_fifo_ctrl_config(&self) -> CustomConfiguration {
         CustomConfiguration {
             value: self.f_fifo_ctrl(),
