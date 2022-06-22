@@ -60,35 +60,35 @@ impl IntConfigAccel {
 impl From<u8> for IntConfigAccel {
     fn from(reg_value: u8) -> Self {
         IntConfigAccel {
-            events_combination: match (reg_value & XL_CFG_Bitmasks::AOI_XL) >> 7 {
+            events_combination: match (reg_value & CfgBitmasks::AOI_XL) >> 7 {
                 1 => Combination::And,
                 _ => Combination::Or,
             },
-            enable_6d: match (reg_value & XL_CFG_Bitmasks::_6D) >> 6 {
+            enable_6d: match (reg_value & CfgBitmasks::_6D) >> 6 {
                 1 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
-            interrupt_zaxis_high: match (reg_value & XL_CFG_Bitmasks::ZHIE_XL) >> 5 {
+            interrupt_zaxis_high: match (reg_value & CfgBitmasks::ZHIE_XL) >> 5 {
                 1 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
-            interrupt_zaxis_low: match (reg_value & XL_CFG_Bitmasks::ZLIE_XL) >> 4 {
+            interrupt_zaxis_low: match (reg_value & CfgBitmasks::ZLIE_XL) >> 4 {
                 1 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
-            interrupt_yaxis_high: match (reg_value & XL_CFG_Bitmasks::YHIE_XL) >> 3 {
+            interrupt_yaxis_high: match (reg_value & CfgBitmasks::YHIE_XL) >> 3 {
                 1 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
-            interrupt_yaxis_low: match (reg_value & XL_CFG_Bitmasks::XLIE_XL) >> 2 {
+            interrupt_yaxis_low: match (reg_value & CfgBitmasks::XLIE_XL) >> 2 {
                 1 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
-            interrupt_xaxis_high: match (reg_value & XL_CFG_Bitmasks::XHIE_XL) >> 1 {
+            interrupt_xaxis_high: match (reg_value & CfgBitmasks::XHIE_XL) >> 1 {
                 1 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
-            interrupt_xaxis_low: match reg_value & XL_CFG_Bitmasks::XLIE_XL {
+            interrupt_xaxis_low: match reg_value & CfgBitmasks::XLIE_XL {
                 1 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
@@ -96,11 +96,10 @@ impl From<u8> for IntConfigAccel {
     }
 }
 
-#[allow(non_camel_case_types)]
-pub struct XL_INT_Bitmasks;
+pub struct XLIntBitmasks;
 #[allow(dead_code)]
 /// Bitmasks for interrupt-related settings in INT_GEN_SRC_XL register
-impl XL_INT_Bitmasks {
+impl XLIntBitmasks {
     pub(crate) const IA_XL: u8 = 0b0100_0000;
     pub(crate) const ZH_XL: u8 = 0b0010_0000;
     pub(crate) const ZL_XL: u8 = 0b0001_0000;
@@ -109,12 +108,10 @@ impl XL_INT_Bitmasks {
     pub(crate) const XH_XL: u8 = 0b0000_0010;
     pub(crate) const XL_XL: u8 = 0b0000_0001;
 }
-
-#[allow(non_camel_case_types)]
-pub struct XL_CFG_Bitmasks;
+pub struct CfgBitmasks;
 #[allow(dead_code)]
 /// Bitmasks for interrupt-related settings in INT_GEN_CFG_XL register
-impl XL_CFG_Bitmasks {
+impl CfgBitmasks {
     pub(crate) const AOI_XL: u8 = 0b1000_0000;
     pub(crate) const _6D: u8 = 0b0100_0000;
     pub(crate) const ZHIE_XL: u8 = 0b0010_0000;
