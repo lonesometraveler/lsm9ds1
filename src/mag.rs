@@ -56,7 +56,7 @@ impl MagSettings {
     pub fn ctrl_reg1_m(&self) -> u8 {
         self.temp_compensation.value() | self.x_y_performance.value() | self.sample_rate.value()
     }
-
+    /// Returns `Configuration` to write to CTRL_REG1_M. See page 63.
     pub fn ctrl_reg1_m_config(&self) -> CustomConfiguration {
         CustomConfiguration {
             value: self.ctrl_reg1_m(),
@@ -73,7 +73,7 @@ impl MagSettings {
     pub fn ctrl_reg2_m(&self) -> u8 {
         self.scale.value()
     }
-
+    /// Returns `Configuration` to write to CTRL_REG2_M.
     pub fn ctrl_reg2_m_config(&self) -> CustomConfiguration {
         CustomConfiguration {
             value: self.ctrl_reg2_m(),
@@ -97,7 +97,7 @@ impl MagSettings {
             | self.spi_mode.value()
             | self.system_op.value()
     }
-
+    /// Returns `Configuration` to write to CTRL_REG3_M.
     pub fn ctrl_reg3_m_config(&self) -> CustomConfiguration {
         CustomConfiguration {
             value: self.ctrl_reg3_m(),
@@ -117,7 +117,7 @@ impl MagSettings {
     pub fn ctrl_reg4_m(&self) -> u8 {
         self.z_performance.value()
     }
-
+    /// Returns `Configuration` to write to CTRL_REG4_M.
     pub fn ctrl_reg4_m_config(&self) -> CustomConfiguration {
         CustomConfiguration {
             value: self.ctrl_reg4_m(),
@@ -134,7 +134,7 @@ impl MagSettings {
     pub fn ctrl_reg5_m(&self) -> u8 {
         0x00 // TODO
     }
-
+    /// Returns `Configuration` to write to CTRL_REG5_M.
     pub fn ctrl_reg5_m_config(&self) -> CustomConfiguration {
         CustomConfiguration {
             value: self.ctrl_reg5_m(),
