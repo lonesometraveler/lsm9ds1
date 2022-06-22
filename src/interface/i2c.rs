@@ -68,11 +68,9 @@ where
             Accelerometer | Gyro | Temperature => self.ag_addr,
             Magnetometer => self.mag_addr,
         };
-        core::prelude::v1::Ok(
-            self.i2c
-                .write(sensor_addr, &[addr, value])
-                .map_err(Error::Comm)?,
-        )
+        self.i2c
+            .write(sensor_addr, &[addr, value])
+            .map_err(Error::Comm)
     }
 
     fn read(&mut self, sensor: Sensor, addr: u8, buffer: &mut [u8]) -> Result<(), Self::Error> {
@@ -80,10 +78,8 @@ where
             Accelerometer | Gyro | Temperature => self.ag_addr,
             Magnetometer => self.mag_addr,
         };
-        core::prelude::v1::Ok(
-            self.i2c
-                .write_read(sensor_addr, &[addr], buffer)
-                .map_err(Error::Comm)?,
-        )
+        self.i2c
+            .write_read(sensor_addr, &[addr], buffer)
+            .map_err(Error::Comm)
     }
 }
