@@ -24,11 +24,11 @@ impl Default for PinConfig {
 impl From<u8> for PinConfig {
     fn from(value: u8) -> Self {
         PinConfig {
-            active_level: match (value & 0b0100_0000) >> 5 {
+            active_level: match (value & PinConfigBitmask::ACTIVE_LEVEL) >> 5 {
                 1 => IntActive::Low,
                 _ => IntActive::High,
             },
-            pin_mode: match (value & 0b0010_0000) >> 4 {
+            pin_mode: match (value & PinConfigBitmask::PIN_MODE) >> 4 {
                 1 => IntPin::OpenDrain,
                 _ => IntPin::PushPull,
             },
@@ -37,15 +37,22 @@ impl From<u8> for PinConfig {
 }
 
 impl PinConfig {
-    /// Returns values to be written to CTRL_REG8 register
+    /// Returns `u8` to be written to CTRL_REG8 register
     pub(crate) fn ctrl_reg8(&self) -> u8 {
         let mut data: u8 = 0;
-
         data |= self.active_level.value() << 5;
         data |= self.pin_mode.value() << 4;
-
         data
     }
+}
+
+/// Bitmasks for interrupt-related settings in CTRL_REG8 register
+pub(crate) struct PinConfigBitmask;
+
+#[allow(dead_code)]
+impl PinConfigBitmask {
+    pub(crate) const ACTIVE_LEVEL: u8 = 0b0010_0000;
+    pub(crate) const PIN_MODE: u8 = 0b0001_0000;
 }
 
 /// Accelerometer/gyroscope interrupt pin (INT1_A/G) settings
@@ -125,10 +132,9 @@ impl From<u8> for IntConfigAG1 {
 }
 
 impl IntConfigAG1 {
-    /// Returns values to be written to INT1_CTRL register
+    /// Returns `u8` to be written to INT1_CTRL register
     pub(crate) fn int1_ctrl(&self) -> u8 {
         let mut data: u8 = 0;
-
         data |= self.enable_gyro_int.value() << 7;
         data |= self.enable_accel_int.value() << 6;
         data |= self.enable_fss5.value() << 5;
@@ -137,7 +143,6 @@ impl IntConfigAG1 {
         data |= self.enable_boot_status.value() << 2;
         data |= self.enable_gyro_dataready.value() << 1;
         data |= self.enable_accel_dataready.value();
-
         data
     }
 }
@@ -205,7 +210,7 @@ impl From<u8> for IntConfigAG2 {
 }
 
 impl IntConfigAG2 {
-    /// Returns values to be written to INT2_CTRL register
+    /// Returns `u8` to be written to INT2_CTRL register
     pub(crate) fn int2_ctrl(&self) -> u8 {
         let mut data: u8 = 0;
 
