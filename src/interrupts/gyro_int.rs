@@ -98,7 +98,7 @@ impl From<u8> for IntConfigGyro {
 }
 
 /// Bitmasks for interrupt-related settings in INT_GEN_SRC_G register
-pub struct InterruptBitmasks;
+pub(crate) struct InterruptBitmasks;
 
 #[allow(dead_code)]
 impl InterruptBitmasks {
@@ -112,7 +112,7 @@ impl InterruptBitmasks {
 }
 
 /// Bitmasks for interrupt-related settings in INT_GEN_CFG_G register
-pub struct CfgBitmasks;
+pub(crate) struct CfgBitmasks;
 
 #[allow(dead_code)]
 impl CfgBitmasks {
