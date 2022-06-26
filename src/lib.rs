@@ -82,7 +82,18 @@ where
             .write(config.sensor(), config.addr(), config.value())?;
         Ok(())
     }
-
+    /// Modify a register with a configuration.
+    fn modify_register_with<C: Configuration>(
+        &mut self,
+        config: C,
+        original_value: u8,
+        bitmask: u8,
+    ) -> Result<(), T::Error> {
+        let mut data: u8 = original_value & bitmask;
+        data |= config.value();
+        self.interface.write(config.sensor(), config.addr(), data)?;
+        Ok(())
+    }
     /// Read a byte from the given register.
     fn read_register(&mut self, sensor: Sensor, address: u8) -> Result<u8, T::Error> {
         let mut reg_data = [0u8];
@@ -236,16 +247,14 @@ where
         // write values to the FIFO_CTRL register
         self.write_register_with(config.f_fifo_ctrl_config())?;
 
-        // write values to specific bits of the CTRL_REG9 register
         let ctrl_reg9: u8 =
             self.read_register(Sensor::Accelerometer, register::AG::CTRL_REG9.addr())?;
-        let payload = ctrl_reg9 & !FIFOBitmasks::CTRL_REG9_FIFO | config.f_ctrl_reg9();
-        self.interface.write(
-            Sensor::Accelerometer,
-            register::AG::CTRL_REG9.addr(),
-            payload,
-        )?;
-        Ok(())
+        // write values to specific bits of the CTRL_REG9 register
+        self.modify_register_with(
+            config.f_ctrl_reg9_config(),
+            ctrl_reg9,
+            !FIFOBitmasks::CTRL_REG9_FIFO,
+        )
     }
 
     /// Get flags and FIFO level from the FIFO_STATUS register
@@ -260,13 +269,7 @@ where
     pub fn set_decimation(&mut self, decimation: Decimate) -> Result<(), T::Error> {
         let ctrl_reg5 =
             self.read_register(Sensor::Accelerometer, register::AG::CTRL_REG5_XL.addr())?;
-        let payload = ctrl_reg5 & !FIFOBitmasks::DEC | decimation.value();
-        self.interface.write(
-            Sensor::Accelerometer,
-            register::AG::CTRL_REG5_XL.addr(),
-            payload,
-        )?;
-        Ok(())
+        self.modify_register_with(decimation, ctrl_reg5, !FIFOBitmasks::DEC)
     }
 
     /// Get the current A/G1 pin configuration
@@ -329,7 +332,9 @@ where
 
     /// Interrupt pins electrical configuration
     pub fn configure_interrupts_pins(&mut self, config: PinConfig) -> Result<(), T::Error> {
-        self.write_register_with(config)
+        let ctrl_reg8 =
+            self.read_register(Sensor::Accelerometer, register::AG::CTRL_REG8.addr())?;
+        self.modify_register_with(config, ctrl_reg8, 0b1100_1111)
     }
 
     /// Configure Accelerometer interrupt
