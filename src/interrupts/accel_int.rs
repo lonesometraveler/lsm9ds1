@@ -97,7 +97,7 @@ impl From<u8> for IntConfigAccel {
 }
 
 /// Bitmasks for interrupt-related settings in INT_GEN_SRC_XL register
-pub struct InterruptBitmasks;
+pub(crate) struct InterruptBitmasks;
 #[allow(dead_code)]
 impl InterruptBitmasks {
     pub const IA_XL: u8 = 0b0100_0000;
@@ -110,7 +110,7 @@ impl InterruptBitmasks {
 }
 
 /// Bitmasks for interrupt-related settings in INT_GEN_CFG_XL register
-pub struct CfgBitmasks;
+pub(crate) struct CfgBitmasks;
 #[allow(dead_code)]
 impl CfgBitmasks {
     pub const AOI_XL: u8 = 0b1000_0000;
