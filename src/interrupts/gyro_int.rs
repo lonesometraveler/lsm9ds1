@@ -43,8 +43,8 @@ impl Default for IntConfigGyro {
 }
 
 impl IntConfigGyro {
-    /// Returns values to be written to INT_GEN_CFG_G:    
-    pub fn int_gen_cfg_g(&self) -> u8 {
+    /// Returns `u8` to be written to INT_GEN_CFG_G:    
+    pub(crate) fn int_gen_cfg_g(&self) -> u8 {
         let mut data = 0u8;
         data |= self.events_combination.value() << 7;
         data |= self.latch_interrupts.value() << 6;
