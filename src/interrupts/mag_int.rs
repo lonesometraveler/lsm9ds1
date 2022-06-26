@@ -1,4 +1,4 @@
-/// Functions related to magnetometer-specific interrupts
+//! Functions related to magnetometer-specific interrupts
 use super::*;
 
 /// Magnetometer interrupt pin (INT_M) settings
@@ -33,7 +33,7 @@ impl Default for IntConfigMag {
 
 impl IntConfigMag {
     /// Returns values to be written to INT_CFG_M:    
-    pub(crate) fn int_cfg_m(&self) -> u8 {
+    pub fn int_cfg_m(&self) -> u8 {
         let mut data = 0u8;
         data |= self.interrupt_xaxis.value() << 7;
         data |= self.interrupt_yaxis.value() << 6;
@@ -82,31 +82,32 @@ impl From<u8> for IntConfigMag {
     }
 }
 
+/// Bitmasks for interrupt-related settings in INT_SRC_M register
 pub struct InterruptBitmasks;
 
 #[allow(dead_code)]
-/// Bitmasks for interrupt-related settings in INT_SRC_M register
 impl InterruptBitmasks {
-    pub(crate) const PTH_X: u8 = 0b1000_0000;
-    pub(crate) const PTH_Y: u8 = 0b0100_0000;
-    pub(crate) const PTH_Z: u8 = 0b0010_0000;
-    pub(crate) const NTH_X: u8 = 0b0001_0000;
-    pub(crate) const NTH_Y: u8 = 0b0000_1000;
-    pub(crate) const NTH_Z: u8 = 0b0000_0100;
-    pub(crate) const MROI: u8 = 0b0000_0010;
-    pub(crate) const INT: u8 = 0b0000_0001;
+    pub const PTH_X: u8 = 0b1000_0000;
+    pub const PTH_Y: u8 = 0b0100_0000;
+    pub const PTH_Z: u8 = 0b0010_0000;
+    pub const NTH_X: u8 = 0b0001_0000;
+    pub const NTH_Y: u8 = 0b0000_1000;
+    pub const NTH_Z: u8 = 0b0000_0100;
+    pub const MROI: u8 = 0b0000_0010;
+    pub const INT: u8 = 0b0000_0001;
 }
 
-pub struct CfgBitmasks;
-#[allow(dead_code)]
 /// Bitmasks for interrupt-related settings in INT_CFG_M register
+pub struct CfgBitmasks;
+
+#[allow(dead_code)]
 impl CfgBitmasks {
-    pub(crate) const XIEN: u8 = 0b1000_0000;
-    pub(crate) const YIEN: u8 = 0b0100_0000;
-    pub(crate) const ZIEN: u8 = 0b0010_0000;
-    pub(crate) const IEA: u8 = 0b0000_0100;
-    pub(crate) const IEL: u8 = 0b0000_0010;
-    pub(crate) const IEN: u8 = 0b0000_0001;
+    pub const XIEN: u8 = 0b1000_0000;
+    pub const YIEN: u8 = 0b0100_0000;
+    pub const ZIEN: u8 = 0b0010_0000;
+    pub const IEA: u8 = 0b0000_0100;
+    pub const IEL: u8 = 0b0000_0010;
+    pub const IEN: u8 = 0b0000_0001;
 }
 
 #[derive(Debug)]
