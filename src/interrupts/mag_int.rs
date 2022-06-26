@@ -32,8 +32,8 @@ impl Default for IntConfigMag {
 }
 
 impl IntConfigMag {
-    /// Returns values to be written to INT_CFG_M:    
-    pub fn int_cfg_m(&self) -> u8 {
+    /// Returns `u8` to be written to INT_CFG_M:    
+    pub(crate) fn int_cfg_m(&self) -> u8 {
         let mut data = 0u8;
         data |= self.interrupt_xaxis.value() << 7;
         data |= self.interrupt_yaxis.value() << 6;
