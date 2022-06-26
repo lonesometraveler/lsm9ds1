@@ -1,6 +1,4 @@
 //! Various settings related to FIFO functionality of the sensors
-
-use crate::{configuration::CustomConfiguration, interface::Sensor, register};
 #[allow(non_camel_case_types)]
 
 pub struct FIFOBitmasks;
