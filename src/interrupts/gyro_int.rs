@@ -1,4 +1,4 @@
-/// Functions related to gyroscope-specific interrupts
+//! Functions related to gyroscope-specific interrupts
 ///
 /// TO DO:
 /// - complete gyroscope threshold setting for X, Y and Z axis (INT_GEN_THS_X/Y/Z_G)
@@ -96,31 +96,34 @@ impl From<u8> for IntConfigGyro {
         }
     }
 }
+
+/// Bitmasks for interrupt-related settings in INT_GEN_SRC_G register
 pub struct InterruptBitmasks;
 
 #[allow(dead_code)]
-/// Bitmasks for interrupt-related settings in INT_GEN_SRC_G register
 impl InterruptBitmasks {
-    pub(crate) const IA_G: u8 = 0b0100_0000;
-    pub(crate) const ZH_G: u8 = 0b0010_0000;
-    pub(crate) const ZL_G: u8 = 0b0001_0000;
-    pub(crate) const YH_G: u8 = 0b0000_1000;
-    pub(crate) const YL_G: u8 = 0b0000_0100;
-    pub(crate) const XH_G: u8 = 0b0000_0010;
-    pub(crate) const XL_G: u8 = 0b0000_0001;
+    pub const IA_G: u8 = 0b0100_0000;
+    pub const ZH_G: u8 = 0b0010_0000;
+    pub const ZL_G: u8 = 0b0001_0000;
+    pub const YH_G: u8 = 0b0000_1000;
+    pub const YL_G: u8 = 0b0000_0100;
+    pub const XH_G: u8 = 0b0000_0010;
+    pub const XL_G: u8 = 0b0000_0001;
 }
-pub struct CfgBitmasks;
-#[allow(dead_code)]
+
 /// Bitmasks for interrupt-related settings in INT_GEN_CFG_G register
+pub struct CfgBitmasks;
+
+#[allow(dead_code)]
 impl CfgBitmasks {
-    pub(crate) const AOI_G: u8 = 0b1000_0000;
-    pub(crate) const LIR_G: u8 = 0b0100_0000;
-    pub(crate) const ZHIE_G: u8 = 0b0010_0000;
-    pub(crate) const ZLIE_G: u8 = 0b0001_0000;
-    pub(crate) const YHIE_G: u8 = 0b0000_1000;
-    pub(crate) const YLIE_G: u8 = 0b0000_0100;
-    pub(crate) const XHIE_G: u8 = 0b0000_0010;
-    pub(crate) const XLIE_G: u8 = 0b0000_0001;
+    pub const AOI_G: u8 = 0b1000_0000;
+    pub const LIR_G: u8 = 0b0100_0000;
+    pub const ZHIE_G: u8 = 0b0010_0000;
+    pub const ZLIE_G: u8 = 0b0001_0000;
+    pub const YHIE_G: u8 = 0b0000_1000;
+    pub const YLIE_G: u8 = 0b0000_0100;
+    pub const XHIE_G: u8 = 0b0000_0010;
+    pub const XLIE_G: u8 = 0b0000_0001;
 }
 
 #[derive(Debug)]
