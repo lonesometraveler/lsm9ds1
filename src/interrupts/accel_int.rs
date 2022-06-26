@@ -1,4 +1,4 @@
-/// Functions related to accelerometer-specific interrupts
+//! Functions related to accelerometer-specific interrupts
 ///
 /// TO DO:
 /// - set acceleration threshold for X, Y and Z axis (INT_GEN_THS_X/Y/Z_XL) in mg instead?
@@ -96,33 +96,34 @@ impl From<u8> for IntConfigAccel {
     }
 }
 
-pub struct XLIntBitmasks;
-#[allow(dead_code)]
 /// Bitmasks for interrupt-related settings in INT_GEN_SRC_XL register
-impl XLIntBitmasks {
-    pub(crate) const IA_XL: u8 = 0b0100_0000;
-    pub(crate) const ZH_XL: u8 = 0b0010_0000;
-    pub(crate) const ZL_XL: u8 = 0b0001_0000;
-    pub(crate) const YH_XL: u8 = 0b0000_1000;
-    pub(crate) const YL_XL: u8 = 0b0000_0100;
-    pub(crate) const XH_XL: u8 = 0b0000_0010;
-    pub(crate) const XL_XL: u8 = 0b0000_0001;
+pub struct InterruptBitmasks;
+#[allow(dead_code)]
+impl InterruptBitmasks {
+    pub const IA_XL: u8 = 0b0100_0000;
+    pub const ZH_XL: u8 = 0b0010_0000;
+    pub const ZL_XL: u8 = 0b0001_0000;
+    pub const YH_XL: u8 = 0b0000_1000;
+    pub const YL_XL: u8 = 0b0000_0100;
+    pub const XH_XL: u8 = 0b0000_0010;
+    pub const XL_XL: u8 = 0b0000_0001;
 }
+
+/// Bitmasks for interrupt-related settings in INT_GEN_CFG_XL register
 pub struct CfgBitmasks;
 #[allow(dead_code)]
-/// Bitmasks for interrupt-related settings in INT_GEN_CFG_XL register
 impl CfgBitmasks {
-    pub(crate) const AOI_XL: u8 = 0b1000_0000;
-    pub(crate) const _6D: u8 = 0b0100_0000;
-    pub(crate) const ZHIE_XL: u8 = 0b0010_0000;
-    pub(crate) const ZLIE_XL: u8 = 0b0001_0000;
-    pub(crate) const YHIE_XL: u8 = 0b0000_1000;
-    pub(crate) const YLIE_XL: u8 = 0b0000_0100;
-    pub(crate) const XHIE_XL: u8 = 0b0000_0010;
-    pub(crate) const XLIE_XL: u8 = 0b0000_0001;
+    pub const AOI_XL: u8 = 0b1000_0000;
+    pub const _6D: u8 = 0b0100_0000;
+    pub const ZHIE_XL: u8 = 0b0010_0000;
+    pub const ZLIE_XL: u8 = 0b0001_0000;
+    pub const YHIE_XL: u8 = 0b0000_1000;
+    pub const YLIE_XL: u8 = 0b0000_0100;
+    pub const XHIE_XL: u8 = 0b0000_0010;
+    pub const XLIE_XL: u8 = 0b0000_0001;
 
-    pub(crate) const LIR_XL1: u8 = 0b0000_0010;
-    pub(crate) const _4D_XL1: u8 = 0b0000_0001;
+    pub const LIR_XL1: u8 = 0b0000_0010;
+    pub const _4D_XL1: u8 = 0b0000_0001;
 }
 
 #[derive(Debug)]
@@ -139,7 +140,7 @@ pub struct IntStatusAccel {
 
 #[test]
 fn configure_accel_int() {
-    let config = IntConfigAccel::default(); //IntConfigAccel {..Default::default()};
+    let config = IntConfigAccel::default();
     assert_eq!(config.int_gen_cfg_xl(), 0b0000_0000);
 
     let config = IntConfigAccel {
