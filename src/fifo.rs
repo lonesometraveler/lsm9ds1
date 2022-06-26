@@ -1,20 +1,20 @@
 //! Various settings related to FIFO functionality of the sensors
 #[allow(non_camel_case_types)]
 
-pub struct FIFOBitmasks;
+pub(crate) struct FIFOBitmasks;
 
 #[allow(dead_code)]
 /// Bitmasks for FIFO-related settings in CTRL_REG9 and CTRL_REG5_XL registers
 impl FIFOBitmasks {
-    pub(crate) const FTH: u8 = 0b1000_0000;
+    pub const FTH: u8 = 0b1000_0000;
     /// FIFO_SRC bit 6 OVRN
-    pub(crate) const OVRN: u8 = 0b0100_0000;
+    pub const OVRN: u8 = 0b0100_0000;
     /// FIFO_SRC bits 5:0 FSS
-    pub(crate) const FSS: u8 = 0b0011_1111;
+    pub const FSS: u8 = 0b0011_1111;
     /// CTRL_REG9 FIFO-related settings
-    pub(crate) const CTRL_REG9_FIFO: u8 = 0b0001_0011;
+    pub const CTRL_REG9_FIFO: u8 = 0b0001_0011;
     /// Decimation setting in CTRL_REG5_XL
-    pub(crate) const DEC: u8 = 0b1100_0000;
+    pub const DEC: u8 = 0b1100_0000;
 }
 
 /// FIFO settings
