@@ -1,7 +1,7 @@
 //! Configuration trait, trait implementations
 use crate::{
     accel::AccelSettings,
-    fifo::FIFOConfig,
+    fifo::{Decimate, FIFOConfig},
     gyro::GyroSettings,
     interface::Sensor,
     interrupts::{
@@ -108,6 +108,18 @@ impl Configuration for IntConfigMag {
     }
     fn sensor(&self) -> Sensor {
         Sensor::Magnetometer
+    }
+}
+
+impl Configuration for Decimate {
+    fn value(&self) -> u8 {
+        self.value()
+    }
+    fn addr(&self) -> u8 {
+        register::AG::CTRL_REG5_XL.addr()
+    }
+    fn sensor(&self) -> Sensor {
+        Sensor::Accelerometer
     }
 }
 
@@ -225,6 +237,14 @@ impl FIFOConfig {
             value: self.f_fifo_ctrl(),
             sensor: Sensor::Accelerometer,
             register: register::AG::FIFO_CTRL.addr(),
+        }
+    }
+
+    pub fn f_ctrl_reg9_config(&self) -> CustomConfiguration {
+        CustomConfiguration {
+            sensor: Sensor::Accelerometer,
+            register: register::AG::CTRL_REG9.addr(),
+            value: self.f_ctrl_reg9(),
         }
     }
 }
