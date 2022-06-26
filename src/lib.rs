@@ -79,7 +79,7 @@ where
     /// Write a configuration to a register.
     fn write_register_with<C: Configuration>(&mut self, config: C) -> Result<(), T::Error> {
         self.interface
-            .write(config.sensor(), config.addr(), config.value())?;
+            .write(config.sensor(), config.addr(), config.byte())?;
         Ok(())
     }
     /// Modify a register with a configuration.
@@ -90,7 +90,7 @@ where
         bitmask: u8,
     ) -> Result<(), T::Error> {
         let mut data: u8 = original_value & bitmask;
-        data |= config.value();
+        data |= config.byte();
         self.interface.write(config.sensor(), config.addr(), data)?;
         Ok(())
     }

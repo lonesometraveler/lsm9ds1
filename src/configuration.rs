@@ -15,7 +15,7 @@ use crate::{
 };
 
 pub trait Configuration {
-    fn value(&self) -> u8;
+    fn byte(&self) -> u8;
     fn sensor(&self) -> Sensor;
     fn addr(&self) -> u8;
 }
@@ -34,13 +34,13 @@ impl Configuration for CustomConfiguration {
     fn sensor(&self) -> Sensor {
         self.sensor
     }
-    fn value(&self) -> u8 {
+    fn byte(&self) -> u8 {
         self.value
     }
 }
 
 impl Configuration for PinConfig {
-    fn value(&self) -> u8 {
+    fn byte(&self) -> u8 {
         self.ctrl_reg8()
     }
     fn sensor(&self) -> Sensor {
@@ -52,7 +52,7 @@ impl Configuration for PinConfig {
 }
 
 impl Configuration for IntConfigAccel {
-    fn value(&self) -> u8 {
+    fn byte(&self) -> u8 {
         self.int_gen_cfg_xl()
     }
     fn sensor(&self) -> Sensor {
@@ -64,7 +64,7 @@ impl Configuration for IntConfigAccel {
 }
 
 impl Configuration for IntConfigAG1 {
-    fn value(&self) -> u8 {
+    fn byte(&self) -> u8 {
         self.int1_ctrl()
     }
     fn sensor(&self) -> Sensor {
@@ -76,7 +76,7 @@ impl Configuration for IntConfigAG1 {
 }
 
 impl Configuration for IntConfigAG2 {
-    fn value(&self) -> u8 {
+    fn byte(&self) -> u8 {
         self.int2_ctrl()
     }
     fn sensor(&self) -> Sensor {
@@ -88,7 +88,7 @@ impl Configuration for IntConfigAG2 {
 }
 
 impl Configuration for IntConfigGyro {
-    fn value(&self) -> u8 {
+    fn byte(&self) -> u8 {
         self.int_gen_cfg_g()
     }
     fn addr(&self) -> u8 {
@@ -100,7 +100,7 @@ impl Configuration for IntConfigGyro {
 }
 
 impl Configuration for IntConfigMag {
-    fn value(&self) -> u8 {
+    fn byte(&self) -> u8 {
         self.int_cfg_m()
     }
     fn addr(&self) -> u8 {
@@ -112,7 +112,7 @@ impl Configuration for IntConfigMag {
 }
 
 impl Configuration for Decimate {
-    fn value(&self) -> u8 {
+    fn byte(&self) -> u8 {
         self.value()
     }
     fn addr(&self) -> u8 {
