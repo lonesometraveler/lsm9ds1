@@ -83,7 +83,7 @@ impl From<u8> for IntConfigMag {
 }
 
 /// Bitmasks for interrupt-related settings in INT_SRC_M register
-pub struct InterruptBitmasks;
+pub(crate) struct InterruptBitmasks;
 
 #[allow(dead_code)]
 impl InterruptBitmasks {
@@ -98,7 +98,7 @@ impl InterruptBitmasks {
 }
 
 /// Bitmasks for interrupt-related settings in INT_CFG_M register
-pub struct CfgBitmasks;
+pub(crate) struct CfgBitmasks;
 
 #[allow(dead_code)]
 impl CfgBitmasks {
