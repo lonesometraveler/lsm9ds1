@@ -1,5 +1,4 @@
 //! Various settings related to FIFO functionality of the sensors
-
 #[allow(non_camel_case_types)]
 pub struct FIFOBitmasks;
 
@@ -45,13 +44,14 @@ impl Default for FIFOConfig {
 }
 
 impl FIFOConfig {
-    /// Returns values to be written to CTRL_REG9 and FIFO_CTRL:   
+    /// Returns `u8` to be written to FIFO_CTRL.  
     pub fn f_fifo_ctrl(&self) -> u8 {
         let mut data = 0u8;
         data |= self.fifo_mode.value();
         data |= self.fifo_threshold;
         data
     }
+    /// Returns `u8` to be written to CTRL_REG9.
     pub fn f_ctrl_reg9(&self) -> u8 {
         let mut data = 0u8;
         if self.fifo_temperature_enable {
