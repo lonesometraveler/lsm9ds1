@@ -22,8 +22,9 @@ use interface::{Interface, Sensor};
 use interrupts::accel_int::IntConfigAccel;
 use interrupts::gyro_int::IntConfigGyro;
 use interrupts::mag_int::IntConfigMag;
-use interrupts::pins_config::{IntConfigAG1, IntConfigAG2, PinConfig};
+use interrupts::pins_config::{self, IntConfigAG1, IntConfigAG2, PinConfig};
 use mag::MagSettings;
+use pins_config::PinConfigBitmask;
 
 /// Accelerometer/Gyroscope's ID
 const WHO_AM_I_AG: u8 = 0x68;
@@ -334,7 +335,11 @@ where
     pub fn configure_interrupts_pins(&mut self, config: PinConfig) -> Result<(), T::Error> {
         let ctrl_reg8 =
             self.read_register(Sensor::Accelerometer, register::AG::CTRL_REG8.addr())?;
-        self.modify_register_with(config, ctrl_reg8, 0b1100_1111)
+        self.modify_register_with(
+            config,
+            ctrl_reg8,
+            !(PinConfigBitmask::ACTIVE_LEVEL | PinConfigBitmask::PIN_MODE),
+        )
     }
 
     /// Configure Accelerometer interrupt
