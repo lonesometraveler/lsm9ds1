@@ -51,8 +51,8 @@ pub(crate) struct PinConfigBitmask;
 
 #[allow(dead_code)]
 impl PinConfigBitmask {
-    pub(crate) const ACTIVE_LEVEL: u8 = 0b0010_0000;
-    pub(crate) const PIN_MODE: u8 = 0b0001_0000;
+    pub const ACTIVE_LEVEL: u8 = 0b0010_0000;
+    pub const PIN_MODE: u8 = 0b0001_0000;
 }
 
 /// Accelerometer/gyroscope interrupt pin (INT1_A/G) settings
