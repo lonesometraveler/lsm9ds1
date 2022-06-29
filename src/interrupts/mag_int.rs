@@ -1,7 +1,7 @@
 //! Functions related to magnetometer-specific interrupts
 use super::*;
 
-/// Magnetometer interrupt pin (INT_M) settings
+/// Magnetometer interrupt pin (INT_CFG_M) settings
 #[derive(Debug)]
 pub struct IntConfigMag {
     /// Enable interrupt generation on X-axis, default 0
@@ -54,28 +54,28 @@ impl IntConfigMag {
 impl From<u8> for IntConfigMag {
     fn from(reg_value: u8) -> Self {
         IntConfigMag {
-            interrupt_xaxis: match (reg_value & CfgBitmasks::XIEN) >> 7 {
-                1 => Flag::Enabled,
+            interrupt_xaxis: match reg_value & CfgBitmasks::XIEN {
+                x if x > 0 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
-            interrupt_yaxis: match (reg_value & CfgBitmasks::YIEN) >> 6 {
-                1 => Flag::Enabled,
+            interrupt_yaxis: match reg_value & CfgBitmasks::YIEN {
+                x if x > 0 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
-            interrupt_zaxis: match (reg_value & CfgBitmasks::ZIEN) >> 5 {
-                1 => Flag::Enabled,
+            interrupt_zaxis: match reg_value & CfgBitmasks::ZIEN {
+                x if x > 0 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
-            active_high_or_low: match (reg_value & CfgBitmasks::IEA) >> 2 {
-                1 => IntActive::High,
+            active_high_or_low: match reg_value & CfgBitmasks::IEA {
+                x if x > 0 => IntActive::High,
                 _ => IntActive::Low,
             },
-            interrupt_latching: match (reg_value & CfgBitmasks::IEL) >> 1 {
-                1 => IntLatch::NotLatched,
+            interrupt_latching: match reg_value & CfgBitmasks::IEL {
+                x if x > 0 => IntLatch::NotLatched,
                 _ => IntLatch::Latched, // NOTE: it's reversed, 0 is latched
             },
             enable_interrupt: match reg_value & CfgBitmasks::IEN {
-                1 => Flag::Enabled,
+                x if x > 0 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
         }

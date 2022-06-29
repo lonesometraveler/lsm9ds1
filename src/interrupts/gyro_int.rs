@@ -61,24 +61,24 @@ impl IntConfigGyro {
 impl From<u8> for IntConfigGyro {
     fn from(reg_value: u8) -> Self {
         IntConfigGyro {
-            events_combination: match (reg_value & CfgBitmasks::AOI_G) >> 7 {
-                1 => Combination::And,
+            events_combination: match reg_value & CfgBitmasks::AOI_G {
+                x if x > 0 => Combination::And,
                 _ => Combination::Or,
             },
-            latch_interrupts: match (reg_value & CfgBitmasks::LIR_G) >> 6 {
-                1 => IntLatch::Latched,
+            latch_interrupts: match reg_value & CfgBitmasks::LIR_G {
+                x if x > 0 => IntLatch::Latched,
                 _ => IntLatch::NotLatched,
             },
-            interrupt_high_zaxis: match (reg_value & CfgBitmasks::ZHIE_G) >> 5 {
-                1 => Flag::Enabled,
+            interrupt_high_zaxis: match reg_value & CfgBitmasks::ZHIE_G {
+                x if x > 0 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
-            interrupt_low_zaxis: match (reg_value & CfgBitmasks::ZLIE_G) >> 4 {
-                1 => Flag::Enabled,
+            interrupt_low_zaxis: match reg_value & CfgBitmasks::ZLIE_G {
+                x if x > 0 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
-            interrupt_high_yaxis: match (reg_value & CfgBitmasks::YHIE_G) >> 3 {
-                1 => Flag::Enabled,
+            interrupt_high_yaxis: match reg_value & CfgBitmasks::YHIE_G {
+                x if x > 0 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
             interrupt_low_yaxis: match (reg_value & CfgBitmasks::YLIE_G) >> 2 {
@@ -90,7 +90,7 @@ impl From<u8> for IntConfigGyro {
                 _ => Flag::Disabled,
             },
             interrupt_low_xaxis: match reg_value & CfgBitmasks::XLIE_G {
-                1 => Flag::Enabled,
+                x if x > 0 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
         }

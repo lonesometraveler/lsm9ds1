@@ -26,6 +26,7 @@ pub struct IntConfigAccel {
     /// Enable interrupt generation on X-axis low event
     pub interrupt_xaxis_low: Flag,
 }
+
 impl Default for IntConfigAccel {
     fn default() -> Self {
         IntConfigAccel {
@@ -60,36 +61,36 @@ impl IntConfigAccel {
 impl From<u8> for IntConfigAccel {
     fn from(reg_value: u8) -> Self {
         IntConfigAccel {
-            events_combination: match (reg_value & CfgBitmasks::AOI_XL) >> 7 {
-                1 => Combination::And,
+            events_combination: match reg_value & CfgBitmasks::AOI_XL {
+                x if x > 0 => Combination::And,
                 _ => Combination::Or,
             },
-            enable_6d: match (reg_value & CfgBitmasks::_6D) >> 6 {
-                1 => Flag::Enabled,
+            enable_6d: match reg_value & CfgBitmasks::_6D {
+                x if x > 0 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
-            interrupt_zaxis_high: match (reg_value & CfgBitmasks::ZHIE_XL) >> 5 {
-                1 => Flag::Enabled,
+            interrupt_zaxis_high: match reg_value & CfgBitmasks::ZHIE_XL {
+                x if x > 0 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
-            interrupt_zaxis_low: match (reg_value & CfgBitmasks::ZLIE_XL) >> 4 {
-                1 => Flag::Enabled,
+            interrupt_zaxis_low: match reg_value & CfgBitmasks::ZLIE_XL {
+                x if x > 0 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
-            interrupt_yaxis_high: match (reg_value & CfgBitmasks::YHIE_XL) >> 3 {
-                1 => Flag::Enabled,
+            interrupt_yaxis_high: match reg_value & CfgBitmasks::YHIE_XL {
+                x if x > 0 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
-            interrupt_yaxis_low: match (reg_value & CfgBitmasks::XLIE_XL) >> 2 {
-                1 => Flag::Enabled,
+            interrupt_yaxis_low: match reg_value & CfgBitmasks::YLIE_XL {
+                x if x > 0 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
-            interrupt_xaxis_high: match (reg_value & CfgBitmasks::XHIE_XL) >> 1 {
-                1 => Flag::Enabled,
+            interrupt_xaxis_high: match reg_value & CfgBitmasks::XHIE_XL {
+                x if x > 0 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
             interrupt_xaxis_low: match reg_value & CfgBitmasks::XLIE_XL {
-                1 => Flag::Enabled,
+                x if x > 0 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
         }
