@@ -95,36 +95,36 @@ impl Default for IntConfigAG1 {
 impl From<u8> for IntConfigAG1 {
     fn from(value: u8) -> Self {
         IntConfigAG1 {
-            enable_gyro_int: match (value & 0b1000_0000) >> 7 {
-                1 => Flag::Enabled,
+            enable_gyro_int: match value & IntConfigAG1Bitmask::INT1_IG_G {
+                x if x > 0 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
-            enable_accel_int: match (value & 0b0100_0000) >> 6 {
-                1 => Flag::Enabled,
+            enable_accel_int: match value & IntConfigAG1Bitmask::INT1_IG_XL {
+                x if x > 0 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
-            enable_fss5: match (value & 0b0010_0000) >> 5 {
-                1 => Flag::Enabled,
+            enable_fss5: match value & IntConfigAG1Bitmask::INT1_FSS5 {
+                x if x > 0 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
-            enable_overrun: match (value & 0b0001_0000) >> 4 {
-                1 => Flag::Enabled,
+            enable_overrun: match value & IntConfigAG1Bitmask::INT1_OVR {
+                x if x > 0 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
-            enable_fth: match (value & 0b0000_1000) >> 3 {
-                1 => Flag::Enabled,
+            enable_fth: match value & IntConfigAG1Bitmask::INT1_FTH {
+                x if x > 0 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
-            enable_boot_status: match (value & 0b0000_0100) >> 2 {
-                1 => Flag::Enabled,
+            enable_boot_status: match value & IntConfigAG1Bitmask::INT1_BOOT {
+                x if x > 0 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
-            enable_gyro_dataready: match (value & 0b0000_0010) >> 1 {
-                1 => Flag::Enabled,
+            enable_gyro_dataready: match value & IntConfigAG1Bitmask::INT1_DRDY_G {
+                x if x > 0 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
-            enable_accel_dataready: match value & 0b0000_0001 {
-                1 => Flag::Enabled,
+            enable_accel_dataready: match value & IntConfigAG1Bitmask::INT1_DRDY_XL {
+                x if x > 0 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
         }
@@ -145,6 +145,20 @@ impl IntConfigAG1 {
         data |= self.enable_accel_dataready.value();
         data
     }
+}
+
+pub(crate) struct IntConfigAG1Bitmask;
+
+#[allow(dead_code)]
+impl IntConfigAG1Bitmask {
+    pub const INT1_IG_G: u8 = 0b1000_0000;
+    pub const INT1_IG_XL: u8 = 0b0100_0000;
+    pub const INT1_FSS5: u8 = 0b0010_0000;
+    pub const INT1_OVR: u8 = 0b0001_0000;
+    pub const INT1_FTH: u8 = 0b0000_1000;
+    pub const INT1_BOOT: u8 = 0b0000_0100;
+    pub const INT1_DRDY_G: u8 = 0b0000_0010;
+    pub const INT1_DRDY_XL: u8 = 0b0000_0001;
 }
 
 /// Accelerometer/gyroscope interrupt pin (INT2_A/G) settings
@@ -181,28 +195,28 @@ impl Default for IntConfigAG2 {
 impl From<u8> for IntConfigAG2 {
     fn from(value: u8) -> Self {
         IntConfigAG2 {
-            enable_fss5: match (value & 0b0010_0000) >> 5 {
-                1 => Flag::Enabled,
+            enable_fss5: match value & IntConfigAG2Bitmask::INT2_FSS5 {
+                x if x > 0 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
-            enable_overrun: match (value & 0b0001_0000) >> 4 {
-                1 => Flag::Enabled,
+            enable_overrun: match value & IntConfigAG2Bitmask::INT2_OVR {
+                x if x > 0 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
-            enable_fth: match (value & 0b0000_1000) >> 3 {
-                1 => Flag::Enabled,
+            enable_fth: match value & IntConfigAG2Bitmask::INT2_FTH {
+                x if x > 0 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
-            enable_temp_dataready: match (value & 0b0000_0100) >> 2 {
-                1 => Flag::Enabled,
+            enable_temp_dataready: match value & IntConfigAG2Bitmask::INT2_DRDY_TEMP {
+                x if x > 0 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
-            enable_gyro_dataready: match (value & 0b0000_0010) >> 1 {
-                1 => Flag::Enabled,
+            enable_gyro_dataready: match value & IntConfigAG2Bitmask::INT2_DRDY_G {
+                x if x > 0 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
-            enable_accel_dataready: match value & 0b0000_0001 {
-                1 => Flag::Enabled,
+            enable_accel_dataready: match value & IntConfigAG2Bitmask::INT2_DRDY_XL {
+                x if x > 0 => Flag::Enabled,
                 _ => Flag::Disabled,
             },
         }
@@ -213,16 +227,27 @@ impl IntConfigAG2 {
     /// Returns `u8` to be written to INT2_CTRL register
     pub(crate) fn int2_ctrl(&self) -> u8 {
         let mut data: u8 = 0;
-
         data |= self.enable_fss5.value() << 5;
         data |= self.enable_overrun.value() << 4;
         data |= self.enable_fth.value() << 3;
         data |= self.enable_temp_dataready.value() << 2;
         data |= self.enable_gyro_dataready.value() << 1;
         data |= self.enable_accel_dataready.value();
-
         data
     }
+}
+
+pub(crate) struct IntConfigAG2Bitmask;
+
+#[allow(dead_code)]
+impl IntConfigAG2Bitmask {
+    pub const INT2_INACT: u8 = 0b1000_0000;
+    pub const INT2_FSS5: u8 = 0b0010_0000;
+    pub const INT2_OVR: u8 = 0b0001_0000;
+    pub const INT2_FTH: u8 = 0b0000_1000;
+    pub const INT2_DRDY_TEMP: u8 = 0b0000_0100;
+    pub const INT2_DRDY_G: u8 = 0b0000_0010;
+    pub const INT2_DRDY_XL: u8 = 0b0000_0001;
 }
 
 #[test]
