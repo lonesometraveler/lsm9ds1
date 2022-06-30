@@ -6,20 +6,25 @@
 #![no_std]
 // #![deny(warnings, missing_docs)]
 pub mod accel;
+pub mod configuration;
 pub mod fifo;
 pub mod gyro;
+pub mod interface;
 pub mod interrupts;
 pub mod mag;
 pub mod register;
 
 use accel::AccelSettings;
+use configuration::ConfigToWrite;
 use fifo::{Decimate, FIFOBitmasks, FIFOConfig, FIFOStatus};
 use gyro::GyroSettings;
-use interrupts::pins_config::{IntConfigAG1, IntConfigAG2, PinConfig};
-use mag::MagSettings;
-
-pub mod interface;
 use interface::{Interface, Sensor};
+use interrupts::accel_int::IntConfigAccel;
+use interrupts::gyro_int::IntConfigGyro;
+use interrupts::mag_int::IntConfigMag;
+use interrupts::pins_config::{self, IntConfigAG1, IntConfigAG2, PinConfig};
+use mag::MagSettings;
+use pins_config::PinConfigBitmask;
 
 /// Accelerometer/Gyroscope's ID
 const WHO_AM_I_AG: u8 = 0x68;
@@ -72,16 +77,32 @@ impl<T> LSM9DS1<T>
 where
     T: Interface,
 {
+    /// Write a configuration to a register.
+    fn write_register<C: ConfigToWrite>(&mut self, config: C) -> Result<(), T::Error> {
+        self.interface
+            .write(config.sensor(), config.addr(), config.byte())?;
+        Ok(())
+    }
+    /// Modify a register with a configuration.
+    fn modify_register<C: ConfigToWrite>(
+        &mut self,
+        config: C,
+        original_value: u8,
+        bitmask: u8,
+    ) -> Result<(), T::Error> {
+        let mut data: u8 = original_value & bitmask;
+        data |= config.byte();
+        self.interface.write(config.sensor(), config.addr(), data)?;
+        Ok(())
+    }
+
     fn reachable(&mut self, sensor: Sensor) -> Result<bool, T::Error> {
         use Sensor::*;
-        let mut bytes = [0u8; 1];
         let (who_am_i, register) = match sensor {
             Accelerometer | Gyro | Temperature => (WHO_AM_I_AG, register::AG::WHO_AM_I.addr()),
             Magnetometer => (WHO_AM_I_M, register::Mag::WHO_AM_I.addr()),
         };
-
-        self.interface.read(sensor, register, &mut bytes)?;
-        Ok(bytes[0] == who_am_i)
+        Ok(self.read_register(sensor, register)? == who_am_i)
     }
 
     /// Verifies communication with WHO_AM_I register
@@ -94,74 +115,26 @@ where
     }
     /// Initializes Accelerometer with sensor settings.
     pub fn begin_accel(&mut self) -> Result<(), T::Error> {
-        self.interface.write(
-            Sensor::Accelerometer,
-            register::AG::CTRL_REG5_XL.addr(),
-            self.accel.ctrl_reg5_xl(),
-        )?;
-        self.interface.write(
-            Sensor::Accelerometer,
-            register::AG::CTRL_REG6_XL.addr(),
-            self.accel.ctrl_reg6_xl(),
-        )?;
-        self.interface.write(
-            Sensor::Accelerometer,
-            register::AG::CTRL_REG7_XL.addr(),
-            self.accel.ctrl_reg7_xl(),
-        )?;
+        self.write_register(self.accel.ctrl_reg5_xl_config())?;
+        self.write_register(self.accel.ctrl_reg6_xl_config())?;
+        self.write_register(self.accel.ctrl_reg7_xl_config())?;
         Ok(())
     }
     /// Initializes Gyro with sensor settings.
     pub fn begin_gyro(&mut self) -> Result<(), T::Error> {
-        self.interface.write(
-            Sensor::Gyro,
-            register::AG::CTRL_REG1_G.addr(),
-            self.gyro.ctrl_reg1_g(),
-        )?;
-        self.interface.write(
-            Sensor::Gyro,
-            register::AG::CTRL_REG2_G.addr(),
-            self.gyro.ctrl_reg2_g(),
-        )?;
-        self.interface.write(
-            Sensor::Gyro,
-            register::AG::CTRL_REG3_G.addr(),
-            self.gyro.ctrl_reg3_g(),
-        )?;
-        self.interface.write(
-            Sensor::Gyro,
-            register::AG::CTRL_REG4.addr(),
-            self.gyro.ctrl_reg4(),
-        )?;
+        self.write_register(self.gyro.ctrl_reg1_g_config())?;
+        self.write_register(self.gyro.ctrl_reg2_g_config())?;
+        self.write_register(self.gyro.ctrl_reg3_g_config())?;
+        self.write_register(self.gyro.ctrl_reg4_config())?;
         Ok(())
     }
     /// Initializes Magnetometer with sensor settings.
     pub fn begin_mag(&mut self) -> Result<(), T::Error> {
-        self.interface.write(
-            Sensor::Magnetometer,
-            register::Mag::CTRL_REG1_M.addr(),
-            self.mag.ctrl_reg1_m(),
-        )?;
-        self.interface.write(
-            Sensor::Magnetometer,
-            register::Mag::CTRL_REG2_M.addr(),
-            self.mag.ctrl_reg2_m(),
-        )?;
-        self.interface.write(
-            Sensor::Magnetometer,
-            register::Mag::CTRL_REG3_M.addr(),
-            self.mag.ctrl_reg3_m(),
-        )?;
-        self.interface.write(
-            Sensor::Magnetometer,
-            register::Mag::CTRL_REG4_M.addr(),
-            self.mag.ctrl_reg4_m(),
-        )?;
-        self.interface.write(
-            Sensor::Magnetometer,
-            register::Mag::CTRL_REG5_M.addr(),
-            self.mag.ctrl_reg5_m(),
-        )?;
+        self.write_register(self.mag.ctrl_reg1_m_config())?;
+        self.write_register(self.mag.ctrl_reg2_m_config())?;
+        self.write_register(self.mag.ctrl_reg3_m_config())?;
+        self.write_register(self.mag.ctrl_reg4_m_config())?;
+        self.write_register(self.mag.ctrl_reg5_m_config())?;
         Ok(())
     }
 
@@ -171,9 +144,7 @@ where
             Accelerometer | Gyro | Temperature => register::AG::STATUS_REG_1.addr(),
             Magnetometer => register::Mag::STATUS_REG_M.addr(),
         };
-        let mut bytes = [0u8; 1];
-        self.interface.read(sensor, register, &mut bytes)?;
-        Ok(bytes[0])
+        self.read_register(sensor, register)
     }
     /// Sees if new Accelerometer data is available
     pub fn accel_data_available(&mut self) -> Result<bool, T::Error> {
@@ -269,22 +240,16 @@ where
     /// Enable and configure FIFO
     pub fn configure_fifo(&mut self, config: FIFOConfig) -> Result<(), T::Error> {
         // write values to the FIFO_CTRL register
-        self.interface.write(
-            Sensor::Accelerometer,
-            register::AG::FIFO_CTRL.addr(),
-            config.f_fifo_ctrl(),
-        )?;
+        self.write_register(config.f_fifo_ctrl_config())?;
 
-        // write values to specific bits of the CTRL_REG9 register
         let ctrl_reg9: u8 =
             self.read_register(Sensor::Accelerometer, register::AG::CTRL_REG9.addr())?;
-        let payload = ctrl_reg9 & !FIFOBitmasks::CTRL_REG9_FIFO | config.f_ctrl_reg9();
-        self.interface.write(
-            Sensor::Accelerometer,
-            register::AG::CTRL_REG9.addr(),
-            payload,
-        )?;
-        Ok(())
+        // write values to specific bits of the CTRL_REG9 register
+        self.modify_register(
+            config.f_ctrl_reg9_config(),
+            ctrl_reg9,
+            !FIFOBitmasks::CTRL_REG9_FIFO,
+        )
     }
 
     /// Get flags and FIFO level from the FIFO_STATUS register
@@ -299,41 +264,28 @@ where
     pub fn set_decimation(&mut self, decimation: Decimate) -> Result<(), T::Error> {
         let ctrl_reg5 =
             self.read_register(Sensor::Accelerometer, register::AG::CTRL_REG5_XL.addr())?;
-        let payload = ctrl_reg5 & !FIFOBitmasks::DEC | decimation.value();
-        self.interface.write(
-            Sensor::Accelerometer,
-            register::AG::CTRL_REG5_XL.addr(),
-            payload,
-        )?;
-        Ok(())
+        self.modify_register(decimation, ctrl_reg5, !FIFOBitmasks::DEC)
     }
 
     /// Enable interrupts for accelerometer/gyroscope and configure the INT1_A/G interrupt pin
     pub fn configure_interrupts_ag1(&mut self, config: IntConfigAG1) -> Result<(), T::Error> {
-        self.interface.write(
-            Sensor::Accelerometer,
-            register::AG::INT1_CTRL.addr(),
-            config.int1_ctrl(),
-        )?;
-        Ok(())
+        self.write_register(config)
     }
 
     /// Enable interrupts for accelerometer/gyroscope and configure the INT2_A/G interrupt pin
     pub fn configure_interrupts_ag2(&mut self, config: IntConfigAG2) -> Result<(), T::Error> {
-        let reg_data = self.read_register(Sensor::Accelerometer, register::AG::INT2_CTRL.addr())?;
-        let data: u8 = reg_data & 0b0011_1111 | config.int2_ctrl();
-        self.interface
-            .write(Sensor::Accelerometer, register::AG::INT2_CTRL.addr(), data)?;
-        Ok(())
+        self.write_register(config)
     }
 
     /// Interrupt pins electrical configuration
     pub fn configure_interrupts_pins(&mut self, config: PinConfig) -> Result<(), T::Error> {
-        let reg_data = self.read_register(Sensor::Accelerometer, register::AG::CTRL_REG8.addr())?;
-        let data: u8 = reg_data & 0b1100_1111 | config.ctrl_reg8();
-        self.interface
-            .write(Sensor::Accelerometer, register::AG::CTRL_REG8.addr(), data)?;
-        Ok(())
+        let ctrl_reg8 =
+            self.read_register(Sensor::Accelerometer, register::AG::CTRL_REG8.addr())?;
+        self.modify_register(
+            config,
+            ctrl_reg8,
+            !(PinConfigBitmask::ACTIVE_LEVEL | PinConfigBitmask::PIN_MODE),
+        )
     }
 
     /// Get the current A/G1 pin configuration
@@ -358,6 +310,45 @@ where
             Sensor::Accelerometer,
             register::AG::CTRL_REG8.addr(),
         )?))
+    }
+
+    /// Get the current Accelerometer interrupt configuration
+    pub fn get_accel_int_config(&mut self) -> Result<IntConfigAccel, T::Error> {
+        Ok(IntConfigAccel::from(self.read_register(
+            Sensor::Accelerometer,
+            register::AG::INT_GEN_CFG_XL.addr(),
+        )?))
+    }
+
+    /// Get the current Gyro interrupt configuration
+    pub fn get_gyro_int_config(&mut self) -> Result<IntConfigGyro, T::Error> {
+        Ok(IntConfigGyro::from(self.read_register(
+            Sensor::Gyro,
+            register::AG::INT_GEN_CFG_G.addr(),
+        )?))
+    }
+
+    /// Get the current Magnetometer interrupt configuration
+    pub fn get_mag_int_config(&mut self) -> Result<IntConfigMag, T::Error> {
+        Ok(IntConfigMag::from(self.read_register(
+            Sensor::Magnetometer,
+            register::Mag::INT_CFG_M.addr(),
+        )?))
+    }
+
+    /// Configure Accelerometer interrupt
+    pub fn configure_interrupts_accel(&mut self, config: IntConfigAccel) -> Result<(), T::Error> {
+        self.write_register(config)
+    }
+
+    /// Configure Gyro interrupt
+    pub fn configure_interrupts_gyro(&mut self, config: IntConfigGyro) -> Result<(), T::Error> {
+        self.write_register(config)
+    }
+
+    /// Configure Magnetometer interrupt
+    pub fn configure_interrupts_mag(&mut self, config: IntConfigMag) -> Result<(), T::Error> {
+        self.write_register(config)
     }
 
     /// Read a byte from the given register.
