@@ -1,6 +1,6 @@
 //! Functions related to accelerometer-specific interrupts
 ///
-/// TO DO:
+/// TODO:
 /// - set acceleration threshold for X, Y and Z axis (INT_GEN_THS_X/Y/Z_XL) in mg instead?
 /// - LIR_XL1 and 4D_XL1 bits of CTRL_REG4 => should they be incorporated in the Config struct? what's the relation between 4D_XL1 and _6D?
 ///
