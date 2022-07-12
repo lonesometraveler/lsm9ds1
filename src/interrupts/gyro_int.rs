@@ -1,6 +1,6 @@
 //! Functions related to gyroscope-specific interrupts
 ///
-/// TO DO:
+/// TODO:
 /// - complete gyroscope threshold setting for X, Y and Z axis (INT_GEN_THS_X/Y/Z_G)
 /// - ORIENT_CFG_G settings (user orientation selection (???)) -> to be done in gyro.rs
 ///
