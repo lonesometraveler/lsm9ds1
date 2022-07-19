@@ -254,10 +254,9 @@ where
 
     /// Get flags and FIFO level from the FIFO_STATUS register
     pub fn get_fifo_status(&mut self) -> Result<FIFOStatus, T::Error> {
-        Ok(FIFOStatus::from(self.read_register(
-            Sensor::Accelerometer,
-            register::AG::FIFO_SRC.addr(),
-        )?))
+        Ok(self
+            .read_register(Sensor::Accelerometer, register::AG::FIFO_SRC.addr())?
+            .into())
     }
 
     /// Sets decimation of acceleration data on OUT REG and FIFO
@@ -290,50 +289,44 @@ where
 
     /// Get the current A/G1 pin configuration
     pub fn get_ag1_config(&mut self) -> Result<IntConfigAG1, T::Error> {
-        Ok(IntConfigAG1::from(self.read_register(
-            Sensor::Accelerometer,
-            register::AG::INT1_CTRL.addr(),
-        )?))
+        Ok(self
+            .read_register(Sensor::Accelerometer, register::AG::INT1_CTRL.addr())?
+            .into())
     }
 
     /// Get the current A/G2 pin configuration
     pub fn get_ag2_config(&mut self) -> Result<IntConfigAG2, T::Error> {
-        Ok(IntConfigAG2::from(self.read_register(
-            Sensor::Accelerometer,
-            register::AG::INT2_CTRL.addr(),
-        )?))
+        Ok(self
+            .read_register(Sensor::Accelerometer, register::AG::INT2_CTRL.addr())?
+            .into())
     }
 
     /// Get the current common pins configuration
     pub fn get_pins_config(&mut self) -> Result<PinConfig, T::Error> {
-        Ok(PinConfig::from(self.read_register(
-            Sensor::Accelerometer,
-            register::AG::CTRL_REG8.addr(),
-        )?))
+        Ok(self
+            .read_register(Sensor::Accelerometer, register::AG::CTRL_REG8.addr())?
+            .into())
     }
 
     /// Get the current Accelerometer interrupt configuration
     pub fn get_accel_int_config(&mut self) -> Result<IntConfigAccel, T::Error> {
-        Ok(IntConfigAccel::from(self.read_register(
-            Sensor::Accelerometer,
-            register::AG::INT_GEN_CFG_XL.addr(),
-        )?))
+        Ok(self
+            .read_register(Sensor::Accelerometer, register::AG::INT_GEN_CFG_XL.addr())?
+            .into())
     }
 
     /// Get the current Gyro interrupt configuration
     pub fn get_gyro_int_config(&mut self) -> Result<IntConfigGyro, T::Error> {
-        Ok(IntConfigGyro::from(self.read_register(
-            Sensor::Gyro,
-            register::AG::INT_GEN_CFG_G.addr(),
-        )?))
+        Ok(self
+            .read_register(Sensor::Gyro, register::AG::INT_GEN_CFG_G.addr())?
+            .into())
     }
 
     /// Get the current Magnetometer interrupt configuration
     pub fn get_mag_int_config(&mut self) -> Result<IntConfigMag, T::Error> {
-        Ok(IntConfigMag::from(self.read_register(
-            Sensor::Magnetometer,
-            register::Mag::INT_CFG_M.addr(),
-        )?))
+        Ok(self
+            .read_register(Sensor::Magnetometer, register::Mag::INT_CFG_M.addr())?
+            .into())
     }
 
     /// Configure Accelerometer interrupt
