@@ -11,5 +11,11 @@ keywords = ["embedded-hal-driver", "accelerometer", "gyroscope", "magnetometer"]
 license = "MIT"
 repository = "https://github.com/lonesometraveler/lsm9ds1"
 
+[features]
+default = ["hal_02"]
+hal_02 = ["embedded-hal"]
+hal_1 = ["embedded-hal_1"]
+
 [dependencies]
-embedded-hal  = { version = "0.2.3" }
+embedded-hal  = { version = "0.2.3", optional = true }
+embedded-hal_1 = { package = "embedded-hal", version = "=1.0.0-alpha.9", optional = true }
