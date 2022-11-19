@@ -34,11 +34,11 @@ pub struct FIFOConfig {
 impl Default for FIFOConfig {
     fn default() -> Self {
         FIFOConfig {
-            fifo_mode: FIFOMode::Bypass,    // Bypass mode
-            fifo_threshold: 32u8,           // set the threshold level
-            fifo_enable: false,             // disabled
+            fifo_mode: FIFOMode::FIFO,      // FIFO mode
+            fifo_threshold: 32u8,           // set the default threshold level
+            fifo_enable: true,              // FIFO enabled
             fifo_temperature_enable: false, // temperature data not stored in FIFO
-            fifo_use_threshold: false,      // FIFO depth not limited
+            fifo_use_threshold: true,       // FIFO depth not limited
         }
     }
 }
@@ -47,8 +47,18 @@ impl FIFOConfig {
     /// Returns `u8` to be written to FIFO_CTRL.  
     pub(crate) fn f_fifo_ctrl(&self) -> u8 {
         let mut data = 0u8;
+
+        // clamp the inserted threshold values as the maximum is 32
+        // threshold value must be set as t-1, i.e. to set it to 32,
+        // value 0b11111 must be written to the register
+        let threshold_data = match self.fifo_threshold {
+            0 => 0, // setting to 0 will actually set it to 1 FIFO level
+            1..=32 => self.fifo_threshold - 1,  
+            _ => 31, // every value above 32 will be set to 32 levels of FIFO
+        };
+
         data |= self.fifo_mode.value();
-        data |= self.fifo_threshold;
+        data |= threshold_data;
         data
     }
     /// Returns `u8` to be written to CTRL_REG9.
