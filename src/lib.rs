@@ -8,10 +8,8 @@
 pub mod accel;
 pub mod configuration;
 pub mod fifo;
-pub mod fifo;
 pub mod gyro;
 pub mod interface;
-pub mod interrupts;
 pub mod interrupts;
 pub mod mag;
 pub mod register;
