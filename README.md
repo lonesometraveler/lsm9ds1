@@ -23,7 +23,7 @@ This library is work in progress. Not all features are implemented yet. Contribu
 * [x] Raw Sensor reading (Accel, Gyro, Mag) See `read_sensor_raw()`.
 * [ ] Calibration
 * [ ] Interrupt
-* [ ] FIFO Mode
+* [x] FIFO Mode
 
 
 ## Usage

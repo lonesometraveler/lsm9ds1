@@ -10,18 +10,18 @@ pub mod pins_config;
 /// Interrupt active setting for the INT_DRDY pin: active high (default) or active low
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, Copy)]
-pub enum INT_ACTIVE {
+pub enum IntActive {
     /// Active high
     High,
     /// Active low
     Low,
 }
 
-impl INT_ACTIVE {
-    pub fn status(self) -> u8 {
+impl IntActive {
+    pub fn value(self) -> u8 {
         match self {
-            INT_ACTIVE::High => 0,
-            INT_ACTIVE::Low => 1,
+            IntActive::High => 0,
+            IntActive::Low => 1,
         }
     }
 }
@@ -29,18 +29,18 @@ impl INT_ACTIVE {
 /// Interrupt pad setting for INT_DRDY pin: push-pull (default) or open-drain.
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, Copy)]
-pub enum INT_PIN {
+pub enum IntPin {
     /// Push-pull
     PushPull,
     /// Open drain
     OpenDrain,
 }
 
-impl INT_PIN {
-    pub fn status(self) -> u8 {
+impl IntPin {
+    pub fn value(self) -> u8 {
         match self {
-            INT_PIN::PushPull => 0,
-            INT_PIN::OpenDrain => 1,
+            IntPin::PushPull => 0,
+            IntPin::OpenDrain => 1,
         }
     }
 }
@@ -48,18 +48,18 @@ impl INT_PIN {
 /// Interrupt latching setting (interrupt request latched or not latched)
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, Copy)]
-pub enum INT_LATCH {
+pub enum IntLatch {
     /// Interrupt request latched
     Latched,
     /// Interrupt request not latched
     NotLatched,
 }
 
-impl INT_LATCH {
-    pub fn status(self) -> bool {
+impl IntLatch {
+    pub fn value(self) -> u8 {
         match self {
-            INT_LATCH::Latched => true,
-            INT_LATCH::NotLatched => false,
+            IntLatch::Latched => 1,
+            IntLatch::NotLatched => 0,
         }
     }
 }
@@ -67,18 +67,18 @@ impl INT_LATCH {
 /// 6D or 4D used by interrupt generator for for position recognition
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, Copy)]
-pub enum POS_RECOG {
+pub enum PosRecog {
     /// 4D option used for position recognition
     _4D,
     /// 4D option used for position recognition
     _6D,
 }
 
-impl POS_RECOG {
-    pub fn status(self) -> bool {
+impl PosRecog {
+    pub fn value(self) -> u8 {
         match self {
-            POS_RECOG::_4D => true,
-            POS_RECOG::_6D => false,
+            PosRecog::_4D => 1,
+            PosRecog::_6D => 0,
         }
     }
 }
@@ -86,18 +86,56 @@ impl POS_RECOG {
 /// Decrement or reset counter mode selection.
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, Copy)]
-pub enum COUNTER {
+pub enum Counter {
     /// Decrement counter (see pages 58-61)
     Decrement,
     /// Reset counter
     Reset,
 }
 
-impl COUNTER {
-    pub fn status(self) -> bool {
+impl Counter {
+    pub fn value(self) -> u8 {
         match self {
-            COUNTER::Decrement => true,
-            COUNTER::Reset => false,
+            Counter::Decrement => 1,
+            Counter::Reset => 0,
+        }
+    }
+}
+
+/// Settings for various interrupt-related flags, Enabled or Disabled
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy)]
+pub enum Flag {
+    /// Enabled (bit set)
+    Enabled,
+    /// Disabled (bit cleared)
+    Disabled,
+}
+
+impl Flag {
+    pub fn value(self) -> u8 {
+        match self {
+            Flag::Disabled => 0,
+            Flag::Enabled => 1,
+        }
+    }
+}
+
+/// Possible combinations of interrupt events for the accelerometer
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy)]
+pub enum Combination {
+    /// AND combination (bit set)
+    And,
+    /// OR (bit cleared)
+    Or,
+}
+
+impl Combination {
+    pub fn value(self) -> u8 {
+        match self {
+            Combination::Or => 0,
+            Combination::And => 1,
         }
     }
 }
