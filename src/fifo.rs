@@ -26,7 +26,7 @@ pub struct FIFOConfig {
     /// Enable threshold level use
     pub fifo_use_threshold: bool,
     /// Set the threshold level
-    pub fifo_threshold: u8, 
+    pub fifo_threshold: u8,
     /// Store temperature data in FIFO
     pub fifo_temperature_enable: bool,
 }
@@ -48,14 +48,10 @@ impl FIFOConfig {
     pub(crate) fn f_fifo_ctrl(&self) -> u8 {
         let mut data = 0u8;
 
-        // clamp the inserted threshold values as the maximum is 32
+        // clamp the inserted threshold value to minimum 1 and maximum 32.
         // threshold value must be set as t-1, i.e. to set it to 32,
         // value 0b11111 must be written to the register
-        let threshold_data = match self.fifo_threshold {
-            0 => 0, // setting to 0 will actually set it to 1 FIFO level
-            1..=32 => self.fifo_threshold - 1,  
-            _ => 31, // every value above 32 will be set to 32 levels of FIFO
-        };
+        let threshold_data = self.fifo_threshold.clamp(1, 32) - 1;
 
         data |= self.fifo_mode.value();
         data |= threshold_data;
