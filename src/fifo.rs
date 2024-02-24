@@ -91,13 +91,13 @@ impl From<u8> for FIFOStatus {
     fn from(value: u8) -> Self {
         let fifo_level_value = value & FIFOBitmasks::FSS;
         FIFOStatus {
-            /// Is FIFO filling equal or higher than the threshold?
+            // Is FIFO filling equal or higher than the threshold?
             fifo_thresh_reached: value & FIFOBitmasks::FTH != 0,
-            /// Is FIFO full and at least one sample has been overwritten?
+            // Is FIFO full and at least one sample has been overwritten?
             fifo_overrun: value & FIFOBitmasks::OVRN != 0,
-            /// Is FIFO empty (no unread samples)?
+            // Is FIFO empty (no unread samples)?
             fifo_empty: fifo_level_value == 0,
-            /// Read FIFO stored data level
+            // Read FIFO stored data level
             fifo_level: fifo_level_value,
         }
     }
