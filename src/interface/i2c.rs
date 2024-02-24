@@ -7,12 +7,6 @@ use Sensor::*;
 use embedded_hal::blocking::i2c::{Write, WriteRead};
 #[cfg(feature = "hal_1")]
 use embedded_hal_1::i2c::I2c;
-/// Errors in this crate
-#[derive(Debug)]
-pub enum Error<CommE> {
-    /// Communication error
-    Comm(CommE),
-}
 
 /// Accelerometer/Gyro sensor address for I2C communication
 pub enum AgAddress {
@@ -62,20 +56,18 @@ impl<I2C> I2cInterface<I2C> {
 
 /// Implementation of `Interface`
 #[cfg(feature = "hal_02")]
-impl<I2C, CommE> Interface for I2cInterface<I2C>
+impl<I2C, E> Interface for I2cInterface<I2C>
 where
-    I2C: WriteRead<Error = CommE> + Write<Error = CommE>,
+    I2C: WriteRead<Error = E> + Write<Error = E>,
 {
-    type Error = Error<CommE>;
+    type Error = E;
 
     fn write(&mut self, sensor: Sensor, addr: u8, value: u8) -> Result<(), Self::Error> {
         let sensor_addr = match sensor {
             Accelerometer | Gyro | Temperature => self.ag_addr,
             Magnetometer => self.mag_addr,
         };
-        self.i2c
-            .write(sensor_addr, &[addr, value])
-            .map_err(Error::Comm)
+        self.i2c.write(sensor_addr, &[addr, value])
     }
 
     fn read(&mut self, sensor: Sensor, addr: u8, buffer: &mut [u8]) -> Result<(), Self::Error> {
@@ -83,27 +75,23 @@ where
             Accelerometer | Gyro | Temperature => self.ag_addr,
             Magnetometer => self.mag_addr,
         };
-        self.i2c
-            .write_read(sensor_addr, &[addr], buffer)
-            .map_err(Error::Comm)
+        self.i2c.write_read(sensor_addr, &[addr], buffer)
     }
 }
 
 #[cfg(feature = "hal_1")]
-impl<I2C, CommE> Interface for I2cInterface<I2C>
+impl<I2C, E> Interface for I2cInterface<I2C>
 where
-    I2C: I2c<Error = CommE>,
+    I2C: I2c<Error = E>,
 {
-    type Error = Error<CommE>;
+    type Error = E;
 
     fn write(&mut self, sensor: Sensor, addr: u8, value: u8) -> Result<(), Self::Error> {
         let sensor_addr = match sensor {
             Accelerometer | Gyro | Temperature => self.ag_addr,
             Magnetometer => self.mag_addr,
         };
-        self.i2c
-            .write(sensor_addr, &[addr, value])
-            .map_err(Error::Comm)
+        self.i2c.write(sensor_addr, &[addr, value])
     }
 
     fn read(&mut self, sensor: Sensor, addr: u8, buffer: &mut [u8]) -> Result<(), Self::Error> {
@@ -111,8 +99,6 @@ where
             Accelerometer | Gyro | Temperature => self.ag_addr,
             Magnetometer => self.mag_addr,
         };
-        self.i2c
-            .write_read(sensor_addr, &[addr], buffer)
-            .map_err(Error::Comm)
+        self.i2c.write_read(sensor_addr, &[addr], buffer)
     }
 }
